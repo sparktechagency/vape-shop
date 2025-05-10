@@ -4,6 +4,7 @@ use App\Interfaces\Products\ManageProductsInterface;
 use App\Models\ManageProduct;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class ManageProductsRepository implements ManageProductsInterface
 {
@@ -58,6 +59,11 @@ class ManageProductsRepository implements ManageProductsInterface
     public function deleteProduct(int $id): bool
     {
         $product = ManageProduct::findOrFail($id);
+        //remove old image
+        if ($product->product_image) {
+            $oldImagePath = getStorageFilePath($product->product_image);
+            Storage::disk('public')->delete($oldImagePath);
+        }
         return $product->delete();
     }
 }
