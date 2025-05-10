@@ -3,10 +3,16 @@
 namespace App\Providers;
 
 use App\Interfaces\Auth\AuthRepositoryInterface;
+use App\Interfaces\Products\ManageProductsInterface;
 use App\Repositories\Auth\AuthRepository;
+use App\Repositories\Products\ManageProductsRepository;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * @method static \Illuminate\Http\JsonResponse successResponse(mixed $data = null, string $message = 'Success', int $code = 200)
+ * @method static \Illuminate\Http\JsonResponse errorResponse(string $message = 'Something went wrong', int $code = 400, mixed $errors = null)
+ */
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -15,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(AuthRepositoryInterface::class, AuthRepository::class);
+        $this->app->bind(ManageProductsInterface::class, ManageProductsRepository::class);
     }
 
     /**

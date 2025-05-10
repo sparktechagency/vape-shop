@@ -103,4 +103,18 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->first_name . ' ' . $this->last_name;
     }
+
+    //get avatar
+    public function getAvatarAttribute($value)
+    {
+        return $value ? asset('storage/' . $value) : "https://ui-avatars.com/api/?background=random&name={$this->first_name}+{$this->last_name}&bold=true";
+    }
+
+
+
+    //relationships
+    public function manageProducts()
+    {
+        return $this->hasMany(ManageProduct::class);
+    }
 }

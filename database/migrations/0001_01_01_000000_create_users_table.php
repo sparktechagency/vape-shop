@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->tinyInteger('role')->default(Role::MEMBER)->comment('1: Admin, 2: Association, 3: Brand, 4: Wholesaler, 5: Store, 6: Member');
+            $table->string('avatar')->nullable();
             $table->string('password');
             $table->string('phone')->nullable();
             $table->string('address')->nullable();

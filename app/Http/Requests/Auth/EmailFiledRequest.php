@@ -6,7 +6,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class VerifyEmail extends FormRequest
+class EmailFiledRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,18 +24,17 @@ class VerifyEmail extends FormRequest
     public function rules(): array
     {
         return [
-            'otp' => 'required|string',
+            'email' => 'required|email',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'otp.required' => 'The OTP field is required.',
-            'otp.string' => 'The OTP must be a string.',
+            'email.required' => 'The email field is required.',
+            'email.email' => 'The email must be a valid email address.',
         ];
     }
-
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(

@@ -1,6 +1,7 @@
 <?php
 namespace App\Services\Auth;
 use App\Interfaces\Auth\AuthRepositoryInterface;
+use App\Models\User;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthService
@@ -21,39 +22,100 @@ class AuthService
 
     public function login(array $credentials)
     {
-        // Validate and log in the user
-        return $this->authRepository->login($credentials);
-    }
+        $token = JWTAuth::attempt($credentials);
+        if (!$token) {
+            return 'invalid_credentials';
+        }
 
-    public function logout()
-    {
-        // Log out the user
-        return $this->authRepository->logout();
+        $user = auth()->user();
+
+        if (!$user->hasVerifiedEmail()) {
+            return 'email_not_verified';
+        }
+
+        return $this->responseWithToken($user, $token);
     }
 
     //email verification
-    public function verifyEmail(string $otp)
+    public function verifyEmail(string $otp) : array
     {
-        // Validate and verify the email
+        try{
+            // Validate and verify the email
         $data = $this->authRepository->verifyEmail($otp);
-
-        if(is_array($data) && $data['email_verified_at'] !== null) {
-            return $this->responseWithToken($data);
-        }else {
-            return $data;
+        // dd($data['user']->email_verified_at);
+        if ($data['success'] === false) {
+            return [
+                'success' => false,
+                'message' => $data['message'],
+                'code' => $data['code'],
+            ];
         }
+
+        if($data['user'] instanceof User && $data['user']->email_verified_at !== null) {
+            $token = JWTAuth::fromUser($data['user']);
+            return [
+                'success' => true,
+                'message' => 'Email verified successfully.',
+                'code' => 200,
+                'data' => $this->responseWithToken($data['user'], $token),
+            ];
+        }
+
+        // Fallback for unexpected cases
+        return [
+            'success' => false,
+            'message' => 'Unexpected error occurred.',
+            'code' => 500,
+        ];
+
+        }catch(\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Failed to verify email.',
+                'code' => 500,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    //logout
+    public function logout()
+    {
+        // Logout the user
+        try{
+            JWTAuth::invalidate(JWTAuth::getToken());
+            return response()->successResponse(null, 'Logout successful.');
+        }catch(\Exception $e) {
+            return response()->errorResponse('Failed to logout.', 500, $e->getMessage());
+        }
+    }
+
+    //resend otp
+    public function resendOtp(string $email)
+    {
+        return $this->authRepository->resendOtp($email);
+    }
+
+    //reset password
+    public function resetPassword($password):array
+    {
+
+        return $this->authRepository->resetPassword($password);
     }
 
 
 
-    protected function responseWithToken($user)
+    protected function responseWithToken($user, $token)
     {
-        // Generate a token for the user and return it
-        $token = JWTAuth::fromUser($user);
         return [
-            'token' => $token,
+            'access_token' => $token,
             'token_type' => 'bearer',
             'user' => $user,
         ];
+    }
+
+    public function me():array
+    {
+        return $this->authRepository->me();
     }
 }

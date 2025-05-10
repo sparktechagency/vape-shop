@@ -4,20 +4,14 @@ namespace App\Repositories\Auth;
 use App\Enums\UserRole\Role;
 use App\Interfaces\Auth\AuthRepositoryInterface;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AuthRepository implements AuthRepositoryInterface
 {
-    public function register(array $data)
+    public function register(array $data) : User
     {
-        $firstName = null;
-        if(Role::STORE->value == $data['role']) {
-            $firstName = $data['store_name'];
-        } elseif(Role::BRAND->value == $data['role']) {
-            $firstName = $data['brand_name'];
-        } else {
-            $firstName = $data['first_name'];
-        }
-
+        $firstName = $this->getFirstNameByRole($data['role'], $data);
         $otp_data = [
             'name' => $firstName,
             'email' => $data['email'],
@@ -41,50 +35,105 @@ class AuthRepository implements AuthRepositoryInterface
         return $user;
     }
 
-    public function login(array $credentials)
+
+    private function getFirstNameByRole($role, $data) : string
     {
-        // Implement the login logic here
-        // For example, authenticate the user with the provided credentials
+        switch ($role) {
+            case Role::STORE->value:
+                return $data['store_name'];
+            case Role::BRAND->value:
+                return $data['brand_name'];
+            default:
+                return $data['first_name'];
+        }
     }
 
-    public function verifyEmail(string $otp)
+
+    public function verifyEmail(string $otp) : array
     {
         $user = User::where('otp', $otp)->first();
         if (!$user) {
-            return 'invalid';
+            return [
+                'success' => false,
+                'message' => 'Invalid OTP.',
+                'code' => 422,
+            ];
         }
-        if ($user->otp_expire_at < now()) {
-            return 'expired';
+        if (Carbon::parse($user->otp_expire_at)->isPast()) {
+            return [
+                'success' => false,
+                'message' => 'OTP expired.',
+                'code' => 422,
+            ];
         }
         $user->email_verified_at = now();
         $user->otp = null;
         $user->otp_expire_at = null;
         $user->save();
 
-        return $user;
+        return [
+            'success' => true,
+            'message' => 'Email verified successfully.',
+            'user' => $user,
+        ];
     }
 
-    public function resendOtp(string $email)
+    public function resendOtp(string $email) 
     {
-        // Implement the logic to resend OTP here
-        // For example, generate a new OTP and send it to the user's email
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return response()->errorResponse('User not found.', 404);
+        }
+        $otp_data = [
+            'name' => $user->first_name,
+            'email' => $user->email,
+        ];
+        $otp_data = sentOtp($otp_data, 5);
+        $user->otp = $otp_data['otp'];
+        $user->otp_expire_at = $otp_data['otp_expire_at'];
+        $user->save();
+
+        return response()->successResponse(null, 'OTP sent successfully! Please check your email!');
     }
 
-    public function logout()
+    //reset password
+
+    public function resetPassword($password):array
+
     {
-        // Implement the logout logic here
-        // For example, invalidate the user's session or token
+       $user = Auth::user();
+        if (!$user) {
+            return [
+                'success' => false,
+                'message' => 'User not found.',
+                'code' => 404,
+            ];
+        }
+        $user->password = $password;
+        $user->save();
+
+        return [
+            'success' => true,
+            'message' => 'Password reset successfully.',
+            'code' => 200,
+        ];
     }
 
-    public function refreshToken()
+    public function me() : array
     {
-        // Implement the token refresh logic here
-        // For example, generate a new token for the user
-    }
-
-    public function me()
-    {
-        // Implement the logic to get the authenticated user's information here
-        // For example, return the user's profile data
+        $user = Auth::user();
+        if (!$user) {
+            return [
+                'success' => false,
+                'message' => 'User not found.',
+                'code' => 404,
+            ];
+        }
+        return [
+            'success' => true,
+            'message' => 'User retrieved successfully.',
+            'data' => $user,
+            'code' => 200,
+        ];
     }
 }

@@ -2,13 +2,13 @@
 
 namespace App\Interfaces\Auth;
 
+use App\Models\User;
+
 interface AuthRepositoryInterface
 {
-    public function register(array $data);
-    public function login(array $credentials);
-    public function verifyEmail(string $otp);
+    public function register(array $data) : User;
+    public function verifyEmail(string $otp) : array;
     public function resendOtp(string $email);
-    public function logout();
-    public function refreshToken();
-    public function me();
+    public function resetPassword($password):array;
+    public function me():array;
 }

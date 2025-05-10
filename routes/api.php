@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\UserRole\Role;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Product\ManageProductController;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -12,7 +14,20 @@ use Illuminate\Support\Facades\Route;
 Route::controller(AuthController::class)->group(function () {
     Route::post('/register', 'register');
     Route::post('/login', 'login');
-    Route::post('/logout', 'logout');
+    Route::get('/logout', 'logout');
     Route::post('/verify-email', 'verifyEmail');
+    Route::post('/resend-otp', 'resendOtp');
+    Route::post('/reset-password', 'resetPassword')->middleware('jwt.auth');
+    Route::get('/me', 'me')->middleware('jwt.auth');
     Route::get('/user', 'user');
+});
+
+Route::group([
+    'middleware' => [
+        'jwt.auth',
+        'check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value]), // Correctly implode into a string
+        'check.product.owner'
+    ]
+], function () {
+    Route::apiResource('product-manage', ManageProductController::class)->except(['create', 'edit']);
 });

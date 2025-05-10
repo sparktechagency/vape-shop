@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Auth\EmailFiledRequest;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\PasswordFiledRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\VerifyEmail;
 use Illuminate\Http\Request;
@@ -26,20 +29,68 @@ class AuthController extends Controller
     }
 
 
+    //login
+    public function login(LoginRequest $request)
+    {
+        $credentials = $request->validated();
+
+        $result = $this->authService->login($credentials);
+
+        if ($result == 'invalid_credentials') {
+            return response()->errorResponse('Invalid credentials.', 401);
+        } elseif ($result == 'email_not_verified') {
+            return response()->errorResponse('Email not verified.', 401);
+        }
+        return response()->successResponse($result, 'Login successful.');
+    }
+
+
     //verify email
     public function verifyEmail(VerifyEmail $request)
     {
         $otpData = $request->validated();
 
-        $data = $this->authService->verifyEmail($otpData['otp']);
+        $result = $this->authService->verifyEmail($otpData['otp']);
 
-        if($data == 'invalid') {
-            return response()->errorResponse('Invalid OTP.', 422);
-        } elseif($data == 'expired') {
-            return response()->errorResponse('OTP expired.', 422);
+        if ($result['success'] === false) {
+            return response()->errorResponse($result['message'], $result['code']);
         }
+        return response()->successResponse($result['data'], $result['message']);
+    }
 
-        return response()->successResponse($data, 'Email verified successfully.');
+    //logout
+    public function logout()
+    {
+        return $this->authService->logout();
+    }
+
+    //resend otp
+    public function resendOtp(EmailFiledRequest $request)
+    {
+        $data = $request->validated();
+        return $this->authService->resendOtp($data['email']);
+    }
+
+    //reset password
+    public function resetPassword(PasswordFiledRequest $request)
+    {
+        $data = $request->validated();
+
+        $result = $this->authService->resetPassword($data);
+        if ($result['success'] === false) {
+            return response()->errorResponse($result['message'], $result['code']);
+        }
+        return response()->successResponse($result['data'], $result['message']);
+    }
+
+    //me
+    public function me()
+    {
+        $result = $this->authService->me();
+        if ($result['success'] === false) {
+            return response()->errorResponse($result['message'], $result['code']);
+        }
+        return response()->successResponse($result['data'], $result['message']);
     }
 
 }
