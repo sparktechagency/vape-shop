@@ -3,30 +3,43 @@ namespace App\Repositories\Products;
 use App\Interfaces\Products\ManageProductsInterface;
 use App\Models\ManageProduct;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class ManageProductsRepository implements ManageProductsInterface
 {
+    //get all products
+    /**
+     * @return array
+     */
     public function getAllProducts(): array
     {
-        $page = request()->get('page', 1); // Get the current page from the request
-        $cacheKey = "products_page_{$page}"; // Dynamic cache key based on the page number
-
-        return Cache::remember($cacheKey, now()->addHours(1), function () {
-            return ManageProduct::where('user_id', Auth::id())
-                                ->paginate(10)->toArray();
-        });
+        return ManageProduct::where('user_id', Auth::id())
+                            ->paginate(10)
+                            ->toArray();
     }
 
+
+    //get product by id
+    /**
+     * @param int $id
+     * @return array
+     */
     public function getProductById(int $id): array
     {
-        return ManageProduct::findOrFail($id)->toArray();
+        try {
+            return ManageProduct::findOrFail($id)->toArray();
+        } catch (\Exception $e) {
+            throw new \Exception("Product not found.", 404);
+        }
     }
 
+
+    //store product
+    /**
+     * @param array $data
+     */
     public function storeProduct(array $data): array
     {
-
         $product = new ManageProduct();
         $product->user_id = $data['user_id'];
         $product->product_name = $data['product_name'];
@@ -40,14 +53,17 @@ class ManageProductsRepository implements ManageProductsInterface
         $product->product_description = $data['product_description'];
         $product->product_faqs = $data['product_faqs'] ?? null;
         $product->save();
-        //update cache after storing
-        $cacheProducts = Cache::get('products', []);
-        $cacheProducts[] = $product->toArray();
-        Cache::put('products', $cacheProducts, now()->addHours(1));
-        //clear cache for the specific product
 
         return $product->toArray();
     }
+
+    
+    //update product
+    /**
+     * @param int $id
+     * @param array $data
+     * @return array
+     */
     public function updateProduct(int $id, array $data): array
     {
         $product = ManageProduct::findOrFail($id);
@@ -56,14 +72,23 @@ class ManageProductsRepository implements ManageProductsInterface
         return $product->toArray();
     }
 
+    //delete product
+    /**
+     * @param int $id
+     * @return bool
+     */
     public function deleteProduct(int $id): bool
     {
         $product = ManageProduct::findOrFail($id);
-        //remove old image
+
+        // Remove old image if it exists
         if ($product->product_image) {
             $oldImagePath = getStorageFilePath($product->product_image);
-            Storage::disk('public')->delete($oldImagePath);
+            if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
+                Storage::disk('public')->delete($oldImagePath);
+            }
         }
+
         return $product->delete();
     }
 }
