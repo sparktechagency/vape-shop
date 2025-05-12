@@ -3,16 +3,15 @@
 namespace App\Providers;
 
 use App\Interfaces\Auth\AuthRepositoryInterface;
+use App\Interfaces\FollowersInterface;
 use App\Interfaces\Products\ManageProductsInterface;
 use App\Repositories\Auth\AuthRepository;
+use App\Repositories\FollowersRepository;
 use App\Repositories\Products\ManageProductsRepository;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
 
-/**
- * @method static \Illuminate\Http\JsonResponse successResponse(mixed $data = null, string $message = 'Success', int $code = 200)
- * @method static \Illuminate\Http\JsonResponse errorResponse(string $message = 'Something went wrong', int $code = 400, mixed $errors = null)
- */
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -22,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(AuthRepositoryInterface::class, AuthRepository::class);
         $this->app->bind(ManageProductsInterface::class, ManageProductsRepository::class);
+        $this->app->bind(FollowersInterface::class, FollowersRepository::class);
     }
 
     /**
@@ -29,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        /**
+         * @method static \Illuminate\Http\JsonResponse successResponse(mixed $data = null, string $message = 'Success', int $code = 200)
+         **/
         Response::macro('successResponse', function ($data = null, $message = 'Success', $code = 200) {
             return response()->json([
                 'ok' => true,
@@ -36,6 +39,9 @@ class AppServiceProvider extends ServiceProvider
                 'data' => $data,
             ], $code);
         });
+
+        /** @method static \Illuminate\Http\JsonResponse errorResponse(string $message = 'Something went wrong', int $code = 400, mixed $errors = null)
+         */
         Response::macro('errorResponse', function ($message = 'Something went wrong', $code = 400, $errors = null) {
             return response()->json([
                 'ok' => false,

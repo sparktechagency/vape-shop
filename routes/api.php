@@ -2,6 +2,7 @@
 
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FollowersController;
 use App\Http\Controllers\Product\ManageProductController;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth');
 });
 
+//manage product for brand, store and wholesaler
 Route::group([
     'middleware' => [
         'jwt.auth',
@@ -32,4 +34,17 @@ Route::group([
     ]
 ], function () {
     Route::apiResource('product-manage', ManageProductController::class)->except(['create', 'edit']);
+});
+
+//manage follow
+Route::group(['middleware' => 'jwt.auth'], function () {
+    Route::post('/follow', [FollowersController::class, 'follow']);
+    Route::post('/unfollow', [FollowersController::class, 'unfollow']);
+    Route::get('/follower-list', [ManageProductController::class, 'followerList']);
+    Route::get('/following-list', [ManageProductController::class, 'followingList']);
+
+    // Route::get('/test', function () {
+    //     $user = auth()->user();
+    //     return $user->followers()->get();
+    // });
 });
