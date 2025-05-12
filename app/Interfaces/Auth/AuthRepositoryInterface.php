@@ -10,5 +10,8 @@ interface AuthRepositoryInterface
     public function verifyEmail(string $otp) : array;
     public function resendOtp(string $email);
     public function resetPassword($password):array;
+    public function updatePassword(string $password):array;
+    public function updateProfile(array $data):array;
     public function me():array;
+
 }

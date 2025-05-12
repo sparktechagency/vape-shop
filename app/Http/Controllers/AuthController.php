@@ -6,6 +6,7 @@ use App\Http\Requests\Auth\EmailFiledRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\PasswordFiledRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Requests\Auth\VerifyEmail;
 use Illuminate\Http\Request;
 use App\Services\Auth\AuthService;
@@ -83,6 +84,23 @@ class AuthController extends Controller
         return response()->successResponse($result['data'], $result['message']);
     }
 
+    //update profile
+
+    public function updateProfile(UpdateProfileRequest $request)
+    {
+        try {
+            $data = $request->validated();
+            $result = $this->authService->updateProfile($data);
+            if ($result['success'] === false) {
+                return response()->errorResponse($result['message'], $result['code']);
+            }
+            return response()->successResponse($result['data'], $result['message']);
+        } catch (\Exception $e) {
+            return response()->errorResponse('Failed to update profile.', 500, $e->getMessage());
+        }
+    }
+
+
     //me
     public function me()
     {
@@ -92,5 +110,7 @@ class AuthController extends Controller
         }
         return response()->successResponse($result['data'], $result['message']);
     }
+
+
 
 }

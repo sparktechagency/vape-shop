@@ -20,6 +20,8 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/reset-password', 'resetPassword')->middleware('jwt.auth');
     Route::get('/me', 'me')->middleware('jwt.auth');
     Route::get('/user', 'user');
+    Route::post('/update-password', 'updatePassword')->middleware('jwt.auth');
+    Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth');
 });
 
 Route::group([

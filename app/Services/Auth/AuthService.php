@@ -20,6 +20,11 @@ class AuthService
 
     }
 
+    //login
+    /**
+     * @param array $credentials
+     * @return array|string
+     */
     public function login(array $credentials)
     {
         $token = JWTAuth::attempt($credentials);
@@ -91,12 +96,20 @@ class AuthService
     }
 
     //resend otp
+    /**
+     * @param string $email
+     * @return array
+     */
     public function resendOtp(string $email)
     {
         return $this->authRepository->resendOtp($email);
     }
 
     //reset password
+    /**
+     * @param array $password
+     * @return array
+     */
     public function resetPassword($password):array
     {
 
@@ -104,8 +117,13 @@ class AuthService
     }
 
 
-
-    protected function responseWithToken($user, $token)
+    //response with token
+    /**
+     * @param User $user
+     * @param string $token
+     * @return array
+     */
+    protected function responseWithToken($user, $token) : array
     {
         return [
             'access_token' => $token,
@@ -114,6 +132,21 @@ class AuthService
         ];
     }
 
+
+    //update profile
+    /**
+     * @param array $data
+     * @return array
+     */
+    public function updateProfile(array $data): array
+    {
+        return $this->authRepository->updateProfile($data);
+    }
+
+    //me
+    /**
+     * @return array
+     */
     public function me():array
     {
         return $this->authRepository->me();

@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthRepository implements AuthRepositoryInterface
 {
+    /**
+     * @param array $data
+     * @return User
+     */
     public function register(array $data) : User
     {
         $firstName = $this->getFirstNameByRole($data['role'], $data);
@@ -36,6 +40,11 @@ class AuthRepository implements AuthRepositoryInterface
     }
 
 
+    /**
+     * @param string $role
+     * @param array $data
+     * @return string
+     */
     private function getFirstNameByRole($role, $data) : string
     {
         switch ($role) {
@@ -48,7 +57,10 @@ class AuthRepository implements AuthRepositoryInterface
         }
     }
 
-
+    /**
+     * @param string $otp
+     * @return array
+     */
     public function verifyEmail(string $otp) : array
     {
         $user = User::where('otp', $otp)->first();
@@ -78,7 +90,7 @@ class AuthRepository implements AuthRepositoryInterface
         ];
     }
 
-    public function resendOtp(string $email) 
+    public function resendOtp(string $email)
     {
         $user = User::where('email', $email)->first();
         if (!$user) {
@@ -97,7 +109,6 @@ class AuthRepository implements AuthRepositoryInterface
     }
 
     //reset password
-
     public function resetPassword($password):array
 
     {
@@ -115,6 +126,55 @@ class AuthRepository implements AuthRepositoryInterface
         return [
             'success' => true,
             'message' => 'Password reset successfully.',
+            'code' => 200,
+        ];
+    }
+
+    //update password
+    public function updatePassword(string $password):array
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return [
+                'success' => false,
+                'message' => 'User not found.',
+                'code' => 404,
+            ];
+        }
+        $user->password = $password;
+        $user->save();
+
+        return [
+            'success' => true,
+            'message' => 'Password updated successfully.',
+            'code' => 200,
+        ];
+    }
+
+    //update profile
+    public function updateProfile(array $data) : array
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return [
+                'success' => false,
+                'message' => 'User not found.',
+                'code' => 404,
+            ];
+        }
+        $firstName = $this->getFirstNameByRole($user->role, $data);
+        $user->first_name = $firstName;
+        $user->last_name = $data['last_name'] ?? $user->last_name;
+        $user->phone = $data['phone'] ?? $user->phone;
+        $user->address = $data['address'] ?? $user->address;
+        $user->zip_code = $data['zip_code'] ?? $user->zip_code;
+        $user->region = $data['region'] ?? $user->region;
+        $user->save();
+
+        return [
+            'success' => true,
+            'message' => 'Profile updated successfully.',
+            'data' => $user,
             'code' => 200,
         ];
     }
