@@ -6,6 +6,7 @@ use App\Http\Requests\Auth\EmailFiledRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\PasswordFiledRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\UpdatePasswordRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Requests\Auth\VerifyEmail;
 use Illuminate\Http\Request;
@@ -84,8 +85,22 @@ class AuthController extends Controller
         return response()->successResponse($result['data'], $result['message']);
     }
 
-    //update profile
+    //update password
+    public function updatePassword(UpdatePasswordRequest $request)
+    {
+       try {
+            $data = $request->validated();
+            $result = $this->authService->updatePassword($data);
+            if ($result['success'] === false) {
+                return response()->errorResponse($result['message'], $result['code']);
+            }
+            return response()->successResponse(null, $result['message']);
+        } catch (\Exception $e) {
+            return response()->errorResponse('Failed to update password.', 500, $e->getMessage());
+        }
+    }
 
+    //update profile
     public function updateProfile(UpdateProfileRequest $request)
     {
         try {

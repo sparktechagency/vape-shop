@@ -2,6 +2,7 @@
 namespace App\Services\Auth;
 use App\Interfaces\Auth\AuthRepositoryInterface;
 use App\Models\User;
+use Illuminate\Support\Arr;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthService
@@ -130,6 +131,16 @@ class AuthService
             'token_type' => 'bearer',
             'user' => $user,
         ];
+    }
+
+    //update password
+    /**
+     * @param string $password
+     * @return array
+     */
+    public function updatePassword(Array $data):array
+    {
+        return $this->authRepository->updatePassword($data);
     }
 
 

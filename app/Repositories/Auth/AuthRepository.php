@@ -6,6 +6,7 @@ use App\Interfaces\Auth\AuthRepositoryInterface;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthRepository implements AuthRepositoryInterface
 {
@@ -131,18 +132,19 @@ class AuthRepository implements AuthRepositoryInterface
     }
 
     //update password
-    public function updatePassword(string $password):array
+    public function updatePassword(array $data):array
     {
         $user = Auth::user();
-        if (!$user) {
+        if(Hash::check($data['current_password'], $user->password)) {
+            $user->password = Hash::make($data['new_password']);
+            $user->save();
+        } else {
             return [
                 'success' => false,
-                'message' => 'User not found.',
-                'code' => 404,
+                'message' => 'Current password is incorrect.',
+                'code' => 422,
             ];
         }
-        $user->password = $password;
-        $user->save();
 
         return [
             'success' => true,
