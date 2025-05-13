@@ -40,11 +40,11 @@ Route::group([
 Route::group(['middleware' => 'jwt.auth'], function () {
     Route::post('/follow', [FollowersController::class, 'follow']);
     Route::post('/unfollow', [FollowersController::class, 'unfollow']);
-    Route::get('/follower-list', [ManageProductController::class, 'followerList']);
-    Route::get('/following-list', [ManageProductController::class, 'followingList']);
+    Route::get('/get-followers-list', [FollowersController::class, 'getAllFollowers']);
+    Route::get('/get-following-list', [FollowersController::class, 'getAllFollowing']);
 
     // Route::get('/test', function () {
     //     $user = auth()->user();
-    //     return $user->followers()->get();
+    //     return $user->following()->select('first_name','email','role')->get();
     // });
 });

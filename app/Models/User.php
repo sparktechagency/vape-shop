@@ -30,6 +30,8 @@ class User extends Authenticatable implements JWTSubject
     protected $appends = [
         'role_label',
         'full_name',
+        'total_followers',
+        'total_following',
     ];
 
     /**
@@ -42,6 +44,7 @@ class User extends Authenticatable implements JWTSubject
         'remember_token',
         'otp',
         'otp_expire_at',
+        'email_verified_at',
     ];
 
     /**
@@ -78,6 +81,7 @@ class User extends Authenticatable implements JWTSubject
     }
 
 
+    //attributes
     public function getFirstNameAttribute($value)
     {
         if ($this->role == Role::MEMBER) {
@@ -95,7 +99,7 @@ class User extends Authenticatable implements JWTSubject
 
     public function getRoleLabelAttribute(): string
     {
-        return Role::from($this->role)->label();
+        return $this->role ? Role::from($this->role)->label() : '';
     }
 
     //full  name
@@ -108,6 +112,17 @@ class User extends Authenticatable implements JWTSubject
     public function getAvatarAttribute($value)
     {
         return $value ? asset('storage/' . $value) : "https://ui-avatars.com/api/?background=random&name={$this->first_name}+{$this->last_name}&bold=true";
+    }
+
+    //get total followers
+    public function getTotalFollowersAttribute(): int
+    {
+        return $this->followers()->count();
+    }
+    //get total following
+    public function getTotalFollowingAttribute(): int
+    {
+        return $this->following()->count();
     }
 
 

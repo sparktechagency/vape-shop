@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Interfaces\FollowersInterface;
 use App\Models\User;
+use App\Notifications\FollowerNotification;
+use Illuminate\Database\Eloquent\Collection;
 
 class FollowerService
 {
@@ -14,6 +16,34 @@ class FollowerService
         $this->followerRepository = $followerRepository;
     }
 
+
+    //get all followers of a user
+    /**
+     * Get all followers of a user.
+     *
+     * @param int $userId
+     * @return Collection
+     */
+    public function getAllFollowers(int $userId): Collection
+    {
+        return $this->followerRepository->getAllFollowers($userId);
+
+    }
+
+    //get all following of a user
+    /**
+     * Get all users that a user is following.
+     *
+     * @param int $userId
+     * @return Collection
+     */
+    public function getAllFollowing(int $userId): Collection
+    {
+        return $this->followerRepository->getAllFollowing($userId);
+    }
+
+
+
     //follow user
     /**
      * Follow a user.
@@ -23,7 +53,12 @@ class FollowerService
      */
     public function follow(User $follower, User $following)
     {
-        return $this->followerRepository->follow($follower, $following);
+        $followerData = $this->followerRepository->follow($follower, $following);
+
+        //send notification to the user
+        $following->notify( new FollowerNotification($follower));
+        
+        return $followerData;
     }
 
     //unfollow user
@@ -37,14 +72,4 @@ class FollowerService
         return $this->followerRepository->unfollow($follower, $following);
     }
 
-    /**
-     * Get all followers of a user.
-     *
-     * @param int $userId
-     * @return array
-     */
-    public function getAllFollowers(int $userId): array
-    {
-        return $this->followerRepository->getAllFollowers($userId);
-    }
 }
