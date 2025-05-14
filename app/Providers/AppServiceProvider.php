@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Interfaces\Auth\AuthRepositoryInterface;
 use App\Interfaces\FollowersInterface;
+use App\Interfaces\Post\PostInterface;
 use App\Interfaces\Products\ManageProductsInterface;
 use App\Repositories\Auth\AuthRepository;
 use App\Repositories\FollowersRepository;
+use App\Repositories\Post\PostRepository;
 use App\Repositories\Products\ManageProductsRepository;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(AuthRepositoryInterface::class, AuthRepository::class);
         $this->app->bind(ManageProductsInterface::class, ManageProductsRepository::class);
         $this->app->bind(FollowersInterface::class, FollowersRepository::class);
+        $this->app->bind(PostInterface::class, PostRepository::class);
     }
 
     /**

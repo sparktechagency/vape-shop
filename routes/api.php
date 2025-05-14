@@ -3,6 +3,7 @@
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FollowersController;
+use App\Http\Controllers\Post\PostController;
 use App\Http\Controllers\Product\ManageProductController;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
@@ -34,7 +35,11 @@ Route::group([
     ]
 ], function () {
     Route::apiResource('product-manage', ManageProductController::class)->except(['create', 'edit']);
+
+    Route::apiResource('post', PostController::class)->except(['create', 'edit']);
 });
+
+
 
 //manage follow
 Route::group(['middleware' => 'jwt.auth'], function () {
