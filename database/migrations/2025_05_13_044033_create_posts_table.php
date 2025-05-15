@@ -32,6 +32,7 @@ return new class extends Migration
             $table->foreignId('post_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->text('comment');
+            $table->foreignId('parent_id')->nullable()->constrained('post_comments')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -41,8 +42,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('posts');
+        // Drop the dependent tables first
         Schema::dropIfExists('post_likes');
         Schema::dropIfExists('post_comments');
+
+        // Then drop the posts table
+        Schema::dropIfExists('posts');
     }
 };
