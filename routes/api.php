@@ -4,6 +4,7 @@ use App\Enums\UserRole\Role;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FollowersController;
 use App\Http\Controllers\Post\LikePostController;
+use App\Http\Controllers\Post\PostCommentController;
 use App\Http\Controllers\Post\PostController;
 use App\Http\Controllers\Product\ManageProductController;
 use Illuminate\Container\Attributes\Auth;
@@ -53,6 +54,9 @@ Route::group(['middleware' => 'jwt.auth'], function () {
     Route::post('/tigger-like/{postId}', [LikePostController::class, 'tiggerLike']);
     Route::get('/get-likes-count/{postId}', [LikePostController::class, 'getLikesCount']);
     Route::get('/get-likes-by-post-id/{postId}', [LikePostController::class, 'getLikesByPostId']);
+
+    //post comment
+    Route::apiResource('post-comment', PostCommentController::class)->except(['create', 'edit','update']);
 
     // Route::get('/test', function () {
     //     $user = auth()->user();

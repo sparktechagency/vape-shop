@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Interfaces\Auth\AuthRepositoryInterface;
 use App\Interfaces\FollowersInterface;
+use App\Interfaces\Post\PostCommentInterface;
 use App\Interfaces\Post\PostInterface;
 use App\Interfaces\Post\PostLikeInterface;
 use App\Interfaces\Products\ManageProductsInterface;
 use App\Repositories\Auth\AuthRepository;
 use App\Repositories\FollowersRepository;
+use App\Repositories\Post\PostCommentRepository;
 use App\Repositories\Post\PostLikeRepository;
 use App\Repositories\Post\PostRepository;
 use App\Repositories\Products\ManageProductsRepository;
@@ -28,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(FollowersInterface::class, FollowersRepository::class);
         $this->app->bind(PostInterface::class, PostRepository::class);
         $this->app->bind(PostLikeInterface::class, PostLikeRepository::class);
+        $this->app->bind(PostCommentInterface::class, PostCommentRepository::class);
     }
 
     /**

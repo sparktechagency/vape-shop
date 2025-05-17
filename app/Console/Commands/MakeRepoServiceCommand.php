@@ -25,7 +25,7 @@ class MakeRepoServiceCommand extends Command
         $subFolderPath = implode(DIRECTORY_SEPARATOR, $pathParts);
 
         // Interface folder and file paths
-        $interfaceDir = app_path('Repositories' . DIRECTORY_SEPARATOR . 'Contracts' . ($subFolderPath ? DIRECTORY_SEPARATOR . $subFolderPath : ''));
+        $interfaceDir = app_path('Interfaces' . ($subFolderPath ? DIRECTORY_SEPARATOR . $subFolderPath : ''));
         $repoDir = app_path('Repositories' . ($subFolderPath ? DIRECTORY_SEPARATOR . $subFolderPath : ''));
         $serviceDir = app_path('Services' . ($subFolderPath ? DIRECTORY_SEPARATOR . $subFolderPath : ''));
 
@@ -49,11 +49,7 @@ namespace {$interfaceNamespace};
 
 interface {$className}Interface
 {
-    public function all();
-    public function find(\$id);
-    public function create(array \$data);
-    public function update(\$id, array \$data);
-    public function delete(\$id);
+   // Define the methods that the repository should implement
 }
 ";
 
@@ -66,30 +62,7 @@ use {$interfaceNamespace}\\{$className}Interface;
 
 class {$className}Repository implements {$className}Interface
 {
-    public function all()
-    {
-        // Implement all() method
-    }
-
-    public function find(\$id)
-    {
-        // Implement find() method
-    }
-
-    public function create(array \$data)
-    {
-        // Implement create() method
-    }
-
-    public function update(\$id, array \$data)
-    {
-        // Implement update() method
-    }
-
-    public function delete(\$id)
-    {
-        // Implement delete() method
-    }
+    // Implement the methods defined in the interface
 }
 ";
 
@@ -109,30 +82,7 @@ class {$className}Service
         \$this->repository = \$repository;
     }
 
-    public function all()
-    {
-        return \$this->repository->all();
-    }
-
-    public function find(\$id)
-    {
-        return \$this->repository->find(\$id);
-    }
-
-    public function create(array \$data)
-    {
-        return \$this->repository->create(\$data);
-    }
-
-    public function update(\$id, array \$data)
-    {
-        return \$this->repository->update(\$id, \$data);
-    }
-
-    public function delete(\$id)
-    {
-        return \$this->repository->delete(\$id);
-    }
+    // Define service methods that use the repository
 }
 ";
 

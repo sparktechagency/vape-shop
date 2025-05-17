@@ -10,6 +10,7 @@ class PostComment extends Model
         'post_id',
         'user_id',
         'comment',
+        'parent_id',
     ];
 
     public function post()
@@ -24,6 +25,6 @@ class PostComment extends Model
 
     public function replies()
     {
-        return $this->hasMany(PostComment::class, 'parent_id');
+        return $this->hasMany(PostComment::class, 'parent_id')->with('replies');
     }
 }
