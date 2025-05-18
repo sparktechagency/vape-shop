@@ -3,6 +3,7 @@
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FollowersController;
+use App\Http\Controllers\Forum\ForumCommentController;
 use App\Http\Controllers\Forum\ForumGroupController;
 use App\Http\Controllers\Forum\ForumThreadController;
 use App\Http\Controllers\Post\LikePostController;
@@ -58,13 +59,16 @@ Route::group(['middleware' => 'jwt.auth'], function () {
     Route::get('/get-likes-by-post-id/{postId}', [LikePostController::class, 'getLikesByPostId']);
 
     //post comment
-    Route::apiResource('post-comment', PostCommentController::class)->except(['create', 'edit','update']);
+    Route::apiResource('post-comment', PostCommentController::class)->except(['create', 'edit','update', 'show']);
 
     //Forum group
     Route::apiResource('forum-group', ForumGroupController::class)->except(['create', 'edit']);
 
     //Forum threads
     Route::apiResource('forum-thread', ForumThreadController::class)->except(['create', 'edit']);
+
+    //Forum comments
+    Route::apiResource('forum-comment', ForumCommentController::class)->except(['create', 'edit','update', 'show']);
 
     // Route::get('/test', function () {
     //     $user = auth()->user();

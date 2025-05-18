@@ -1,21 +1,21 @@
 <?php
 
-namespace App\Http\Controllers\Post;
+namespace App\Http\Controllers\Forum;
 
 use App\Http\Controllers\Controller;
-use App\Models\PostComment;
+use App\Models\ForumComment;
 use App\Repositories\CommentsRepository;
 use App\Services\CommentsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class PostCommentController extends Controller
+class ForumCommentController extends Controller
 {
     protected $commentsService;
     public function __construct()
     {
-        $model = new PostComment();
+        $model = new ForumComment();
 
         $repository = new CommentsRepository($model);
         $this->commentsService = new CommentsService($repository);
@@ -26,13 +26,17 @@ class PostCommentController extends Controller
     public function index()
     {
         try{
-            $postId = request()->query('post_id');
-            $modelType = 'post';
+            $postId = request()->query('thread_id');
+            $modelType = 'forum';
             if(!$postId){
-                return response()->error('Post ID is required', 422);
+                return response()->error('Thread ID is required', 422);
             }
             $comments = $this->commentsService->getAllComments($postId, $modelType);
-            return response()->success($comments, 'Comments retrieved successfully');
+            if (!empty($comments) && isset($comments['data']) && !empty($comments['data'])) {
+                return response()->success($comments, 'Comments retrieved successfully', 200);
+            }else {
+                return response()->error('No comments found for this thread', 404);
+            }
         }catch (\Exception $e){
             return response()->error('Error occurred while retrieving comments', 500, $e->getMessage());
         }
@@ -53,7 +57,7 @@ class PostCommentController extends Controller
     {
         try{
             $validator = Validator::make($request->all(), [
-                'post_id' => 'required|integer|exists:posts,id',
+                'thread_id' => 'required|integer|exists:posts,id',
                 'comment' => 'required|string|max:500',
                 'parent_id' => 'nullable|integer|exists:post_comments,id',
 
