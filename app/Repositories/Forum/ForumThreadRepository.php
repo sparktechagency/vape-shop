@@ -22,14 +22,14 @@ class ForumThreadRepository implements ForumThreadInterface
     {
         $perPage = request()->query('per_page', 10);
         return $this->model->where('group_id', $groupId)
-                            ->with(['user:id,first_name,last_name,role', 'group:id,title'])
+                           ->with(['user:id,first_name,last_name,role', 'group:id,title'])
                            ->paginate($perPage)
                            ->toArray();
     }
 
     public function getThreadById($threadId): array
     {
-        $thread = $this->model->with(['user:id,first_name,last_name,role', 'group:id,title'])
+        $thread = $this->model->with(['user:id,first_name,last_name,role', 'group:id,title', 'comments'])
                               ->find($threadId);
         return $thread ? $thread->toArray() : [];
     }

@@ -57,9 +57,9 @@ class ForumCommentController extends Controller
     {
         try{
             $validator = Validator::make($request->all(), [
-                'thread_id' => 'required|integer|exists:posts,id',
+                'thread_id' => 'required|integer|exists:forum_threads,id',
                 'comment' => 'required|string|max:500',
-                'parent_id' => 'nullable|integer|exists:post_comments,id',
+                'parent_id' => 'nullable|integer|exists:forum_comments,id',
 
             ]);
 

@@ -12,7 +12,7 @@ class ForumComment extends Model
 
     public function thread()
     {
-        return $this->belongsTo(ForumThread::class);
+        return $this->belongsTo(ForumThread::class, 'thread_id');
     }
 
     public function user()
