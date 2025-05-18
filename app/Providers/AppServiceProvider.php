@@ -4,12 +4,16 @@ namespace App\Providers;
 
 use App\Interfaces\Auth\AuthRepositoryInterface;
 use App\Interfaces\FollowersInterface;
+use App\Interfaces\Forum\ForumGroupInterface;
+use App\Interfaces\Forum\ForumThreadInterface;
 use App\Interfaces\Post\PostCommentInterface;
 use App\Interfaces\Post\PostInterface;
 use App\Interfaces\Post\PostLikeInterface;
 use App\Interfaces\Products\ManageProductsInterface;
 use App\Repositories\Auth\AuthRepository;
 use App\Repositories\FollowersRepository;
+use App\Repositories\Forum\ForumGroupRepository;
+use App\Repositories\Forum\ForumThreadRepository;
 use App\Repositories\Post\PostCommentRepository;
 use App\Repositories\Post\PostLikeRepository;
 use App\Repositories\Post\PostRepository;
@@ -31,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PostInterface::class, PostRepository::class);
         $this->app->bind(PostLikeInterface::class, PostLikeRepository::class);
         $this->app->bind(PostCommentInterface::class, PostCommentRepository::class);
+        $this->app->bind(ForumGroupInterface::class, ForumGroupRepository::class);
+        $this->app->bind(ForumThreadInterface::class, ForumThreadRepository::class);
     }
 
     /**
@@ -39,9 +45,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         /**
-         * @method static \Illuminate\Http\JsonResponse successResponse(mixed $data = null, string $message = 'Success', int $code = 200)
+         * @method static \Illuminate\Http\JsonResponse success(mixed $data = null, string $message = 'Success', int $code = 200)
          **/
-        Response::macro('successResponse', function ($data = null, $message = 'Success', $code = 200) {
+        Response::macro('success', function ($data = null, $message = 'Success', $code = 200) {
             return response()->json([
                 'ok' => true,
                 'message' => $message,
@@ -49,9 +55,9 @@ class AppServiceProvider extends ServiceProvider
             ], $code);
         });
 
-        /** @method static \Illuminate\Http\JsonResponse errorResponse(string $message = 'Something went wrong', int $code = 400, mixed $errors = null)
+        /** @method static \Illuminate\Http\JsonResponse error(string $message = 'Something went wrong', int $code = 400, mixed $errors = null)
          */
-        Response::macro('errorResponse', function ($message = 'Something went wrong', $code = 400, $errors = null) {
+        Response::macro('error', function ($message = 'Something went wrong', $code = 400, $errors = null) {
             return response()->json([
                 'ok' => false,
                 'message' => $message,

@@ -17,7 +17,7 @@ class CheckRole
     {
         $user = $request->user();
         if(!$user || !in_array($user->role, $role)) {
-            return response()->errorResponse(
+            return response()->error(
                 'Unauthorized',
                 403,
                 null,

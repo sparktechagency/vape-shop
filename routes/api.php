@@ -3,6 +3,8 @@
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FollowersController;
+use App\Http\Controllers\Forum\ForumGroupController;
+use App\Http\Controllers\Forum\ForumThreadController;
 use App\Http\Controllers\Post\LikePostController;
 use App\Http\Controllers\Post\PostCommentController;
 use App\Http\Controllers\Post\PostController;
@@ -57,6 +59,12 @@ Route::group(['middleware' => 'jwt.auth'], function () {
 
     //post comment
     Route::apiResource('post-comment', PostCommentController::class)->except(['create', 'edit','update']);
+
+    //Forum group
+    Route::apiResource('forum-group', ForumGroupController::class)->except(['create', 'edit']);
+
+    //Forum threads
+    Route::apiResource('forum-thread', ForumThreadController::class)->except(['create', 'edit']);
 
     // Route::get('/test', function () {
     //     $user = auth()->user();

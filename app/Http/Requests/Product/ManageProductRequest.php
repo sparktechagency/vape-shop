@@ -80,7 +80,7 @@ class ManageProductRequest extends FormRequest
     protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
     {
         throw new \Illuminate\Http\Exceptions\HttpResponseException(
-            response()->errorResponse($validator->errors()->first(), 422, $validator->errors())
+            response()->error($validator->errors()->first(), 422, $validator->errors())
         );
     }
 

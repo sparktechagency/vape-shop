@@ -20,7 +20,7 @@ class CheckProductOwner
     {
         $product = ManageProduct::select('user_id')->find($request->route('product_manage'));
         $post = Post::select('user_id')->find($request->route('post'));
-        
+
         if ($post && $post->user_id !== auth()->id()) {
             // Clear cache for the old role if it exists
             $oldRole = session('user_role');
@@ -31,7 +31,7 @@ class CheckProductOwner
             // Update session with the new role
             session(['user_role' => auth()->user()->role]);
 
-            return response()->errorResponse(
+            return response()->error(
                 'You are not authorized to perform this action.',
                 403,
                 'You are not the owner of this post. Please login with "' . $post->role . ' Role" account'
@@ -48,7 +48,7 @@ class CheckProductOwner
             // Update session with the new role
             session(['user_role' => auth()->user()->role]);
 
-            return response()->errorResponse(
+            return response()->error(
                 'You are not authorized to perform this action.',
                 403,
                 'You are not the owner of this product. Please login with "' . $product->role . ' Role" account'

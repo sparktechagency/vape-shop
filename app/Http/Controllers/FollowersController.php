@@ -29,16 +29,16 @@ class FollowersController extends Controller
             $userId = $request->user_id ?? Auth::id();
             $followers = $this->followerService->getAllFollowers($userId);
             if ($followers->isEmpty()) {
-                return response()->errorResponse('No followers found', 404);
+                return response()->error('No followers found', 404);
             }
             $followers = FollowerResource::collection($followers);
-            return response()->successResponse(
+            return response()->success(
                 $followers,
                 'Followers fetched successfully',
                 200
             );
         } catch (\Exception $e) {
-            return response()->errorResponse('Error fetching followers', 500, $e->getMessage());
+            return response()->error('Error fetching followers', 500, $e->getMessage());
         }
     }
 
@@ -55,16 +55,16 @@ class FollowersController extends Controller
             $userId = $request->user_id ?? Auth::id();
             $following = $this->followerService->getAllFollowing($userId);
             if ($following->isEmpty()) {
-                return response()->errorResponse('No following found', 404);
+                return response()->error('No following found', 404);
             }
             $following = FollowerResource::collection($following);
-            return response()->successResponse(
+            return response()->success(
                 $following,
                 'Following fetched successfully',
                 200
             );
         } catch (\Exception $e) {
-            return response()->errorResponse('Error fetching following', 500, $e->getMessage());
+            return response()->error('Error fetching following', 500, $e->getMessage());
         }
     }
 
@@ -82,9 +82,9 @@ class FollowersController extends Controller
             $follower = Auth::user();
             $following = User::findOrFail($request->following_id);
             $this->followerService->follow($follower, $following);
-            return response()->successResponse(null,'Followed successfully');
+            return response()->success(null,'Followed successfully');
         } catch (\Exception $e) {
-            return response()->errorResponse('Error following user', 500, $e->getMessage());
+            return response()->error('Error following user', 500, $e->getMessage());
         }
     }
 
@@ -100,9 +100,9 @@ class FollowersController extends Controller
             $follower = Auth::user();
             $following = User::findOrFail($request->following_id);
             $this->followerService->unfollow($follower, $following);
-            return response()->successResponse(null,'Unfollowed successfully');
+            return response()->success(null,'Unfollowed successfully');
         } catch (\Exception $e) {
-            return response()->errorResponse('Error unfollowing user', 500, $e->getMessage());
+            return response()->error('Error unfollowing user', 500, $e->getMessage());
         }
     }
 }

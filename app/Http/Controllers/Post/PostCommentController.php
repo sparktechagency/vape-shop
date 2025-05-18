@@ -23,12 +23,12 @@ class PostCommentController extends Controller
         try{
             $postId = request()->query('post_id');
             if(!$postId){
-                return response()->errorResponse('Post ID is required', 422);
+                return response()->error('Post ID is required', 422);
             }
             $comments = $this->postCommentService->getAllComments($postId);
-            return response()->successResponse($comments, 'Comments retrieved successfully');
+            return response()->success($comments, 'Comments retrieved successfully');
         }catch (\Exception $e){
-            return response()->errorResponse('Error occurred while retrieving comments', 500, $e->getMessage());
+            return response()->error('Error occurred while retrieving comments', 500, $e->getMessage());
         }
     }
 
@@ -54,7 +54,7 @@ class PostCommentController extends Controller
             ]);
 
             if($validator->fails()){
-                return response()->errorResponse($validator->errors()->first(), 422, $validator->errors());
+                return response()->error($validator->errors()->first(), 422, $validator->errors());
             }
 
             $data = $validator->validated();
@@ -62,9 +62,9 @@ class PostCommentController extends Controller
 
             $comment = $this->postCommentService->createComment($data);
 
-            return response()->successResponse($comment, 'Comment added successfully', 201);
+            return response()->success($comment, 'Comment added successfully', 201);
         }catch (\Exception $e){
-            return response()->errorResponse('Error occurred while adding comment', 500, $e->getMessage());
+            return response()->error('Error occurred while adding comment', 500, $e->getMessage());
         }
     }
 
@@ -100,11 +100,11 @@ class PostCommentController extends Controller
         try{
             $comment = $this->postCommentService->deleteComment($id);
             if(!$comment){
-                return response()->errorResponse('Comment not found', 404);
+                return response()->error('Comment not found', 404);
             }
-            return response()->successResponse(null, 'Comment deleted successfully');
+            return response()->success(null, 'Comment deleted successfully');
         }catch (\Exception $e){
-            return response()->errorResponse('Error occurred while deleting comment', 500, $e->getMessage());
+            return response()->error('Error occurred while deleting comment', 500, $e->getMessage());
         }
     }
 }

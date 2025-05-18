@@ -22,12 +22,12 @@ class LikePostController extends Controller
             $tiggerLike = $this->postLikeService->tiggerLike((int)$postId, $userId);
             // dd($tiggerLike);
             if ($tiggerLike) {
-                return response()->successResponse($tiggerLike, 'Post liked successfully');
+                return response()->success($tiggerLike, 'Post liked successfully');
             } else {
-                return response()->successResponse($tiggerLike, 'Post unliked successfully');
+                return response()->success($tiggerLike, 'Post unliked successfully');
             }
         } catch (\Exception $e) {
-            return response()->errorResponse('Failed to like post', 500, $e->getMessage());
+            return response()->error('Failed to like post', 500, $e->getMessage());
         }
     }
 
@@ -36,9 +36,9 @@ class LikePostController extends Controller
     {
         try {
             $likesCount = $this->postLikeService->getLikesCount((int)$postId);
-            return response()->successResponse($likesCount, 'Likes count retrieved successfully');
+            return response()->success($likesCount, 'Likes count retrieved successfully');
         } catch (\Exception $e) {
-            return response()->errorResponse('Failed to retrieve likes count', 500, $e->getMessage());
+            return response()->error('Failed to retrieve likes count', 500, $e->getMessage());
         }
     }
     //get likes by post id
@@ -46,9 +46,9 @@ class LikePostController extends Controller
     {
         try {
             $likes = $this->postLikeService->getLikesByPostId((int)$postId);
-            return response()->successResponse($likes, 'Likes retrieved successfully');
+            return response()->success($likes, 'Likes retrieved successfully');
         } catch (\Exception $e) {
-            return response()->errorResponse('Failed to retrieve likes', 500, $e->getMessage());
+            return response()->error('Failed to retrieve likes', 500, $e->getMessage());
         }
     }
 }

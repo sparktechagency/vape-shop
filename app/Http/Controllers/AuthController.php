@@ -27,7 +27,7 @@ class AuthController extends Controller
 
         $user = $this->authService->register($data);
 
-        return response()->successResponse($user, 'User registered successfully. Please verify your email.');
+        return response()->success($user, 'User registered successfully. Please verify your email.');
     }
 
 
@@ -39,11 +39,11 @@ class AuthController extends Controller
         $result = $this->authService->login($credentials);
 
         if ($result == 'invalid_credentials') {
-            return response()->errorResponse('Invalid credentials.', 401);
+            return response()->error('Invalid credentials.', 401);
         } elseif ($result == 'email_not_verified') {
-            return response()->errorResponse('Email not verified.', 401);
+            return response()->error('Email not verified.', 401);
         }
-        return response()->successResponse($result, 'Login successful.');
+        return response()->success($result, 'Login successful.');
     }
 
 
@@ -55,9 +55,9 @@ class AuthController extends Controller
         $result = $this->authService->verifyEmail($otpData['otp']);
 
         if ($result['success'] === false) {
-            return response()->errorResponse($result['message'], $result['code']);
+            return response()->error($result['message'], $result['code']);
         }
-        return response()->successResponse($result['data'], $result['message']);
+        return response()->success($result['data'], $result['message']);
     }
 
     //logout
@@ -80,9 +80,9 @@ class AuthController extends Controller
 
         $result = $this->authService->resetPassword($data);
         if ($result['success'] === false) {
-            return response()->errorResponse($result['message'], $result['code']);
+            return response()->error($result['message'], $result['code']);
         }
-        return response()->successResponse($result['data'], $result['message']);
+        return response()->success($result['data'], $result['message']);
     }
 
     //update password
@@ -92,11 +92,11 @@ class AuthController extends Controller
             $data = $request->validated();
             $result = $this->authService->updatePassword($data);
             if ($result['success'] === false) {
-                return response()->errorResponse($result['message'], $result['code']);
+                return response()->error($result['message'], $result['code']);
             }
-            return response()->successResponse(null, $result['message']);
+            return response()->success(null, $result['message']);
         } catch (\Exception $e) {
-            return response()->errorResponse('Failed to update password.', 500, $e->getMessage());
+            return response()->error('Failed to update password.', 500, $e->getMessage());
         }
     }
 
@@ -107,11 +107,11 @@ class AuthController extends Controller
             $data = $request->validated();
             $result = $this->authService->updateProfile($data);
             if ($result['success'] === false) {
-                return response()->errorResponse($result['message'], $result['code']);
+                return response()->error($result['message'], $result['code']);
             }
-            return response()->successResponse($result['data'], $result['message']);
+            return response()->success($result['data'], $result['message']);
         } catch (\Exception $e) {
-            return response()->errorResponse('Failed to update profile.', 500, $e->getMessage());
+            return response()->error('Failed to update profile.', 500, $e->getMessage());
         }
     }
 
@@ -121,9 +121,9 @@ class AuthController extends Controller
     {
         $result = $this->authService->me();
         if ($result['success'] === false) {
-            return response()->errorResponse($result['message'], $result['code']);
+            return response()->error($result['message'], $result['code']);
         }
-        return response()->successResponse($result['data'], $result['message']);
+        return response()->success($result['data'], $result['message']);
     }
 
 

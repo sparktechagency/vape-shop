@@ -90,9 +90,9 @@ class AuthService
         // Logout the user
         try{
             JWTAuth::invalidate(JWTAuth::getToken());
-            return response()->successResponse(null, 'Logout successful.');
+            return response()->success(null, 'Logout successful.');
         }catch(\Exception $e) {
-            return response()->errorResponse('Failed to logout.', 500, $e->getMessage());
+            return response()->error('Failed to logout.', 500, $e->getMessage());
         }
     }
 

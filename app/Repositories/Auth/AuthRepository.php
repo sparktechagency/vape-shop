@@ -95,7 +95,7 @@ class AuthRepository implements AuthRepositoryInterface
     {
         $user = User::where('email', $email)->first();
         if (!$user) {
-            return response()->errorResponse('User not found.', 404);
+            return response()->error('User not found.', 404);
         }
         $otp_data = [
             'name' => $user->first_name,
@@ -106,7 +106,7 @@ class AuthRepository implements AuthRepositoryInterface
         $user->otp_expire_at = $otp_data['otp_expire_at'];
         $user->save();
 
-        return response()->successResponse(null, 'OTP sent successfully! Please check your email!');
+        return response()->success(null, 'OTP sent successfully! Please check your email!');
     }
 
     //reset password

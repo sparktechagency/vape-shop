@@ -66,8 +66,8 @@ if (!function_exists('getStorageFilePath')) {
 }
 
 // //success response
-// if (!function_exists('successResponse')) {
-//     function successResponse($data, $message = 'Success', $statusCode = 200)
+// if (!function_exists('success')) {
+//     function success($data, $message = 'Success', $statusCode = 200)
 //     {
 //         return response()->json([
 //             'ok' => true,

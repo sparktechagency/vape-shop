@@ -23,9 +23,9 @@ class ManageProductController extends Controller
     {
         $products = $this->manageProduct->getAllProducts();
         if (empty($products)) {
-            return response()->errorResponse('No products found.', 404);
+            return response()->error('No products found.', 404);
         }
-        return response()->successResponse($products, 'Products retrieved successfully.');
+        return response()->success($products, 'Products retrieved successfully.');
     }
 
     /**
@@ -47,13 +47,13 @@ class ManageProductController extends Controller
             $product = $this->manageProduct->storeProduct($data, $productImage);
 
             if ($product) {
-                return response()->successResponse(
+                return response()->success(
                     $product,
                     'Product created successfully.'
                 );
             }
         } catch (\Exception $e) {
-            return response()->errorResponse(
+            return response()->error(
                 'Error storing product',
                 500,
                 env('APP_DEBUG') === 'true' ? $e->getMessage() : null);
@@ -68,11 +68,11 @@ class ManageProductController extends Controller
         try {
             $product = $this->manageProduct->getProductById((int)$id);
             if (empty($product)) {
-                return response()->errorResponse('Product not found.', 404);
+                return response()->error('Product not found.', 404);
             }
-            return response()->successResponse($product, 'Product retrieved successfully.');
+            return response()->success($product, 'Product retrieved successfully.');
         } catch (\Exception $e) {
-            return response()->errorResponse(
+            return response()->error(
                 'Error retrieving product',
                 500,
                 env('APP_DEBUG') === 'true' ? $e->getMessage() : null
@@ -98,12 +98,12 @@ class ManageProductController extends Controller
             $productImage = $request->file('product_image') ?? null;
             $updatedProduct = $this->manageProduct->updateProduct((int)$id, $data, $productImage);
 
-            return response()->successResponse(
+            return response()->success(
                 $updatedProduct,
                 'Product updated successfully.'
             );
         } catch (\Exception $e) {
-            return response()->errorResponse(
+            return response()->error(
                 'Error updating product',
                 500,
                 env('APP_DEBUG') === 'true' ? $e->getMessage() : null
@@ -119,17 +119,17 @@ class ManageProductController extends Controller
        try {
             $deleted = $this->manageProduct->deleteProduct((int)$id);
             if ($deleted) {
-                return response()->successResponse(
+                return response()->success(
                     null,
                     'Product deleted successfully.'
                 );
             }
-            return response()->errorResponse(
+            return response()->error(
                 'Product not found',
                 404
             );
         } catch (\Exception $e) {
-            return response()->errorResponse(
+            return response()->error(
                 'Error deleting product',
                 500,
                 env('APP_DEBUG') === 'true' ? $e->getMessage() : null

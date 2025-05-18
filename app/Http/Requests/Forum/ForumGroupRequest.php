@@ -1,12 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Forum;
 
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
 
-class FollowingIdRequest extends FormRequest
+class ForumGroupRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,21 +22,16 @@ class FollowingIdRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'following_id' => 'required|integer|exists:users,id',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
         ];
     }
 
-    public function attributes()
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
     {
-        return [
-            'following_id' => 'Following ID',
-        ];
-    }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(
+        throw new \Illuminate\Http\Exceptions\HttpResponseException(
             response()->error($validator->errors()->first(), 422, $validator->errors())
         );
     }
+
 }

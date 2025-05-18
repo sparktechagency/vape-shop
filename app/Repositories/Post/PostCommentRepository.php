@@ -47,20 +47,4 @@ class PostCommentRepository implements PostCommentInterface
         return $this->model->destroy($commentId);
     }
 
-    public function updateComment(int $commentId, string $comment): bool
-    {
-        // Implementation to update a comment
-        return true;
-    }
-
-    public function getCommentById(int $commentId): array
-    {
-        // Implementation to get a comment by ID
-        return [];
-    }
-    public function getCommentsByUserId(int $userId): array
-    {
-        // Implementation to get comments by user ID
-        return [];
-    }
 }

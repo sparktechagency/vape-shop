@@ -24,11 +24,11 @@ class PostController extends Controller
         try {
             $posts = $this->postService->getAllPosts();
             if ($posts->isEmpty()) {
-                return response()->errorResponse('No posts found', 404);
+                return response()->error('No posts found', 404);
             }
-            return response()->successResponse($posts, 'Posts retrieved successfully');
+            return response()->success($posts, 'Posts retrieved successfully');
         } catch (\Exception $e) {
-            return response()->errorResponse('Failed to retrieve posts', 500, $e->getMessage());
+            return response()->error('Failed to retrieve posts', 500, $e->getMessage());
         }
     }
 
@@ -48,9 +48,9 @@ class PostController extends Controller
         try {
             $data = $request->validated();
             $post = $this->postService->createPost($data);
-            return response()->successResponse($post,'Post created successfully');
+            return response()->success($post,'Post created successfully');
         } catch (\Exception $e) {
-            return response()->errorResponse('Failed to create post', 500, $e->getMessage());
+            return response()->error('Failed to create post', 500, $e->getMessage());
         }
 
     }
@@ -63,11 +63,11 @@ class PostController extends Controller
         try {
             $post = $this->postService->getPostById($id);
             if (!$post) {
-                return response()->errorResponse('Post not found', 404);
+                return response()->error('Post not found', 404);
             }
-            return response()->successResponse($post, 'Post retrieved successfully');
+            return response()->success($post, 'Post retrieved successfully');
         } catch (\Exception $e) {
-            return response()->errorResponse('Failed to retrieve post', 500, $e->getMessage());
+            return response()->error('Failed to retrieve post', 500, $e->getMessage());
         }
     }
 
@@ -88,11 +88,11 @@ class PostController extends Controller
             $data = $request->validated();
             $post = $this->postService->updatePost($id, $data);
             if (!$post) {
-                return response()->errorResponse('Post not found', 404);
+                return response()->error('Post not found', 404);
             }
-            return response()->successResponse($post, 'Post updated successfully');
+            return response()->success($post, 'Post updated successfully');
         } catch (\Exception $e) {
-            return response()->errorResponse('Failed to update post', 500, $e->getMessage());
+            return response()->error('Failed to update post', 500, $e->getMessage());
         }
     }
 
@@ -104,11 +104,11 @@ class PostController extends Controller
         try {
             $deleted = $this->postService->deletePost($id);
             if (!$deleted) {
-                return response()->errorResponse('Post not found', 404);
+                return response()->error('Post not found', 404);
             }
-            return response()->successResponse(null, 'Post deleted successfully');
+            return response()->success(null, 'Post deleted successfully');
         } catch (\Exception $e) {
-            return response()->errorResponse('Failed to delete post', 500, $e->getMessage());
+            return response()->error('Failed to delete post', 500, $e->getMessage());
         }
     }
 }

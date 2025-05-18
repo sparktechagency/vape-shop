@@ -65,7 +65,7 @@ class UpdateProfileRequest extends FormRequest
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(
-            response()->errorResponse($validator->errors()->first(), 422, $validator->errors())
+            response()->error($validator->errors()->first(), 422, $validator->errors())
         );
     }
 }

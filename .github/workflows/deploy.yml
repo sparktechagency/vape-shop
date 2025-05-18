@@ -1,0 +1,34 @@
+name: Deploy to GCP
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to GCP via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GCP_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.GCP_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy on GCP VM
+        run: |
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.GCP_USER }}@${{ secrets.GCP_HOST }} << 'EOF'
+            cd ${{ secrets.APP_DIRECTORY }}
+            git pull origin main
+            docker compose down
+            docker compose up -d --build
+            docker exec vapeshop_app php artisan migrate --force
+            docker exec vapeshop_app php artisan config:cache
+            docker exec vapeshop_app php artisan route:cache
+          EOF

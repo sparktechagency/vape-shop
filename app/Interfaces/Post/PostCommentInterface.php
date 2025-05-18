@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Interfaces\Post;
-
 use App\Models\PostComment;
 
 interface PostCommentInterface
@@ -12,6 +11,6 @@ interface PostCommentInterface
 
     public function deleteComment(int $commentId): bool;
 
-    public function updateComment(int $commentId, string $comment): bool;
-    public function getCommentById(int $commentId): array;
+    // public function updateComment(int $commentId, string $comment): bool;
+    // public function getCommentById(int $commentId): array;
 }

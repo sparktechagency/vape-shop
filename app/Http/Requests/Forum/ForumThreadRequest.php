@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Auth;
+namespace App\Http\Requests\Forum;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class PasswordFiledRequest extends FormRequest
+class ForumThreadRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,23 +22,30 @@ class PasswordFiledRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'password' => 'required|string|min:8|confirmed',
-            'password_confirmation' => 'required|string|min:8',
+            'group_id' => 'required|exists:forum_groups,id',
+            'title' => 'required|string|max:255',
+            'body' => 'required|string',
         ];
     }
 
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array
+     */
     public function messages(): array
     {
         return [
-            'password.required' => 'The password field is required.',
-            'password.string' => 'The password must be a string.',
-            'password.min' => 'The password must be at least 8 characters long.',
-            'password.confirmed' => 'The password confirmation does not match.',
-            'password_confirmation.required' => 'The password confirmation field is required.',
-            'password_confirmation.string' => 'The password confirmation must be a string.',
-            'password_confirmation.min' => 'The password confirmation must be at least 8 characters long.',
+            'title.required' => 'The title is required.',
+            'title.string' => 'The title must be a string.',
+            'title.max' => 'The title may not be greater than 255 characters.',
+            'body.required' => 'The body is required.',
+            'body.string' => 'The body must be a string.',
+            'group_id.required' => 'The group ID is required.',
+            'group_id.exists' => 'The selected group ID is invalid.',
         ];
     }
+
     protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
     {
         throw new \Illuminate\Http\Exceptions\HttpResponseException(
