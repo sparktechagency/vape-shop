@@ -20,6 +20,13 @@ jobs:
           echo "${{ secrets.GCP_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.GCP_HOST }} >> ~/.ssh/known_hosts
+      - name: Set Permissions
+        run: |
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.GCP_USER }}@${{ secrets.GCP_HOST }} << 'EOF'
+            cd ${{ secrets.APP_DIRECTORY }}
+            sudo chmod -R 775 storage bootstrap/cache
+            sudo chown -R www-data:www-data storage bootstrap/cache
+          EOF
 
       - name: Deploy on GCP VM
         run: |
@@ -35,10 +42,4 @@ jobs:
             docker exec vapeshop_app php artisan queue:restart
           EOF
 
-      - name: Set Permissions
-        run: |
-          ssh -i ~/.ssh/id_ed25519 ${{ secrets.GCP_USER }}@${{ secrets.GCP_HOST }} << 'EOF'
-            cd ${{ secrets.APP_DIRECTORY }}
-            sudo chmod -R 775 storage bootstrap/cache
-            sudo chown -R www-data:www-data storage bootstrap/cache
-          EOF
+
