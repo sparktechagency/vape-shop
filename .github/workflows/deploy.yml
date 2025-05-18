@@ -31,4 +31,6 @@ jobs:
             docker exec vapeshop_app php artisan migrate --force
             docker exec vapeshop_app php artisan config:cache
             docker exec vapeshop_app php artisan route:cache
+            docker exec vapeshop_app php artisan optimize:clear
+            docker exec vapeshop_app php artisan queue:restart
           EOF
