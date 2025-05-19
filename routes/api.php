@@ -9,6 +9,7 @@ use App\Http\Controllers\Forum\ForumThreadController;
 use App\Http\Controllers\Post\LikePostController;
 use App\Http\Controllers\Post\PostCommentController;
 use App\Http\Controllers\Post\PostController;
+use App\Http\Controllers\product\HeartedProductController;
 use App\Http\Controllers\Product\ManageProductController;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
@@ -69,6 +70,9 @@ Route::group(['middleware' => 'jwt.auth'], function () {
 
     //Forum comments
     Route::apiResource('forum-comment', ForumCommentController::class)->except(['create', 'edit','update', 'show']);
+
+    //hearted product
+    Route::apiResource('hearted-product',HeartedProductController::class)->except(['create', 'edit','update', 'show', 'destroy']);
 
     // Route::get('/test', function () {
     //     $user = auth()->user();

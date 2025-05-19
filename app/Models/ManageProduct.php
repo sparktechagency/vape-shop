@@ -14,6 +14,8 @@ class ManageProduct extends Model
 
     protected $appends = [
         'role',
+        'total_heart',
+        'is_hearted',
     ];
 
     protected $hidden = ['user'];
@@ -39,24 +41,37 @@ class ManageProduct extends Model
     {
         return $this->user->role ? Role::from($this->user->role)->label() : null;
     }
-    //product_faqs attribute
 
+    //product_faqs attribute
     public function setProductFaqsAttribute($value)
     {
         $this->attributes['product_faqs'] = is_array($value) ? json_encode($value) : $value;
     }
 
     public function getProductFaqsAttribute($value)
-{
-    if (!$value) return null;
+    {
+        if (!$value) return null;
 
-    $decoded = json_decode($value, true);
+        $decoded = json_decode($value, true);
 
-    if (is_string($decoded)) {
-        $decoded = json_decode($decoded, true);
+        if (is_string($decoded)) {
+            $decoded = json_decode($decoded, true);
+        }
+
+        return $decoded;
     }
 
-    return $decoded;
-}
+    //hearted product count
+    public function getTotalHeartAttribute()
+    {
+        return $this->hasMany(Heart::class, 'product_id')->count();
+    }
 
+    //is_hearted attribute
+    public function getIsHeartedAttribute()
+    {
+        return $this->hasMany(Heart::class, 'product_id')
+            ->where('user_id', auth()->id())
+            ->exists();
+    }
 }
