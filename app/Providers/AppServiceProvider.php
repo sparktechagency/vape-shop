@@ -6,6 +6,7 @@ use App\Interfaces\Auth\AuthRepositoryInterface;
 use App\Interfaces\FollowersInterface;
 use App\Interfaces\Forum\ForumGroupInterface;
 use App\Interfaces\Forum\ForumThreadInterface;
+use App\Interfaces\Front\HomeInterface;
 use App\Interfaces\Post\PostInterface;
 use App\Interfaces\Post\PostLikeInterface;
 use App\Interfaces\Products\HeartedProductsInterface;
@@ -14,6 +15,7 @@ use App\Repositories\Auth\AuthRepository;
 use App\Repositories\FollowersRepository;
 use App\Repositories\Forum\ForumGroupRepository;
 use App\Repositories\Forum\ForumThreadRepository;
+use App\Repositories\Front\HomeRepository;
 use App\Repositories\Post\PostLikeRepository;
 use App\Repositories\Post\PostRepository;
 use App\Repositories\Products\HeartedProductsRepository;
@@ -37,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ForumGroupInterface::class, ForumGroupRepository::class);
         $this->app->bind(ForumThreadInterface::class, ForumThreadRepository::class);
         $this->app->bind(HeartedProductsInterface::class, HeartedProductsRepository::class);
+        $this->app->bind(HomeInterface::class, HomeRepository::class);
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Http\Controllers\FollowersController;
 use App\Http\Controllers\Forum\ForumCommentController;
 use App\Http\Controllers\Forum\ForumGroupController;
 use App\Http\Controllers\Forum\ForumThreadController;
+use App\Http\Controllers\Front\HomeController;
 use App\Http\Controllers\Post\LikePostController;
 use App\Http\Controllers\Post\PostCommentController;
 use App\Http\Controllers\Post\PostController;
@@ -73,9 +74,11 @@ Route::group(['middleware' => 'jwt.auth'], function () {
 
     //hearted product
     Route::apiResource('hearted-product',HeartedProductController::class)->except(['create', 'edit','update', 'show', 'destroy']);
+});
 
-    // Route::get('/test', function () {
-    //     $user = auth()->user();
-    //     return $user->following()->select('first_name','email','role')->get();
-    // });
+
+//homecontroller
+Route::controller(HomeController::class)->group(function () {
+    Route::get('/get-all-store-brand-wholesaler', 'getAllStoreBrandWholesaler');
+    Route::get('/get/{userId}/products', 'getProductsByRoleId');
 });

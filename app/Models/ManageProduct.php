@@ -25,6 +25,12 @@ class ManageProduct extends Model
         return $this->belongsTo(User::class);
     }
 
+    //category relationship
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
 
     public function getProductImageAttribute($value)
     {

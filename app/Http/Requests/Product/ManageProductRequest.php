@@ -22,6 +22,7 @@ class ManageProductRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'category_id' => 'required|exists:categories,id',
             'product_name' => 'required|string|max:255',
             'product_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'product_price' => 'required|numeric|min:0',
@@ -64,6 +65,7 @@ class ManageProductRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'category_id' => 'Category ID',
             'product_name' => 'Product Name',
             'product_image' => 'Product Image',
             'product_price' => 'Product Price',
