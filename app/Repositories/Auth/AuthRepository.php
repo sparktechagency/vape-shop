@@ -3,6 +3,7 @@ namespace App\Repositories\Auth;
 
 use App\Enums\UserRole\Role;
 use App\Interfaces\Auth\AuthRepositoryInterface;
+use App\Models\Address;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -29,14 +30,24 @@ class AuthRepository implements AuthRepositoryInterface
         $user->email = $data['email'];
         $user->password = $data['password'];
         $user->phone = $data['phone'] ?? null;
-        $user->address = $data['address'] ?? null;
-        $user->zip_code = $data['zip_code'] ?? null;
-        $user->region = $data['region'] ?? null;
+        // $user->address = $data['address'] ?? null;
+        // $user->zip_code = $data['zip_code'] ?? null;
+        // $user->region = $data['region'] ?? null;
         $user->role = $data['role'];
         $user->otp = $otp_data['otp'];
         $user->otp_expire_at = $otp_data['otp_expire_at'];
         $user->save();
 
+        $address = new Address();
+        $address->user_id = $user->id;
+        $address->region_id = $data['region_id'] ?? null;
+        $address->address = $data['address'] ?? null;
+        $address->zip_code = $data['zip_code'] ?? null;
+        $address->latitude = $data['latitude'] ?? null;
+        $address->longitude = $data['longitude'] ?? null;
+        $address->save();
+
+        $user->load('address');
         return $user;
     }
 
@@ -168,10 +179,20 @@ class AuthRepository implements AuthRepositoryInterface
         $user->first_name = $firstName;
         $user->last_name = $data['last_name'] ?? $user->last_name;
         $user->phone = $data['phone'] ?? $user->phone;
-        $user->address = $data['address'] ?? $user->address;
-        $user->zip_code = $data['zip_code'] ?? $user->zip_code;
-        $user->region = $data['region'] ?? $user->region;
+        // $user->address = $data['address'] ?? $user->address;
+        // $user->zip_code = $data['zip_code'] ?? $user->zip_code;
+        // $user->region = $data['region'] ?? $user->region;
         $user->save();
+
+        // Update or create address for the same user id
+        $address = Address::firstOrNew(['user_id' => $user->id]);
+        $address->region_id = $data['region_id'] ?? $address->region_id;
+        $address->address = $data['address'] ?? $address->address;
+        $address->zip_code = $data['zip_code'] ?? $address->zip_code;
+        $address->latitude = $data['latitude'] ?? $address->latitude;
+        $address->longitude = $data['longitude'] ?? $address->longitude;
+        $address->save();
+        $user->load('address');
 
         return [
             'success' => true,
@@ -183,7 +204,7 @@ class AuthRepository implements AuthRepositoryInterface
 
     public function me() : array
     {
-        $user = Auth::user();
+        $user = Auth::user()->load('address.region');
         if (!$user) {
             return [
                 'success' => false,

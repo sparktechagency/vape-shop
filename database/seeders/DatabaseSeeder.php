@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\UserRole\Role;
+use App\Models\Category;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -23,5 +24,13 @@ class DatabaseSeeder extends Seeder
             'role' => Role::ADMIN,
             'email_verified_at' => now(),
         ]);
+
+        $this->call([
+            // Add other seeders here
+            CategorySeeder::class,
+            CountryRegionSeeder::class,
+        ]);
     }
+
+
 }

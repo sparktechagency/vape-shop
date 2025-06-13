@@ -11,6 +11,7 @@ use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Requests\Auth\VerifyEmail;
 use Illuminate\Http\Request;
 use App\Services\Auth\AuthService;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -23,11 +24,17 @@ class AuthController extends Controller
     //register
     public function register(RegisterRequest $request)
     {
-        $data = $request->validated();
+        DB::beginTransaction();
+        try {
+            $data = $request->validated();
 
-        $user = $this->authService->register($data);
-
-        return response()->success($user, 'User registered successfully. Please verify your email.');
+            $user = $this->authService->register($data);
+            DB::commit();
+            return response()->success($user, 'User registered successfully. Please verify your email.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->error('Failed to register user.', 500, $e->getMessage());
+        }
     }
 
 
@@ -88,7 +95,7 @@ class AuthController extends Controller
     //update password
     public function updatePassword(UpdatePasswordRequest $request)
     {
-       try {
+        try {
             $data = $request->validated();
             $result = $this->authService->updatePassword($data);
             if ($result['success'] === false) {
@@ -125,7 +132,4 @@ class AuthController extends Controller
         }
         return response()->success($result['data'], $result['message']);
     }
-
-
-
 }

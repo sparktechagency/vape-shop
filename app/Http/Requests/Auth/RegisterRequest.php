@@ -33,9 +33,11 @@ public function rules(): array
         'email' => 'required|string|email|max:255|unique:users',
         'password' => 'required|string|min:8|confirmed',
         'phone' => 'nullable|regex:/^\+?[0-9]{10,15}$/|unique:users',
+        'region_id' => $this->input('role') == Role::STORE->value ? 'required|string|max:255|exists:regions,id' : 'nullable|string|max:255| exists:regions,id',
         'address' => $this->input('role') == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
         'zip_code' => $this->input('role') == Role::STORE->value ? 'required|string|max:10' : 'nullable|string|max:10',
-        'region' => $this->input('role') == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
+        'latitude' => 'nullable|numeric',
+        'longitude' => 'nullable|numeric',
     ];
 
     if ($this->input('role') == Role::STORE->value) {
@@ -73,8 +75,7 @@ public function rules(): array
             'address.max' => 'Address must not exceed 255 characters',
             'zip_code.string' => 'Zip code must be a string',
             'zip_code.max' => 'Zip code must not exceed 10 characters',
-            'region.string' => 'Region must be a string',
-            'region.max' => 'Region must not exceed 255 characters',
+            'region_id.required' => 'Region is required',
         ];
     }
     public function attributes(): array
@@ -87,7 +88,11 @@ public function rules(): array
             'phone' => 'Phone Number',
             'address' => 'Address',
             'zip_code' => 'Zip Code',
-            'region' => 'Region',
+            'region_id' => 'Region ID',
+            'store_name' => 'Store Name',
+            'brand_name' => 'Brand Name',
+            'latitude' => 'Latitude',
+            'longitude' => 'Longitude',
         ];
     }
 

@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Product;
 
+use App\Enums\UserRole\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\ManageProductRequest;
 use App\Models\ManageProduct;
 use App\Services\Products\ManageProductsService;
+use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth as FacadesAuth;
 
 class ManageProductController extends Controller
 {
@@ -41,8 +44,7 @@ class ManageProductController extends Controller
      */
     public function store(ManageProductRequest $request)
     {
-        try {
-            $data = $request->validated();
+        $data = $request->validated();
             $productImage = $request->file('product_image') ?? null;
             $product = $this->manageProduct->storeProduct($data, $productImage);
 
@@ -52,12 +54,6 @@ class ManageProductController extends Controller
                     'Product created successfully.'
                 );
             }
-        } catch (\Exception $e) {
-            return response()->error(
-                'Error storing product',
-                500,
-                env('APP_DEBUG') === 'true' ? $e->getMessage() : null);
-        }
     }
 
     /**
@@ -106,7 +102,7 @@ class ManageProductController extends Controller
             return response()->error(
                 'Error updating product',
                 500,
-                env('APP_DEBUG') === 'true' ? $e->getMessage() : null
+                $e->getMessage()
             );
         }
     }

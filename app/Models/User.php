@@ -32,6 +32,7 @@ class User extends Authenticatable implements JWTSubject
         'full_name',
         'total_followers',
         'total_following',
+        // 'region',
     ];
 
     /**
@@ -114,6 +115,12 @@ class User extends Authenticatable implements JWTSubject
         return $value ? asset('storage/' . $value) : "https://ui-avatars.com/api/?background=random&name={$this->first_name}+{$this->last_name}&bold=true";
     }
 
+    //get region name
+    // public function getRegionAttribute(): string
+    // {
+    //     return $this->address?->region?->name ?? '';
+    // }
+
     //get total followers
     public function getTotalFollowersAttribute(): int
     {
@@ -128,6 +135,13 @@ class User extends Authenticatable implements JWTSubject
 
 
     //relationships
+
+    //address
+    public function address()
+    {
+        return $this->hasOne(Address::class);
+    }
+
     public function manageProducts()
     {
         return $this->hasMany(ManageProduct::class);

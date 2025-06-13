@@ -70,7 +70,9 @@ class ManageProductsService
         }
 
         $data['user_id'] = Auth::id();
-        $data['slug'] = generateUniqueSlug(\App\Models\ManageProduct::class, $data['product_name']);
+        if (isset($data['product_name']) && $data['product_name']) {
+            $data['slug'] = generateUniqueSlug(\App\Models\ManageProduct::class, $data['product_name']);
+        }
 
         $product = $this->manageProduct->storeProduct($data);
 
