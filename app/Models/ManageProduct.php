@@ -32,6 +32,18 @@ class ManageProduct extends Model
         return $this->belongsTo(Category::class, 'category_id');
     }
 
+    //store product relationship
+    public function storeProduct()
+    {
+        return $this->belongsTo(StoreProduct::class, 'product_id');
+    }
+
+    //heart relationship
+    public function hearts()
+    {
+        return $this->hasMany(Heart::class, 'manage_product_id');
+    }
+
 
     public function getProductImageAttribute($value)
     {

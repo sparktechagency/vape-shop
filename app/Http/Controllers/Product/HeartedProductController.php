@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\product;
 
+use App\Enums\UserRole\Role;
 use App\Http\Controllers\Controller;
 use App\Services\Products\HeartedProductsService;
 use Illuminate\Http\Request;
@@ -48,15 +49,32 @@ class HeartedProductController extends Controller
     public function store(Request $request)
     {
         try{
+            $role = (int)$request->input('role');
+            // Build validation rules based on role
+            if ($role === Role::BRAND->value) {
+                $productRule = 'required|exists:manage_products,id';
+            } elseif ($role === Role::STORE->value) {
+                $productRule = 'required|exists:store_products,id';
+            } elseif ($role === Role::WHOLESALER->value) {
+                $productRule = 'required|exists:store_products,id';
+            } else {
+                $productRule = 'required|exists:manage_products,id';
+            }
+
             $validator = Validator::make($request->all(), [
-                'product_id' => 'required|integer|exists:manage_products,id',
+                'product_id' => $productRule,
+                'role' => 'required|in:' . Role::BRAND->value . ',' . Role::STORE->value . ',' . Role::WHOLESALER->value,
             ]);
             if ($validator->fails()) {
                 return response()->error($validator->errors()->first(), 422, $validator->errors());
             }
             $userId = Auth::id();
             $productId = $request->input('product_id');
-            $result = $this->heartProduct->toggleHeartedProduct($productId, $userId);
+
+            // return $productId;
+            $result = $this->heartProduct->toggleHeartedProduct($productId, $userId, $role);
+
+            // dd($result);
             if ($result === true) {
                 return response()->success($result, 'Product hearted successfully', 200);
             }else {

@@ -16,10 +16,15 @@ class Heart extends Model
     {
         return $this->belongsTo(User::class);
     }
-    //relationship with product
-    public function product()
+    //relationship with manage product
+    public function manageProduct()
     {
-        return $this->belongsTo(ManageProduct::class, 'product_id');
+        return $this->belongsTo(ManageProduct::class);
+    }
+    //relationship with store product
+    public function storeProduct()
+    {
+        return $this->belongsTo(StoreProduct::class);
     }
 
     //get is_heart attribute

@@ -78,4 +78,15 @@ class StoreProduct extends Model
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
+    //manage products
+    public function manageProducts()
+    {
+        return $this->hasMany(ManageProduct::class);
+    }
+
+    //hearts
+    public function hearts()
+    {
+        return $this->hasMany(Heart::class, 'store_product_id');
+    }
 }

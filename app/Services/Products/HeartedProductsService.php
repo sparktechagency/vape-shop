@@ -20,8 +20,8 @@ class HeartedProductsService
     }
 
     //toggle hearted product
-    public function toggleHeartedProduct(int $productId, int $userId): bool
+    public function toggleHeartedProduct(int $productId, int $userId, int $role): bool
     {
-        return $this->repository->toggleHeartedProduct($productId, $userId);
+        return $this->repository->toggleHeartedProduct($productId, $userId, $role);
     }
 }
