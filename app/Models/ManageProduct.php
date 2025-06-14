@@ -14,8 +14,9 @@ class ManageProduct extends Model
 
     protected $appends = [
         'role',
-        'total_heart',
+        'role_label',
         'is_hearted',
+        'total_heart',
     ];
 
     protected $hidden = ['user'];
@@ -45,6 +46,10 @@ class ManageProduct extends Model
     //role attribute
     public function getRoleAttribute()
     {
+        return $this->user->role;
+    }
+    public function getRoleLabelAttribute()
+    {
         return $this->user->role ? Role::from($this->user->role)->label() : null;
     }
 
@@ -70,13 +75,13 @@ class ManageProduct extends Model
     //hearted product count
     public function getTotalHeartAttribute()
     {
-        return $this->hasMany(Heart::class, 'product_id')->count();
+        return $this->hasMany(Heart::class, 'manage_product_id')->count();
     }
 
     //is_hearted attribute
     public function getIsHeartedAttribute()
     {
-        return $this->hasMany(Heart::class, 'product_id')
+        return $this->hasMany(Heart::class, 'manage_product_id')
             ->where('user_id', auth()->id())
             ->exists();
     }

@@ -11,6 +11,7 @@ use App\Http\Controllers\Post\LikePostController;
 use App\Http\Controllers\Post\PostCommentController;
 use App\Http\Controllers\Post\PostController;
 use App\Http\Controllers\product\HeartedProductController;
+use App\Http\Controllers\Product\HomeProductController;
 use App\Http\Controllers\Product\ManageProductController;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
@@ -81,4 +82,10 @@ Route::group(['middleware' => 'jwt.auth'], function () {
 Route::controller(HomeController::class)->group(function () {
     Route::get('/get-all-store-brand-wholesaler', 'getAllStoreBrandWholesaler');
     Route::get('/get/{userId}/products', 'getProductsByRoleId');
+});
+
+//home product
+Route::group(['middleware' => 'guest'], function () {
+    Route::get('get-all-products', [HomeProductController::class, 'index']);
+    Route::get('get-product/{id}', [HomeProductController::class, 'show']);
 });

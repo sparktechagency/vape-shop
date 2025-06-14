@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole\Role;
 use Illuminate\Database\Eloquent\Model;
 
 class StoreProduct extends Model
@@ -11,6 +12,14 @@ class StoreProduct extends Model
     protected $casts = [
         'product_faqs' => 'array',
     ];
+    protected $appends = [
+        'role',
+        'role_label',
+        'is_hearted',
+        'total_heart',
+    ];
+
+    protected $hidden = ['user'];
 
      //product_faqs attribute
     public function setProductFaqsAttribute($value)
@@ -29,5 +38,44 @@ class StoreProduct extends Model
         }
 
         return $decoded;
+    }
+
+    public function getProductImageAttribute($value)
+    {
+        return $value ? asset('storage/' . $value) : null;
+    }
+
+    //role attribute
+    public function getRoleAttribute()
+    {
+        return $this->user->role;
+    }
+    public function getRoleLabelAttribute()
+    {
+        return $this->user->role ? Role::from($this->user->role)->label() : null;
+    }
+
+    //hearted product count
+    public function getTotalHeartAttribute()
+    {
+        return $this->hasMany(Heart::class, 'store_product_id')->count();
+    }
+
+    //is_hearted attribute
+    public function getIsHeartedAttribute()
+    {
+        return $this->hasMany(Heart::class, 'store_product_id')
+            ->where('user_id', auth()->id())
+            ->exists();
+    }
+
+    //Relationships
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
     }
 }

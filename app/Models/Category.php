@@ -12,4 +12,10 @@ class Category extends Model
     {
         return $this->hasMany(ManageProduct::class, 'category_id');
     }
+
+    public function store_products()
+    {
+        return $this->hasMany(StoreProduct::class, 'category_id');
+    }
+
 }

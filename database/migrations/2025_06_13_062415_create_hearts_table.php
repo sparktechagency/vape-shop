@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('hearts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained('manage_products')->onDelete('cascade');
+            $table->foreignId('manage_product_id')->nullable()->constrained('manage_products')->onDelete('cascade');
+            $table->foreignId('store_product_id')->nullable()->constrained('store_products')->onDelete('cascade');
+            $table->foreignId('region_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
         });
     }

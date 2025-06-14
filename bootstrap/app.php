@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'jwt.auth' => App\Http\Middleware\JWTAuthMiddleware::class,
             'check.role' => App\Http\Middleware\CheckRole::class,
             'check.product.owner' => App\Http\Middleware\CheckProductOwner::class,
+            'guest' => App\Http\Middleware\GuestMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories\Products;
 
 use App\Enums\UserRole\Role;
@@ -16,9 +17,15 @@ class ManageProductsRepository implements ManageProductsInterface
      */
     public function getAllProducts(): array
     {
+        if (Auth::user()->role === Role::STORE->value) {
+            return StoreProduct::where('user_id', Auth::id())
+                // ->with('user')
+                ->paginate(10)
+                ->toArray();
+        }
         return ManageProduct::where('user_id', Auth::id())
-                            ->paginate(10)
-                            ->toArray();
+            ->paginate(10)
+            ->toArray();
     }
 
 
@@ -29,11 +36,16 @@ class ManageProductsRepository implements ManageProductsInterface
      */
     public function getProductById(int $id): array
     {
-        try {
+
+
+        if (Auth::user()->role === Role::STORE->value) {
+            return StoreProduct::findOrFail($id)->toArray();
+        }else{
+
             return ManageProduct::findOrFail($id)->toArray();
-        } catch (\Exception $e) {
-            throw new \Exception("Product not found.", 404);
         }
+
+
     }
 
 
@@ -45,10 +57,10 @@ class ManageProductsRepository implements ManageProductsInterface
     {
 
         // dd(Auth::user()->role);
-        if(Auth::user()->role === Role::STORE->value) {
+        if (Auth::user()->role === Role::STORE->value) {
             $product = new StoreProduct();
             $product->user_id = $data['user_id'];
-            if(isset($data['product_id']) && $data['product_id']) {
+            if (isset($data['product_id']) && $data['product_id']) {
                 $manageProduct = ManageProduct::with('user')->findOrFail($data['product_id']);
                 // dd($manageProduct->user->first_name);
                 if (!$manageProduct) {
@@ -64,30 +76,30 @@ class ManageProductsRepository implements ManageProductsInterface
                 $product->brand_id = $manageProduct->user_id ?? null;
                 $product->brand_name = $manageProduct->user->first_name;
             }
-                $product->category_id = $data['category_id'];
-                $product->product_price = $data['product_price'];
-                $product->product_discount = $data['product_discount'];
-                $product->product_discount_unit = $data['product_discount_unit'];
-                $product->product_stock = $data['product_stock'];
-                $product->product_description = $data['product_description'];
-                $product->product_faqs = $data['product_faqs'] ?? null;
-                $product->save();
+            $product->category_id = $data['category_id'];
+            $product->product_price = $data['product_price'];
+            $product->product_discount = $data['product_discount'];
+            $product->product_discount_unit = $data['product_discount_unit'];
+            $product->product_stock = $data['product_stock'];
+            $product->product_description = $data['product_description'];
+            $product->product_faqs = $data['product_faqs'] ?? null;
+            $product->save();
         } else {
-                $product = new ManageProduct();
-                $product->user_id = $data['user_id'];
-                $product->category_id = $data['category_id'] ?? null;
+            $product = new ManageProduct();
+            $product->user_id = $data['user_id'];
+            $product->category_id = $data['category_id'] ?? null;
 
-                $product->product_name = $data['product_name'];
-                $product->slug = $data['slug'];
-                $product->product_image = $data['product_image'] ?? null;
-                $product->product_price = $data['product_price'];
-                $product->brand_name = $data['brand_name'];
-                $product->product_discount = $data['product_discount'];
-                $product->product_discount_unit = $data['product_discount_unit'];
-                $product->product_stock = $data['product_stock'];
-                $product->product_description = $data['product_description'];
-                $product->product_faqs = $data['product_faqs'] ?? null;
-                $product->save();
+            $product->product_name = $data['product_name'];
+            $product->slug = $data['slug'];
+            $product->product_image = $data['product_image'] ?? null;
+            $product->product_price = $data['product_price'];
+            $product->brand_name = $data['brand_name'];
+            $product->product_discount = $data['product_discount'];
+            $product->product_discount_unit = $data['product_discount_unit'];
+            $product->product_stock = $data['product_stock'];
+            $product->product_description = $data['product_description'];
+            $product->product_faqs = $data['product_faqs'] ?? null;
+            $product->save();
         }
         return $product->toArray();
     }
@@ -101,9 +113,9 @@ class ManageProductsRepository implements ManageProductsInterface
      */
     public function updateProduct(int $id, array $data): array
     {
-        if(Auth::user()->role === Role::STORE->value) {
+        if (Auth::user()->role === Role::STORE->value) {
             $product = StoreProduct::findOrFail($id);
-            if($product->product_id) {
+            if ($product->product_id) {
                 $manageProduct = ManageProduct::findOrFail($product->product_id);
                 $data['product_name'] = $manageProduct->product_name;
                 $data['slug'] = generateUniqueSlug(StoreProduct::class, $manageProduct->product_name);
@@ -126,7 +138,11 @@ class ManageProductsRepository implements ManageProductsInterface
      */
     public function deleteProduct(int $id): bool
     {
-        $product = ManageProduct::findOrFail($id);
+        if (Auth::user()->role === Role::STORE->value) {
+            $product = StoreProduct::findOrFail($id);
+        } else {
+            $product = ManageProduct::findOrFail($id);
+        }
 
         // Remove old image if it exists
         if ($product->product_image) {

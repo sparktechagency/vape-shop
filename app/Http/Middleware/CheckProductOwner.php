@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\UserRole\Role;
 use App\Models\ManageProduct;
 use App\Models\Post;
+use App\Models\StoreProduct;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -18,7 +20,7 @@ class CheckProductOwner
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $product = ManageProduct::select('user_id')->find($request->route('product_manage'));
+        $product = auth()->user()->role === Role::STORE->value ? StoreProduct::select('user_id')->find($request->route('product_manage')) : ManageProduct::select('user_id')->find($request->route('product_manage'));
         $post = Post::select('user_id')->find($request->route('post'));
 
         if ($post && $post->user_id !== auth()->id()) {

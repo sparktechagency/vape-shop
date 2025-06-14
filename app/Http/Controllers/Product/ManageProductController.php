@@ -7,9 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\ManageProductRequest;
 use App\Models\ManageProduct;
 use App\Services\Products\ManageProductsService;
-use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth as FacadesAuth;
+use Illuminate\Support\Facades\Auth;
 
 class ManageProductController extends Controller
 {
@@ -24,11 +23,19 @@ class ManageProductController extends Controller
      */
     public function index()
     {
-        $products = $this->manageProduct->getAllProducts();
-        if (empty($products)) {
+        try {
+            $products = $this->manageProduct->getAllProducts();
+            if (!empty($products) && isset($products['data']) && !empty($products['data'])) {
+                return response()->success($products, 'Products retrieved successfully.');
+            }
             return response()->error('No products found.', 404);
+        } catch (\Exception $e) {
+            return response()->error(
+                'Error retrieving products',
+                500,
+                $e->getMessage()
+            );
         }
-        return response()->success($products, 'Products retrieved successfully.');
     }
 
     /**
@@ -44,16 +51,22 @@ class ManageProductController extends Controller
      */
     public function store(ManageProductRequest $request)
     {
-        $data = $request->validated();
+        try {
+            $data = $request->validated();
             $productImage = $request->file('product_image') ?? null;
             $product = $this->manageProduct->storeProduct($data, $productImage);
 
-            if ($product) {
-                return response()->success(
-                    $product,
-                    'Product created successfully.'
-                );
-            }
+            return response()->success(
+                $product,
+                'Product created successfully.'
+            );
+        } catch (\Exception $e) {
+            return response()->error(
+                'Error creating product',
+                500,
+                $e->getMessage()
+            );
+        }
     }
 
     /**
@@ -62,6 +75,7 @@ class ManageProductController extends Controller
     public function show(string $id)
     {
         try {
+            // dd(Auth::user()->role === Role::STORE->value);
             $product = $this->manageProduct->getProductById((int)$id);
             if (empty($product)) {
                 return response()->error('Product not found.', 404);
@@ -69,9 +83,9 @@ class ManageProductController extends Controller
             return response()->success($product, 'Product retrieved successfully.');
         } catch (\Exception $e) {
             return response()->error(
-                'Error retrieving product',
+                $e->getMessage(),
                 500,
-                env('APP_DEBUG') === 'true' ? $e->getMessage() : null
+                'Error retrieving product',
             );
         }
     }
@@ -112,7 +126,7 @@ class ManageProductController extends Controller
      */
     public function destroy(string $id)
     {
-       try {
+        try {
             $deleted = $this->manageProduct->deleteProduct((int)$id);
             if ($deleted) {
                 return response()->success(
@@ -128,7 +142,7 @@ class ManageProductController extends Controller
             return response()->error(
                 'Error deleting product',
                 500,
-                env('APP_DEBUG') === 'true' ? $e->getMessage() : null
+                $e->getMessage()
             );
         }
     }

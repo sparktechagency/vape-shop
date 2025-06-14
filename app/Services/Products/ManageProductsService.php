@@ -42,7 +42,8 @@ class ManageProductsService
     public function getProductById(int $id): array
     {
         // Check if the product is cached
-        $cacheKey = "product_{$id}";
+        $role = Auth::user()->role;
+        $cacheKey = "product_{$role}_{$id}";
         $product = Cache::remember($cacheKey, now()->addHours(1), function () use ($id) {
             return $this->manageProduct->getProductById($id);
         });
