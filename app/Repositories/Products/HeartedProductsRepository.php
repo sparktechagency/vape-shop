@@ -5,6 +5,8 @@ namespace App\Repositories\Products;
 use App\Enums\UserRole\Role;
 use App\Interfaces\Products\HeartedProductsInterface;
 use App\Models\Heart;
+use App\Models\StoreProduct;
+use App\Models\User;
 
 class HeartedProductsRepository implements HeartedProductsInterface
 {
@@ -46,6 +48,7 @@ class HeartedProductsRepository implements HeartedProductsInterface
                 throw new \InvalidArgumentException('Invalid role provided.');
         }
         // If heart exists, delete it; otherwise, create a new heart
+        // dd($this->getRegionId($productId, $role));
         // return $heart;
         if ($heart) {
              $heart->delete();
@@ -62,12 +65,24 @@ class HeartedProductsRepository implements HeartedProductsInterface
                 $model = $this->model->create([
                     'store_product_id' => $productId,
                     'user_id' => $userId,
+                    'region_id' => $this->getRegionId($productId, $role), // Assuming region_id is needed for store products
                 ]);
                 break;
             default:
                 throw new \InvalidArgumentException('Invalid role provided.');
         }
+
+
         return (bool) $model;
+    }
+
+    private function getRegionId($productId, $role)
+    {
+        if ($role === Role::STORE->value) {
+            $product = StoreProduct::find($productId);
+            return $product ? User::find($product->user_id)->address->region_id : null;
+        }
+        return null;
     }
 
 }
