@@ -4,7 +4,10 @@ namespace App\Repositories\Front;
 
 use App\Enums\UserRole\Role;
 use App\Interfaces\Front\HomeInterface;
+use App\Models\ManageProduct;
+use App\Models\StoreProduct;
 use App\Models\User;
+use Illuminate\Contracts\Cache\Store;
 
 class HomeRepository implements HomeInterface
 {
@@ -27,32 +30,37 @@ class HomeRepository implements HomeInterface
     //get products by store or brand or wholesaler id
     public function getProductsByRoleId($type, $userId, $perPage)
     {
-        $products = User::where('id', $userId)
-            ->where('role', Role::BRAND)
-            ->with(['manageProducts' => function ($query) use ($perPage) {
-                $query->paginate($perPage);
-            }]);
-        return $products->first();
+        $user = User::where('id', $userId)->first();
+        if (!$user) return [];
+
         switch ($type) {
             case 'store':
-                $products = $products->where('role', Role::STORE);
-                break;
+                if ($user->role !== Role::STORE->value) return [];
+                return [
+                    'user' => $user,
+                    'products' => StoreProduct::where('user_id', $userId)
+                        ->orderByDesc('created_at')
+                        ->paginate($perPage),
+                ];
+
             case 'brand':
-                $products = $products->where('role', Role::BRAND);
-                break;
+                if ($user->role !== Role::BRAND->value) return [];
+                return [
+                    'user' => $user,
+                    'products' => ManageProduct::where('user_id', $userId)
+                        ->orderByDesc('created_at')
+                        ->paginate($perPage),
+                ];
+
             case 'wholesaler':
-                $products = $products->where('role', Role::WHOLESALER);
-                break;
-            default:
+                // Future logic can go here
                 return [];
 
-                $products = $products->with(['manageProducts' => function ($query) use ($perPage) {
-                    $query->paginate($perPage);
-                }])
-                    ->first();
-                return $products ;
+            default:
+                return [];
         }
     }
+
     //get all store
     private function getAllStore($perPage)
     {

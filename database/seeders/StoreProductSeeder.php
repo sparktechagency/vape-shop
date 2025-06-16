@@ -28,12 +28,12 @@ class StoreProductSeeder extends Seeder
 
         foreach ($storeUsers as $storeUser) {
 
-            // 🔁 3 ta manage product থেকে নিচ্ছে
+            // 3 ta manage product 
             foreach ($manageProducts->random(3) as $product) {
                 StoreProduct::create([
                     'user_id' => $storeUser->id,
                     'product_id' => $product->id,
-                    'category_id' => $categories->random(),
+                    'category_id' => $product->category_id,
                     'product_name' => $product->product_name,
                     'slug' => Str::slug($product->product_name) . '-' . uniqid(),
                     'product_image' => $product->product_image ? preg_replace('#^https?://[^/]+/storage/#', 'products/', $product->product_image) : null,
@@ -48,7 +48,7 @@ class StoreProductSeeder extends Seeder
                 ]);
             }
 
-            // 🔁 2 ta completely new product create করলো
+            //2 ta completely new product create
             for ($i = 0; $i < 2; $i++) {
                 $name = fake()->words(3, true);
                 StoreProduct::create([

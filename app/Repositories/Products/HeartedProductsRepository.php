@@ -62,10 +62,12 @@ class HeartedProductsRepository implements HeartedProductsInterface
                 ]);
                 break;
             case Role::STORE->value:
+                $data = $this->getProductAndRegionId($productId, $role);
                 $model = $this->model->create([
                     'store_product_id' => $productId,
+                    'manage_product_id' => $data['manage_product_id'] ?? null, // Optional, if manage_product_id is needed
                     'user_id' => $userId,
-                    'region_id' => $this->getRegionId($productId, $role), // Assuming region_id is needed for store products
+                    'region_id' => $data['region_id'] ?? null, // Assuming region_id is needed for store products
                 ]);
                 break;
             default:
@@ -76,11 +78,24 @@ class HeartedProductsRepository implements HeartedProductsInterface
         return (bool) $model;
     }
 
-    private function getRegionId($productId, $role)
+    private function getProductAndRegionId($productId, $role)
     {
         if ($role === Role::STORE->value) {
+            $data = [];
             $product = StoreProduct::find($productId);
-            return $product ? User::find($product->user_id)->address->region_id : null;
+            if($product){
+                if ($product->user_id && User::find($product->user_id)->address) {
+                    $data['region_id'] = User::find($product->user_id)->address->region_id;
+                }
+                // dd($product->manageProducts);
+                if($product->product_id && $product->manageProducts) {
+                    $data['manage_product_id'] = $product->product_id;
+                } else {
+                    $data['manage_product_id'] = null;
+                }
+
+            }
+            return $data;
         }
         return null;
     }

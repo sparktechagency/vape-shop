@@ -35,7 +35,7 @@ class ManageProduct extends Model
     //store product relationship
     public function storeProduct()
     {
-        return $this->belongsTo(StoreProduct::class, 'product_id');
+        return $this->hasMany(StoreProduct::class, 'product_id');
     }
 
     //heart relationship

@@ -37,8 +37,8 @@ class HomeController extends Controller
             // return $userId;
             $perPage = $request->input('per_page', 10);
             $type = $request->input('type');
-            $data = $this->homeService->getProductsByRoleId($type, (int)$userId, (int)$perPage);
-            return $data;
+            $data = collect($this->homeService->getProductsByRoleId($type, (int)$userId, (int)$perPage));
+            // return $data;
             if ($data->isEmpty()) {
                 return response()->error('No data found', 404);
             }

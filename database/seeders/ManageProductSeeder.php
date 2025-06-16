@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\UserRole\Role;
+use App\Models\Category;
 use App\Models\ManageProduct;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -17,6 +18,7 @@ class ManageProductSeeder extends Seeder
      public function run(): void
     {
         $brandUsers = User::where('role',Role::BRAND->value)->get();
+        $categories = Category::pluck('id');
 
         if ($brandUsers->isEmpty()) {
             $this->command->warn('No brand users found. Please seed users with BRAND role first.');
@@ -36,6 +38,8 @@ class ManageProductSeeder extends Seeder
                 $name = $productNames[$key] . ' by ' . $brandUser->brand_name;
 
                 ManageProduct::create([
+                    'category_id' => $categories->random(),
+                    'product_image' => 'products/default.jpg',
                     'user_id' => $brandUser->id,
                     'product_name' => $name,
                     'slug' => Str::slug($name) . '-' . uniqid(),

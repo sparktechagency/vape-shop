@@ -13,6 +13,7 @@ use App\Http\Controllers\Post\PostController;
 use App\Http\Controllers\product\HeartedProductController;
 use App\Http\Controllers\Product\HomeProductController;
 use App\Http\Controllers\Product\ManageProductController;
+use App\Http\Controllers\Product\TrendingProducts;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -88,4 +89,12 @@ Route::controller(HomeController::class)->group(function () {
 Route::group(['middleware' => 'guest'], function () {
     Route::get('get-all-products', [HomeProductController::class, 'index']);
     Route::get('get-product/{id}', [HomeProductController::class, 'show']);
+
+    //get trending products
+    Route::get('most-hearted-products', [TrendingProducts::class, 'mostHeartedProducts']);
+    //get most followers brand
+    Route::get('most-followers-brand', [TrendingProducts::class, 'mostFollowersBrand']);
+
 });
+
+
