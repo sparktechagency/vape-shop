@@ -40,6 +40,7 @@ Route::controller(AuthController::class)->group(function () {
 //admin routes
 Route::group(['prefix' => 'admin','middleware' => ['jwt.auth', 'check.role:' . Role::ADMIN->value]], function () {
     Route::get('/manage-users', [UserManagementController::class, 'manageUsers']);
+    Route::get('/user/{id}', [UserManagementController::class, 'getUserById']);
     Route::get('/get-all-users', [UserManagementController::class, 'getAllUsers']);
 });
 

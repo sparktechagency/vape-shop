@@ -27,4 +27,14 @@ class UserManagementController extends Controller
         }
         return response()->success($users, 'Users retrieved successfully.');
     }
+
+    //get user information by ID
+    public function getUserById($id)
+    {
+        $user = User::where('role','!=',Role::ADMIN)->find($id);
+        if (!$user) {
+            return response()->error('User not found.', 404);
+        }
+        return response()->success($user, 'User retrieved successfully.');
+    }
 }
