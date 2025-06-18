@@ -1,8 +1,10 @@
 <?php
 
 use App\Enums\UserRole\Role;
+use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CountryRegionController;
 use App\Http\Controllers\FollowersController;
 use App\Http\Controllers\Forum\ForumCommentController;
 use App\Http\Controllers\Forum\ForumGroupController;
@@ -42,6 +44,9 @@ Route::group(['prefix' => 'admin','middleware' => ['jwt.auth', 'check.role:' . R
     Route::get('/manage-users', [UserManagementController::class, 'manageUsers']);
     Route::get('/user/{id}', [UserManagementController::class, 'getUserById']);
     Route::get('/get-all-users', [UserManagementController::class, 'getAllUsers']);
+
+    //slider
+    Route::apiResource('slider', SliderController::class)->except(['create', 'edit']);
 });
 
 //manage product for brand, store and wholesaler
@@ -110,4 +115,14 @@ Route::group(['middleware' => 'guest'], function () {
     Route::get('most-hearted-products', [TrendingProducts::class, 'mostHeartedProducts']);
     //get most followers brand
     Route::get('most-followers-brand', [TrendingProducts::class, 'mostFollowersBrand']);
+
+    //get slider in home page
+    Route::get('slider', [SliderController::class, 'index']);
 });
+
+
+
+//Country And Region
+Route::get('/get-all-countries', [CountryRegionController::class, 'getAllCountries']);
+Route::get('/get-regions-by-country/{countryId}', [CountryRegionController::class, 'getRegionsByCountryId']);
+
