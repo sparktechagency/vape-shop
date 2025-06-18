@@ -20,7 +20,6 @@ class CheckRole
             return response()->error(
                 'Unauthorized',
                 403,
-                null,
                 'You do not have permission to access this resource.'
             );
         }

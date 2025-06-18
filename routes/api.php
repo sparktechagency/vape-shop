@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole\Role;
+use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FollowersController;
 use App\Http\Controllers\Forum\ForumCommentController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Post\PostController;
 use App\Http\Controllers\product\HeartedProductController;
 use App\Http\Controllers\Product\HomeProductController;
 use App\Http\Controllers\Product\ManageProductController;
+use App\Http\Controllers\Product\ReviewController;
 use App\Http\Controllers\Product\TrendingProducts;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
@@ -33,6 +35,12 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('/user', 'user');
     Route::post('/update-password', 'updatePassword')->middleware('jwt.auth');
     Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth');
+});
+
+//admin routes
+Route::group(['prefix' => 'admin','middleware' => ['jwt.auth', 'check.role:' . Role::ADMIN->value]], function () {
+    Route::get('/manage-users', [UserManagementController::class, 'manageUsers']);
+    Route::get('/get-all-users', [UserManagementController::class, 'getAllUsers']);
 });
 
 //manage product for brand, store and wholesaler
@@ -63,7 +71,7 @@ Route::group(['middleware' => 'jwt.auth'], function () {
     Route::get('/get-likes-by-post-id/{postId}', [LikePostController::class, 'getLikesByPostId']);
 
     //post comment
-    Route::apiResource('post-comment', PostCommentController::class)->except(['create', 'edit','update', 'show']);
+    Route::apiResource('post-comment', PostCommentController::class)->except(['create', 'edit', 'update', 'show']);
 
     //Forum group
     Route::apiResource('forum-group', ForumGroupController::class)->except(['create', 'edit']);
@@ -72,21 +80,28 @@ Route::group(['middleware' => 'jwt.auth'], function () {
     Route::apiResource('forum-thread', ForumThreadController::class)->except(['create', 'edit']);
 
     //Forum comments
-    Route::apiResource('forum-comment', ForumCommentController::class)->except(['create', 'edit','update', 'show']);
+    Route::apiResource('forum-comment', ForumCommentController::class)->except(['create', 'edit', 'update', 'show']);
 
     //hearted product
-    Route::apiResource('hearted-product',HeartedProductController::class)->except(['create', 'edit','update', 'show', 'destroy']);
+    Route::apiResource('hearted-product', HeartedProductController::class)->except(['create', 'edit', 'update', 'show', 'destroy']);
+
+    //reviews product
+    Route::apiResource('product-review', ReviewController::class)->except(['create', 'edit', 'update', 'show']);
 });
 
 
-//homecontroller
-Route::controller(HomeController::class)->group(function () {
-    Route::get('/get-all-store-brand-wholesaler', 'getAllStoreBrandWholesaler');
-    Route::get('/get/{userId}/products', 'getProductsByRoleId');
-});
 
 //home product
 Route::group(['middleware' => 'guest'], function () {
+    //homecontroller
+    Route::controller(HomeController::class)->group(function () {
+        Route::get('/get-all-store-brand-wholesaler', 'getAllStoreBrandWholesaler');
+        Route::get('/get/{userId}/products', 'getProductsByRoleId');
+    });
+
+
+
+
     Route::get('get-all-products', [HomeProductController::class, 'index']);
     Route::get('get-product/{id}', [HomeProductController::class, 'show']);
 
@@ -94,7 +109,4 @@ Route::group(['middleware' => 'guest'], function () {
     Route::get('most-hearted-products', [TrendingProducts::class, 'mostHeartedProducts']);
     //get most followers brand
     Route::get('most-followers-brand', [TrendingProducts::class, 'mostFollowersBrand']);
-
 });
-
-

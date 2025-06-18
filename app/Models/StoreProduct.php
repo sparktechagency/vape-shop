@@ -89,4 +89,10 @@ class StoreProduct extends Model
     {
         return $this->hasMany(Heart::class, 'store_product_id');
     }
+
+    //reviews
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'store_product_id');
+    }
 }

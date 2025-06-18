@@ -32,6 +32,9 @@ class User extends Authenticatable implements JWTSubject
         'full_name',
         'total_followers',
         'total_following',
+        'is_following',
+        'avg_rating',
+        'total_reviews'
         // 'region',
     ];
 
@@ -134,6 +137,12 @@ class User extends Authenticatable implements JWTSubject
         return $this->following()->count();
     }
 
+    //is following attribute
+    public function getIsFollowingAttribute(): bool
+    {
+        return $this->following()->where('follower_id', auth()->id())->exists();
+    }
+
 
 
     //relationships
@@ -164,9 +173,45 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsToMany(User::class, 'followers', 'follower_id', 'following_id')->withTimestamps();
     }
 
+
     //forum groups
     public function forumGroups()
     {
         return $this->hasMany(ForumGroup::class);
+    }
+
+
+    //reviews relationship
+    public function storeReviews()
+    {
+        return $this->hasManyThrough(Review::class, StoreProduct::class);
+    }
+
+    public function brandReviews()
+    {
+        return $this->hasManyThrough(Review::class, ManageProduct::class);
+    }
+
+    //average rating attribute
+    public function getAvgRatingAttribute()
+    {
+
+        $average = match ($this->role) {
+            Role::STORE->value => $this->storeReviews()->avg('rating'),
+            Role::BRAND->value => $this->brandReviews()->avg('rating'),
+            default => 0,
+        };
+
+        return round($average ?? 0, 2);
+    }
+
+    //total reviews attribute
+    public function getTotalReviewsAttribute(): int
+    {
+        return match ($this->role) {
+            Role::STORE->value => $this->storeReviews()->count(),
+            Role::BRAND->value => $this->brandReviews()->count(),
+            default => 0,
+        };
     }
 }

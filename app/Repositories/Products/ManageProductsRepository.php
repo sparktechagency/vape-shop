@@ -76,7 +76,9 @@ class ManageProductsRepository implements ManageProductsInterface
                 $product->brand_id = $manageProduct->user_id ?? null;
                 $product->brand_name = $manageProduct->user->first_name;
             }
+            $product->product_name = $data['product_name'];
             $product->category_id = $data['category_id'];
+            $product->slug = $data['slug'] ?? generateUniqueSlug(StoreProduct::class, $data['product_name']);
             $product->product_price = $data['product_price'];
             $product->product_discount = $data['product_discount'];
             $product->product_discount_unit = $data['product_discount_unit'];

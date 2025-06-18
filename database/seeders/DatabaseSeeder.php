@@ -73,6 +73,7 @@ class DatabaseSeeder extends Seeder
             ManageProductSeeder::class,
             StoreProductSeeder::class,
             HeartSeeder::class,
+            ReviewSeeder::class,
         ]);
 
         $user = User::create([

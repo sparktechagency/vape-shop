@@ -56,7 +56,7 @@ class HeartedProductController extends Controller
             } elseif ($role === Role::STORE->value) {
                 $productRule = 'required|exists:store_products,id';
             } elseif ($role === Role::WHOLESALER->value) {
-                $productRule = 'required|exists:store_products,id';
+                $productRule = 'required|exists:wholesaler_products,id';
             } else {
                 $productRule = 'required|exists:manage_products,id';
             }
