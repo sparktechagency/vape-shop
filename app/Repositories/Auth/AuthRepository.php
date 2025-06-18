@@ -132,7 +132,7 @@ class AuthRepository implements AuthRepositoryInterface
                 'code' => 404,
             ];
         }
-        $user->password = $password;
+        $user->password = password_hash((string) $password['password'], PASSWORD_DEFAULT);
         $user->save();
 
         return [

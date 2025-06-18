@@ -89,7 +89,7 @@ class AuthController extends Controller
         if ($result['success'] === false) {
             return response()->error($result['message'], $result['code']);
         }
-        return response()->success($result['data'], $result['message']);
+        return response()->success(null, $result['message']);
     }
 
     //update password
