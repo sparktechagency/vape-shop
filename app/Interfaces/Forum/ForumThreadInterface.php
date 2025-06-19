@@ -16,4 +16,6 @@ interface ForumThreadInterface
     public function deleteThread($threadId): bool;
 
     public function getThreadComments($threadId);
+    
+    public function incrementViewCount(int $threadId): void;
 }

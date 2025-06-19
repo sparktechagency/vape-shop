@@ -12,6 +12,8 @@ class ForumThreadController extends Controller
     protected $forumThreadService;
     public function __construct(ForumThreadService $forumThreadService)
     {
+        $this->middleware('jwt.auth')->except(['index', 'show']);
+        $this->middleware('guest')->only(['index', 'show']);
         $this->forumThreadService = $forumThreadService;
     }
 
@@ -66,6 +68,8 @@ class ForumThreadController extends Controller
     public function show(string $id)
     {
         try {
+
+            $this->forumThreadService->incrementViewCount((int) $id);
             $thread = $this->forumThreadService->getThreadById($id);
             if (!$thread) {
                 return response()->error('Thread not found', 404);

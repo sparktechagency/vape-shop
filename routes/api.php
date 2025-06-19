@@ -40,7 +40,7 @@ Route::controller(AuthController::class)->group(function () {
 });
 
 //admin routes
-Route::group(['prefix' => 'admin','middleware' => ['jwt.auth', 'check.role:' . Role::ADMIN->value]], function () {
+Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'check.role:' . Role::ADMIN->value]], function () {
     Route::get('/manage-users', [UserManagementController::class, 'manageUsers']);
     Route::get('/user/{id}', [UserManagementController::class, 'getUserById']);
     Route::get('/get-all-users', [UserManagementController::class, 'getAllUsers']);
@@ -78,22 +78,22 @@ Route::group(['middleware' => 'jwt.auth'], function () {
 
     //post comment
     Route::apiResource('post-comment', PostCommentController::class)->except(['create', 'edit', 'update', 'show']);
-
-    //Forum group
-    Route::apiResource('forum-group', ForumGroupController::class)->except(['create', 'edit']);
-
-    //Forum threads
-    Route::apiResource('forum-thread', ForumThreadController::class)->except(['create', 'edit']);
-
-    //Forum comments
-    Route::apiResource('forum-comment', ForumCommentController::class)->except(['create', 'edit', 'update', 'show']);
-
     //hearted product
     Route::apiResource('hearted-product', HeartedProductController::class)->except(['create', 'edit', 'update', 'show', 'destroy']);
 
     //reviews product
     Route::apiResource('product-review', ReviewController::class)->except(['create', 'edit', 'update', 'show']);
 });
+
+//forum routes
+//Forum group
+Route::apiResource('forum-group', ForumGroupController::class)->except(['create', 'edit']);
+
+//Forum threads
+Route::apiResource('forum-thread', ForumThreadController::class)->except(['create', 'edit']);
+
+//Forum comments
+Route::apiResource('forum-comment', ForumCommentController::class)->except(['create', 'edit', 'update', 'show']);
 
 
 
@@ -125,4 +125,3 @@ Route::group(['middleware' => 'guest'], function () {
 //Country And Region
 Route::get('/get-all-countries', [CountryRegionController::class, 'getAllCountries']);
 Route::get('/get-regions-by-country/{countryId}', [CountryRegionController::class, 'getRegionsByCountryId']);
-

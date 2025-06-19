@@ -21,11 +21,18 @@ class ForumGroupRepository implements ForumGroupInterface
     public function getAllGroups(): array
     {
         $userId = Auth::id();
+        $is_trending = request()->get('is_trending', false);
         $perPage = request()->get('per_page', 10);
-        return $this->model->where('user_id', $userId)
-                    ->orderBy('created_at', 'desc')
-                    ->paginate($perPage)
-                    ->toArray();
+        $query = $this->model->withCount('threads');
+        if ($is_trending) {
+            $query->orderBy('threads_count', 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+        if ($userId) {
+            $query->where('user_id', $userId);
+        }
+        return $query->paginate($perPage)->toArray();
     }
 
     //get group by id
@@ -36,10 +43,12 @@ class ForumGroupRepository implements ForumGroupInterface
     public function getGroupById(int $groupId): array
     {
         $userId = Auth::id();
-        return $this->model->where('user_id', $userId)
-                    ->where('id', $groupId)
-                    ->first()
-                    ->toArray();
+        $query = $this->model->where('id', $groupId);
+        if ($userId) {
+            $query->where('user_id', $userId);
+        }
+        $group = $query->first();
+        return $group ? $group->toArray() : [];
     }
 
     //create group

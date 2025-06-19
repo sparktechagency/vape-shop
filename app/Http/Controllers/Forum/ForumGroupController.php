@@ -14,6 +14,8 @@ class ForumGroupController extends Controller
     protected $forumGroupService;
     public function __construct(ForumGroupService $forumGroupService)
     {
+        $this->middleware('jwt.auth')->except(['index', 'show']);
+        $this->middleware('guest')->only(['index', 'show']);
         $this->forumGroupService = $forumGroupService;
     }
 

@@ -5,6 +5,7 @@ namespace App\Repositories\Forum;
 use App\Interfaces\Forum\ForumThreadInterface;
 use App\Models\ForumThread;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class ForumThreadRepository implements ForumThreadInterface
 {
@@ -21,10 +22,16 @@ class ForumThreadRepository implements ForumThreadInterface
     public function getAllThreads($groupId): array
     {
         $perPage = request()->query('per_page', 10);
-        return $this->model->where('group_id', $groupId)
-                           ->with(['user:id,first_name,last_name,role', 'group:id,title'])
-                           ->paginate($perPage)
-                           ->toArray();
+        $is_most_viewed = request()->get('is_most_viewed', false);
+        // dd($is_most_viewed);
+        $query = $this->model->where('group_id', $groupId)
+                           ->with(['user:id,first_name,last_name,role', 'group:id,title']);
+        if ($is_most_viewed) {
+            $query->orderBy('views', 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+        return $query->paginate($perPage)->toArray();
     }
 
     public function getThreadById($threadId): array
@@ -64,5 +71,23 @@ class ForumThreadRepository implements ForumThreadInterface
     public function getThreadComments($threadId)
     {
         return $this->model->find($threadId)->comments()->get()->toArray();
+    }
+
+     public function incrementViewCount(int $threadId): void
+    {
+        $ipAddress = request()->ip();
+        // dd($ipAddress);
+        $cacheKey = "viewed_thread_{$threadId}_{$ipAddress}";
+
+        if (Cache::has($cacheKey)) {
+            return;
+        }
+
+        $thread = $this->model->find($threadId);
+        if ($thread) {
+            $thread->increment('views');
+        }
+
+        Cache::put($cacheKey, true, now()->addMinutes(15));
     }
 }

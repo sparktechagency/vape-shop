@@ -35,4 +35,14 @@ class ForumThreadService
     {
         return $this->repository->deleteThread($threadId);
     }
+
+    public function getThreadComments($threadId)
+    {
+        return $this->repository->getThreadComments($threadId);
+    }
+
+    public function incrementViewCount(int $threadId): void
+    {
+        $this->repository->incrementViewCount( $threadId);
+    }
 }
