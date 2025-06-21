@@ -14,11 +14,12 @@ class CategorySeeder extends Seeder
     {
 
         $categories = [
-            'Disposable',
-            'E-juice',
-            'PODS',
-            'MODS',
-            'Others'
+            'VAPE KITS',
+            'DISPOSABLES',
+            'E-LIQUIDS',
+            'BRANDS',
+            'NIC POUCHES',
+            'ACCESSORIES'
         ];
 
         foreach ($categories as $category) {

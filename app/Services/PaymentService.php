@@ -27,6 +27,7 @@ class PaymentService
             $this->paymentRepository->create([
                 'payable_id'     => $payableItem->id,
                 'payable_type'   => get_class($payableItem),
+                'payment_method' => $response['payment_method'] ?? 'authorizenet',
                 'transaction_id' => $response['transaction_id'],
                 'amount'         => $payableItem->amount,
                 'status'         => 'completed',

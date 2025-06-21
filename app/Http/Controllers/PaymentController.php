@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ManageProduct;
 use Illuminate\Http\Request;
 use App\Services\PaymentService;
-use App\Models\TrandingProducts;
+use App\Models\TrendingProducts;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -37,7 +37,7 @@ class PaymentController extends Controller
         }
         $cardDetails = $validator->validated();
 
-        $trendingRequest = TrandingProducts::create([
+        $trendingRequest = TrendingProducts::create([
             'product_id' => 2,
             // 'payments_id'   => 1,
             'amount'     => '500.00',

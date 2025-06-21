@@ -44,7 +44,7 @@ class AuthorizeNetService implements PaymentGatewayInterface
         $response = $controller->executeWithApiResponse($this->isSandbox ? ANetEnvironment::SANDBOX : ANetEnvironment::PRODUCTION);
 
         if ($response !== null && $response->getMessages()->getResultCode() === "Ok" && $response->getTransactionResponse()->getResponseCode() === "1") {
-            return ['status' => 'success', 'transaction_id' => $response->getTransactionResponse()->getTransId(), 'message' => 'Payment successful.'];
+            return ['status' => 'success', 'transaction_id' => $response->getTransactionResponse()->getTransId(), 'message' => 'Payment successful. Your request is being processed.', 'payment_method' => 'authorizenet'];
         }
 
         $errorMsg = 'Transaction Failed';

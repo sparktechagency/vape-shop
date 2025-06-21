@@ -128,22 +128,7 @@ class User extends Authenticatable implements JWTSubject
     //     return $this->address?->region?->name ?? '';
     // }
 
-    //get total followers
-    public function getTotalFollowersAttribute(): int
-    {
-        return $this->followers()->count();
-    }
-    //get total following
-    public function getTotalFollowingAttribute(): int
-    {
-        return $this->following()->count();
-    }
 
-    //is following attribute
-    public function getIsFollowingAttribute(): bool
-    {
-        return $this->following()->where('follower_id', auth()->id())->exists();
-    }
 
 
 
@@ -189,12 +174,30 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsToMany(User::class, 'followers', 'follower_id', 'following_id')->withTimestamps();
     }
 
+    //get total followers
+    public function getTotalFollowersAttribute(): int
+    {
+        return $this->followers()->count();
+    }
+    //get total following
+    public function getTotalFollowingAttribute(): int
+    {
+        return $this->following()->count();
+    }
+
+    //is following attribute
+    public function getIsFollowingAttribute(): bool
+    {
+        return $this->followers()->where('follower_id', auth()->id())->exists();
+    }
+
 
     //forum groups
     public function forumGroups()
     {
         return $this->hasMany(ForumGroup::class);
     }
+
 
 
     //reviews relationship
@@ -235,5 +238,4 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->favouritesBy()->where('user_id', auth()->id())->exists();
     }
-
 }

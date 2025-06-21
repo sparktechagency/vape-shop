@@ -11,11 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tranding_products', function (Blueprint $table) {
+        Schema::create('trending_products', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('manage_products')->onDelete('cascade');
             // $table->foreignId('payments_id')->constrained('payments')->onDelete('cascade');
             $table->enum('status', ['pending','approved', 'rejected','active', 'expired'])->default('pending');
+            $table->string('preferred_duration')->nullable();
+            $table->timestamp('start_date')->nullable();
+            $table->timestamp('end_date')->nullable();
             $table->timestamp('requested_at')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('approved_at')->nullable();

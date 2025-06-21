@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TrandingProducts extends Model
+class TrendingProducts extends Model
 {
     protected $guarded = ['id'];
 
@@ -20,4 +20,11 @@ class TrandingProducts extends Model
     {
         return $this->belongsTo(ManageProduct::class, 'product_id');
     }
+
+    
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
 }

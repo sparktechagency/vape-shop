@@ -19,6 +19,7 @@ use App\Http\Controllers\product\HeartedProductController;
 use App\Http\Controllers\Product\HomeProductController;
 use App\Http\Controllers\Product\ManageProductController;
 use App\Http\Controllers\Product\ReviewController;
+use App\Http\Controllers\Product\TrendingAdProductController;
 use App\Http\Controllers\Product\TrendingProducts;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
@@ -134,8 +135,9 @@ Route::get('/get-regions-by-country/{countryId}', [CountryRegionController::clas
 Route::get('/get-all-categories', [HomeProductController::class, 'getAllCategories']);
 
 
-//payment routes
-Route::post('/pay/trending', [PaymentController::class, 'payForOrder']);
-Route::post('/pay/order', [PaymentController::class, 'payOrder']);
-Route::post('/pay/refund', [PaymentController::class, 'refund']);
-Route::post('/payment-intent', [PaymentController::class, 'createPaymentIntent']);
+//Ad trending products routes
+Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value]], function () {
+    Route::apiResource('trending-ad-product', TrendingAdProductController::class)->except(['create', 'edit']);
+    // Route::post('trending-ad-product/{id}/approve', [TrendingProducts::class, 'approve']);
+    // Route::post('trending-ad-product/{id}/reject', [TrendingProducts::class, 'reject']);
+});
