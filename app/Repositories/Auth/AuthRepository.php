@@ -204,16 +204,25 @@ class AuthRepository implements AuthRepositoryInterface
         ];
     }
 
-    public function me(): array
+    public function me($id): array
     {
-        $user = Auth::user()->load('address.region', 'favourites');
+
+        $user = User::where('id', $id)->first();
+
+        $user->load('address.region', 'favourites');
+
+
+        [$favouriteStores, $favouriteBrands] = $user->favourites->partition(function ($favoriteUser) {
+            return $favoriteUser->role === Role::STORE->value;
+        });
+        // $user = Auth::user()->load('address.region', 'favourites');
         [$favouriteStores, $favouriteBrands] = $user->favourites->partition(function ($favoriteUser) {
             return $favoriteUser->role === Role::STORE->value;
         });
         unset($user->favourites);
 
-       $user->favourite_store_list = FavouriteUserResource::collection($favouriteStores->values());
-       $user->favourite_brand_list = FavouriteUserResource::collection($favouriteBrands->values());
+        $user->favourite_store_list = FavouriteUserResource::collection($favouriteStores->values());
+        $user->favourite_brand_list = FavouriteUserResource::collection($favouriteBrands->values());
         if (!$user) {
             return [
                 'success' => false,
@@ -228,4 +237,7 @@ class AuthRepository implements AuthRepositoryInterface
             'code' => 200,
         ];
     }
+
+    //get user by id
+
 }

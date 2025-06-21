@@ -12,6 +12,6 @@ interface AuthRepositoryInterface
     public function resetPassword($password):array;
     public function updatePassword(array $data):array;
     public function updateProfile(array $data):array;
-    public function me():array;
+    public function me($id):array;
 
 }

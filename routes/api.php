@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole\Role;
+use App\Http\Controllers\Admin\AdApprovalsManageController;
 use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AuthController;
@@ -37,7 +38,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/resend-otp', 'resendOtp');
     Route::post('/reset-password', 'resetPassword')->middleware('jwt.auth');
     Route::get('/me', 'me')->middleware('jwt.auth');
-    Route::get('/user', 'user');
+    Route::get('/profile/{id}', 'profile')->middleware('guest');
     Route::post('/update-password', 'updatePassword')->middleware('jwt.auth');
     Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth');
 });
@@ -50,6 +51,11 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'check.role:' . 
 
     //slider
     Route::apiResource('slider', SliderController::class)->except(['create', 'edit']);
+
+    //advertisement
+    Route::get('/get-all-ad-requests', [AdApprovalsManageController::class, 'getAllAdRequests']);
+    Route::get('/get-ad-request-by-id/{id}', [AdApprovalsManageController::class, 'getAdRequestById']);
+    Route::put('/update-ad-request-status/{id}', [AdApprovalsManageController::class, 'updateAdRequestStatus']);
 });
 
 //manage product for brand, store and wholesaler

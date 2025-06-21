@@ -36,6 +36,16 @@ class HomeRepository implements HomeInterface
         switch ($type) {
             case 'store':
                 if ($user->role !== Role::STORE->value) return [];
+                $is_most_hearted = request('is_most_hearted', false);
+                $query = StoreProduct::where('user_id', $userId);
+
+                if ($is_most_hearted) {
+                    $query->withCount('hearts')
+                        ->orderByDesc('hearts_count');
+                } else {
+                    $query->orderByDesc('created_at');
+                }
+
                 return [
                     'user' => $user,
                     'products' => StoreProduct::where('user_id', $userId)

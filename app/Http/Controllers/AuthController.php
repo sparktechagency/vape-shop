@@ -9,8 +9,10 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\UpdatePasswordRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Requests\Auth\VerifyEmail;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Services\Auth\AuthService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
@@ -122,11 +124,24 @@ class AuthController extends Controller
         }
     }
 
+    //get user by id
+
+
 
     //me
     public function me()
     {
-        $result = $this->authService->me();
+        $userId = Auth::id();
+        $result = $this->authService->me($userId);
+        if ($result['success'] === false) {
+            return response()->error($result['message'], $result['code']);
+        }
+        return response()->success($result['data'], $result['message']);
+    }
+
+     public function profile($id)
+    {
+        $result = $this->authService->me($id);
         if ($result['success'] === false) {
             return response()->error($result['message'], $result['code']);
         }

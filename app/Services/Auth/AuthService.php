@@ -158,8 +158,8 @@ class AuthService
     /**
      * @return array
      */
-    public function me():array
+    public function me($id):array
     {
-        return $this->authRepository->me();
+        return $this->authRepository->me($id);
     }
 }

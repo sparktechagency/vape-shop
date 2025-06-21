@@ -21,10 +21,21 @@ class TrendingProducts extends Model
         return $this->belongsTo(ManageProduct::class, 'product_id');
     }
 
-    
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    //relationship approveby
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+    //relationship rejectedby
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 
 }
