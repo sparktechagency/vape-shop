@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Repositories\Auth;
 
 use App\Enums\UserRole\Role;
+use App\Http\Resources\FavouriteUserResource;
 use App\Interfaces\Auth\AuthRepositoryInterface;
 use App\Models\Address;
 use App\Models\User;
@@ -15,7 +17,7 @@ class AuthRepository implements AuthRepositoryInterface
      * @param array $data
      * @return User
      */
-    public function register(array $data) : User
+    public function register(array $data): User
     {
         $firstName = $this->getFirstNameByRole($data['role'], $data);
         $otp_data = [
@@ -57,7 +59,7 @@ class AuthRepository implements AuthRepositoryInterface
      * @param array $data
      * @return string
      */
-    private function getFirstNameByRole($role, $data) : string
+    private function getFirstNameByRole($role, $data): string
     {
         switch ($role) {
             case Role::STORE->value:
@@ -73,7 +75,7 @@ class AuthRepository implements AuthRepositoryInterface
      * @param string $otp
      * @return array
      */
-    public function verifyEmail(string $otp) : array
+    public function verifyEmail(string $otp): array
     {
         $user = User::where('otp', $otp)->first();
         if (!$user) {
@@ -121,10 +123,10 @@ class AuthRepository implements AuthRepositoryInterface
     }
 
     //reset password
-    public function resetPassword($password):array
+    public function resetPassword($password): array
 
     {
-       $user = Auth::user();
+        $user = Auth::user();
         if (!$user) {
             return [
                 'success' => false,
@@ -143,10 +145,10 @@ class AuthRepository implements AuthRepositoryInterface
     }
 
     //update password
-    public function updatePassword(array $data):array
+    public function updatePassword(array $data): array
     {
         $user = Auth::user();
-        if(Hash::check($data['current_password'], $user->password)) {
+        if (Hash::check($data['current_password'], $user->password)) {
             $user->password = Hash::make($data['new_password']);
             $user->save();
         } else {
@@ -165,7 +167,7 @@ class AuthRepository implements AuthRepositoryInterface
     }
 
     //update profile
-    public function updateProfile(array $data) : array
+    public function updateProfile(array $data): array
     {
         $user = Auth::user();
         if (!$user) {
@@ -202,9 +204,16 @@ class AuthRepository implements AuthRepositoryInterface
         ];
     }
 
-    public function me() : array
+    public function me(): array
     {
-        $user = Auth::user()->load('address.region');
+        $user = Auth::user()->load('address.region', 'favourites');
+        [$favouriteStores, $favouriteBrands] = $user->favourites->partition(function ($favoriteUser) {
+            return $favoriteUser->role === Role::STORE->value;
+        });
+        unset($user->favourites);
+
+       $user->favourite_store_list = FavouriteUserResource::collection($favouriteStores->values());
+       $user->favourite_brand_list = FavouriteUserResource::collection($favouriteBrands->values());
         if (!$user) {
             return [
                 'success' => false,

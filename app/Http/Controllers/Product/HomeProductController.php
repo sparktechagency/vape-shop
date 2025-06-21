@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Product;
 
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Services\Products\HomeProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,5 +57,24 @@ class HomeProductController extends Controller
                 $e->getMessage()
             );
         }
+    }
+
+    //get all categories
+    public function getAllCategories()
+    {
+        try {
+            $categories = Category::all();
+            if ($categories->isEmpty()) {
+                return response()->error('No categories found.', 404);
+            }
+            return response()->success($categories, 'Categories retrieved successfully.');
+        } catch (\Exception $e) {
+            return response()->error(
+                'Error retrieving categories',
+                500,
+                $e->getMessage()
+            );
+        }
+
     }
 }

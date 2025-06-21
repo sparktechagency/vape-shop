@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Enums\UserRole\Role;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -34,7 +35,8 @@ class User extends Authenticatable implements JWTSubject
         'total_following',
         'is_following',
         'avg_rating',
-        'total_reviews'
+        'total_reviews',
+        'is_favourite',
         // 'region',
     ];
 
@@ -147,6 +149,20 @@ class User extends Authenticatable implements JWTSubject
 
     //relationships
 
+    //favorites
+    public function favourites()
+    {
+        return $this->belongsToMany(user::class, 'favourites', 'user_id', 'favourite_id')
+            ->withTimestamps();
+    }
+
+    //favorites by
+    public function favouritesBy()
+    {
+        return $this->belongsToMany(user::class, 'favourites', 'favourite_id', 'user_id')
+            ->withTimestamps();
+    }
+
     //address
     public function address()
     {
@@ -214,4 +230,10 @@ class User extends Authenticatable implements JWTSubject
             default => 0,
         };
     }
+
+    public function getIsFavouriteAttribute(): bool
+    {
+        return $this->favouritesBy()->where('user_id', auth()->id())->exists();
+    }
+
 }

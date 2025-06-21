@@ -5,11 +5,13 @@ use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CountryRegionController;
+use App\Http\Controllers\FavouriteController;
 use App\Http\Controllers\FollowersController;
 use App\Http\Controllers\Forum\ForumCommentController;
 use App\Http\Controllers\Forum\ForumGroupController;
 use App\Http\Controllers\Forum\ForumThreadController;
 use App\Http\Controllers\Front\HomeController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Post\LikePostController;
 use App\Http\Controllers\Post\PostCommentController;
 use App\Http\Controllers\Post\PostController;
@@ -118,6 +120,9 @@ Route::group(['middleware' => 'guest'], function () {
 
     //get slider in home page
     Route::get('slider', [SliderController::class, 'index']);
+
+    //favorite brands and stores
+    Route::apiResource('favourite', FavouriteController::class)->except(['create', 'edit', 'update', 'show', 'destroy']);
 });
 
 
@@ -125,3 +130,12 @@ Route::group(['middleware' => 'guest'], function () {
 //Country And Region
 Route::get('/get-all-countries', [CountryRegionController::class, 'getAllCountries']);
 Route::get('/get-regions-by-country/{countryId}', [CountryRegionController::class, 'getRegionsByCountryId']);
+
+Route::get('/get-all-categories', [HomeProductController::class, 'getAllCategories']);
+
+
+//payment routes
+Route::post('/pay/trending', [PaymentController::class, 'payForOrder']);
+Route::post('/pay/order', [PaymentController::class, 'payOrder']);
+Route::post('/pay/refund', [PaymentController::class, 'refund']);
+Route::post('/payment-intent', [PaymentController::class, 'createPaymentIntent']);

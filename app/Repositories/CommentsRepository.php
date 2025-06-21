@@ -38,6 +38,8 @@ class CommentsRepository implements CommentsInterface
     //create comment
     public function createComment(array $data)
     {
+        $userId = Auth::id();
+        $data['user_id'] = $userId;
         return $this->model->create($data);
     }
     public function deleteComment(int $commentId): bool

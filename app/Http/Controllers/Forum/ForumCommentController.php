@@ -15,6 +15,10 @@ class ForumCommentController extends Controller
     protected $commentsService;
     public function __construct()
     {
+        $this->middleware('jwt.auth')->except(['index']);
+        $this->middleware('guest')->only(['index']);
+
+
         $model = new ForumComment();
 
         $repository = new CommentsRepository($model);
@@ -26,12 +30,12 @@ class ForumCommentController extends Controller
     public function index()
     {
         try{
-            $postId = request()->query('thread_id');
+            $threadId = request()->query('thread_id');
             $modelType = 'forum';
-            if(!$postId){
+            if(!$threadId){
                 return response()->error('Thread ID is required', 422);
             }
-            $comments = $this->commentsService->getAllComments($postId, $modelType);
+            $comments = $this->commentsService->getAllComments($threadId, $modelType);
             if (!empty($comments) && isset($comments['data']) && !empty($comments['data'])) {
                 return response()->success($comments, 'Comments retrieved successfully', 200);
             }else {

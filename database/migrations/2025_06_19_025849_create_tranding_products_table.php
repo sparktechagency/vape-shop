@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('tranding_products', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('manage_products')->onDelete('cascade');
-            $table->foreignId('payments_id')->constrained('payments')->onDelete('cascade');
+            // $table->foreignId('payments_id')->constrained('payments')->onDelete('cascade');
             $table->enum('status', ['pending','approved', 'rejected','active', 'expired'])->default('pending');
             $table->timestamp('requested_at')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');

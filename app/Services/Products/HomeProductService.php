@@ -28,7 +28,7 @@ class HomeProductService
      * @param int $id
      * @return array
      */
-    public function getProductById(int $id, int $role): array
+    public function getProductById(int $id, int $role)
     {
         return $this->repository->getProductById($id, $role);
     }

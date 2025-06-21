@@ -3,6 +3,7 @@
 namespace App\Repositories\Products;
 
 use App\Enums\UserRole\Role;
+use App\Http\Resources\ProductDeteails;
 use App\Interfaces\Products\HomeProductInterface;
 use App\Models\ManageProduct;
 use App\Models\StoreProduct;
@@ -33,13 +34,31 @@ class HomeProductRepository implements HomeProductInterface
         }
         return [];
     }
-    public function getProductById(int $id, int $role): array
+    public function getProductById(int $id, int $role)
     {
         switch ($role) {
             case Role::BRAND->value:
-                return ManageProduct::with('category')->findOrFail($id)->toArray();
+                $product = ManageProduct::with(['category', 'user'])->findOrFail($id);
+                // related product filter by top rating
+                $product->makeVisible(['user', 'category']);
+                $relatedProducts = ManageProduct::where('id', '!=', $id)
+                    ->inRandomOrder()
+                    ->take(4)
+                    ->get();
+                $product->relatedProducts = $relatedProducts;
+                $product = new ProductDeteails($product);
+                return $product;
             case Role::STORE->value:
-                return StoreProduct::with('category')->findOrFail($id)->toArray();
+                $product = StoreProduct::with('category','user')
+                        ->findOrFail($id)
+                        ->makeVisible(['user', 'category']);
+                $relatedProducts = StoreProduct::where('id', '!=', $id)
+                    ->inRandomOrder()
+                    ->take(4)
+                    ->get();
+                $product->relatedProducts = $relatedProducts;
+                $product = new ProductDeteails($product);
+                return $product;
             case Role::WHOLESALER->value:
                 // Implement logic for wholesaler if needed
                 return [];

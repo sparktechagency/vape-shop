@@ -7,21 +7,25 @@ use App\Interfaces\FollowersInterface;
 use App\Interfaces\Forum\ForumGroupInterface;
 use App\Interfaces\Forum\ForumThreadInterface;
 use App\Interfaces\Front\HomeInterface;
+use App\Interfaces\PaymentGatewayInterface;
 use App\Interfaces\Post\PostInterface;
 use App\Interfaces\Post\PostLikeInterface;
 use App\Interfaces\Products\HeartedProductsInterface;
 use App\Interfaces\Products\HomeProductInterface;
 use App\Interfaces\Products\ManageProductsInterface;
+use App\Interfaces\PaymentRepositoryInterface;
 use App\Repositories\Auth\AuthRepository;
 use App\Repositories\FollowersRepository;
 use App\Repositories\Forum\ForumGroupRepository;
 use App\Repositories\Forum\ForumThreadRepository;
 use App\Repositories\Front\HomeRepository;
+use App\Repositories\PaymentRepository;
 use App\Repositories\Post\PostLikeRepository;
 use App\Repositories\Post\PostRepository;
 use App\Repositories\Products\HeartedProductsRepository;
 use App\Repositories\Products\HomeProductRepository;
 use App\Repositories\Products\ManageProductsRepository;
+use App\Services\Gateways\AuthorizeNetService;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
 
@@ -43,6 +47,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(HeartedProductsInterface::class, HeartedProductsRepository::class);
         $this->app->bind(HomeInterface::class, HomeRepository::class);
         $this->app->bind(HomeProductInterface::class, HomeProductRepository::class);
+
+
+        //payment services
+        $this->app->bind(PaymentGatewayInterface::class, AuthorizeNetService::class);
+        $this->app->bind(PaymentRepositoryInterface::class, PaymentRepository::class);
     }
 
     /**

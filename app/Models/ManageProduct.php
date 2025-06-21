@@ -17,6 +17,7 @@ class ManageProduct extends Model
         'role_label',
         'is_hearted',
         'total_heart',
+        'average_rating',
     ];
 
     protected $hidden = ['user'];
@@ -42,6 +43,12 @@ class ManageProduct extends Model
     public function hearts()
     {
         return $this->hasMany(Heart::class, 'manage_product_id');
+    }
+
+    //reviews relationship
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'manage_product_id');
     }
 
 
@@ -96,5 +103,15 @@ class ManageProduct extends Model
         return $this->hasMany(Heart::class, 'manage_product_id')
             ->where('user_id', auth()->id())
             ->exists();
+    }
+
+    //avarage rating
+    public function getAverageRatingAttribute()
+    {
+        return $this->reviews()->avg('rating') ?: 0; // Return 0
+        if ($this->reviews()->count() === 0) {
+            return 0; // Return 0 if there are no reviews
+        }
+        return $this->reviews()->avg('rating');
     }
 }
