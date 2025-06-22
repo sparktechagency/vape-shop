@@ -13,11 +13,17 @@ class PostService
 
     public function createPost(array $data)
     {
+        $articleImage = request()->file('article_image') ?? null;
+        if ($articleImage) {
+            $data['article_image'] = $articleImage->store('articles', 'public');
+        }
         return $this->postRepository->createPost($data);
     }
 
     public function updatePost(int $postId, array $data)
     {
+        $articleImage = request()->file('article_image') ?? null;
+        $data['article_image'] = $articleImage;
         return $this->postRepository->updatePost($postId, $data);
     }
 

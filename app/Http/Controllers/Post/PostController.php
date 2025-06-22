@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Post;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Post\PostRequest;
+use App\Models\Post;
 use App\Services\Post\PostService;
 use Illuminate\Http\Request;
 
@@ -13,6 +14,8 @@ class PostController extends Controller
     protected $postService;
     public function __construct(PostService $postService)
     {
+        $this->middleware('jwt.auth')->except(['index', 'show']);
+        $this->middleware('guest')->only(['index', 'show']);
         $this->postService = $postService;
     }
 
@@ -61,7 +64,8 @@ class PostController extends Controller
     public function show(string $id)
     {
         try {
-            $post = $this->postService->getPostById($id);
+            $post = Post::with(['user:id,first_name,last_name,role', 'comments'])->where('id',$id)->first();
+            $post->makeVisible('user');
             if (!$post) {
                 return response()->error('Post not found', 404);
             }

@@ -69,7 +69,7 @@ Route::group([
 ], function () {
     Route::apiResource('product-manage', ManageProductController::class)->except(['create', 'edit']);
 
-    Route::apiResource('post', PostController::class)->except(['create', 'edit']);
+
 });
 
 
@@ -104,6 +104,9 @@ Route::apiResource('forum-thread', ForumThreadController::class)->except(['creat
 
 //Forum comments
 Route::apiResource('forum-comment', ForumCommentController::class)->except(['create', 'edit', 'update', 'show']);
+
+//post and article routes
+Route::apiResource('post', PostController::class)->except(['create', 'edit']);
 
 
 

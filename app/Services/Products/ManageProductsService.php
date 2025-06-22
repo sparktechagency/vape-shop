@@ -105,7 +105,6 @@ class ManageProductsService
         if ($productImage) {
             // Store the new image first
             $imagePath = $productImage->store('products', 'public');
-
             // Remove old image if it exists
             if (!empty($data['product_image'])) {
                 $oldImagePath = getStorageFilePath($data['product_image']);

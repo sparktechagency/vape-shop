@@ -26,6 +26,7 @@ class PostRequest extends FormRequest
         return [
             'title' => 'nullable|string|max:255',
             'content' => 'required|string',
+            'article_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
 
@@ -35,6 +36,7 @@ class PostRequest extends FormRequest
         return [
             'title' => 'Title',
             'content' => 'Content',
+            'article_image' => 'Image',
         ];
     }
 

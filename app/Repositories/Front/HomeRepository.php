@@ -32,34 +32,34 @@ class HomeRepository implements HomeInterface
     {
         $user = User::where('id', $userId)->first();
         if (!$user) return [];
-
+        $is_most_hearted = request('is_most_hearted', false);
         switch ($type) {
             case 'store':
                 if ($user->role !== Role::STORE->value) return [];
-                $is_most_hearted = request('is_most_hearted', false);
-                $query = StoreProduct::where('user_id', $userId);
+                $query = StoreProduct::where('user_id', $userId)->withCount('hearts');
 
                 if ($is_most_hearted) {
-                    $query->withCount('hearts')
-                        ->orderByDesc('hearts_count');
+                    $query->orderByDesc('hearts_count');
                 } else {
                     $query->orderByDesc('created_at');
                 }
 
                 return [
                     'user' => $user,
-                    'products' => StoreProduct::where('user_id', $userId)
-                        ->orderByDesc('created_at')
-                        ->paginate($perPage),
+                    'products' => $query->paginate($perPage),
                 ];
 
             case 'brand':
                 if ($user->role !== Role::BRAND->value) return [];
+                $query = ManageProduct::where('user_id', $userId)->withCount('hearts');
+                if ($is_most_hearted) {
+                    $query->orderByDesc('hearts_count');
+                } else {
+                    $query->orderByDesc('created_at');
+                }
                 return [
                     'user' => $user,
-                    'products' => ManageProduct::where('user_id', $userId)
-                        ->orderByDesc('created_at')
-                        ->paginate($perPage),
+                    'products' => $query->paginate($perPage),
                 ];
 
             case 'wholesaler':

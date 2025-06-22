@@ -22,8 +22,9 @@ class ForumGroupRepository implements ForumGroupInterface
     {
         $userId = Auth::id();
         $isTrending = request()->boolean('is_trending');
-        $showFront = request()->boolean('show_front');
+        $isGlobal = request()->boolean('show_front');
         $perPage = (int) request()->get('per_page', 10);
+        $user_id = request()->get('user_id');
 
         $query = $this->model->withCount('threads');
 
@@ -33,8 +34,13 @@ class ForumGroupRepository implements ForumGroupInterface
             $query->orderByDesc('created_at');
         }
 
-        if (!$showFront && $userId) {
+
+        if (!$isGlobal && $userId) {
             $query->where('user_id', $userId);
+        }
+
+        if ($user_id) {
+            $query->where('user_id', $user_id);
         }
 
         return $query->paginate($perPage)->toArray();
@@ -48,9 +54,9 @@ class ForumGroupRepository implements ForumGroupInterface
     public function getGroupById(int $groupId): array
     {
         $userId = Auth::id();
-        $showFront = request()->boolean('show_front');
+        $isGlobal = request()->boolean('show_front');
         $query = $this->model->where('id', $groupId);
-        if (!$showFront && $userId) {
+        if (!$isGlobal && $userId) {
             $query->where('user_id', $userId);
         }
         $group = $query->first();

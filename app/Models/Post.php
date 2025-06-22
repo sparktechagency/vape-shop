@@ -11,6 +11,8 @@ class Post extends Model
         'user_id',
         'title',
         'content',
+        'article_image',
+        'content_type', // 'post' or 'article'
         // 'image',
     ];
 
@@ -60,6 +62,12 @@ class Post extends Model
     public function getRoleAttribute()
     {
         return $this->user->role ? Role::from($this->user->role)->label() : null;
+    }
+
+    //image attribute
+    public function getArticleImageAttribute($value)
+    {
+        return $value ? asset('storage/' . $value) : null;
     }
 
 }

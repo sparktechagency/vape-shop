@@ -40,12 +40,10 @@ class ManageProductsRepository implements ManageProductsInterface
 
         if (Auth::user()->role === Role::STORE->value) {
             return StoreProduct::findOrFail($id)->toArray();
-        }else{
+        } else {
 
             return ManageProduct::findOrFail($id)->toArray();
         }
-
-
     }
 
 
@@ -127,6 +125,13 @@ class ManageProductsRepository implements ManageProductsInterface
             }
         } else {
             $product = ManageProduct::findOrFail($id);
+        }
+        // Remove old image if it exists
+        if (!empty($data['product_image'])) {
+            $oldImagePath = getStorageFilePath($product->product_image);
+            if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
+                Storage::disk('public')->delete($oldImagePath);
+            }
         }
         $product->update($data);
 
