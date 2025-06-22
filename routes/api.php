@@ -12,6 +12,7 @@ use App\Http\Controllers\Forum\ForumCommentController;
 use App\Http\Controllers\Forum\ForumGroupController;
 use App\Http\Controllers\Forum\ForumThreadController;
 use App\Http\Controllers\Front\HomeController;
+use App\Http\Controllers\MostFollowersAdsController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Post\LikePostController;
 use App\Http\Controllers\Post\PostCommentController;
@@ -122,6 +123,8 @@ Route::group(['middleware' => 'guest'], function () {
 
     //get trending products
     Route::get('most-hearted-products', [TrendingProducts::class, 'mostHeartedProducts']);
+    //get ad requests products
+    Route::get('ad-request-trending-products', [TrendingProducts::class, 'adRequestsProducts']);
     //get most followers brand
     Route::get('most-followers-brand', [TrendingProducts::class, 'mostFollowersBrand']);
 
@@ -144,6 +147,5 @@ Route::get('/get-all-categories', [HomeProductController::class, 'getAllCategori
 //Ad trending products routes
 Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value]], function () {
     Route::apiResource('trending-ad-product', TrendingAdProductController::class)->except(['create', 'edit']);
-    // Route::post('trending-ad-product/{id}/approve', [TrendingProducts::class, 'approve']);
-    // Route::post('trending-ad-product/{id}/reject', [TrendingProducts::class, 'reject']);
+    Route::apiResource('most-followers-ad', MostFollowersAdsController::class)->except(['create', 'edit','show', 'update',]);
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Product;
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\Controller;
 use App\Models\ManageProduct;
+use App\Models\TrendingProducts as ModelsTrendingProducts;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,41 @@ class TrendingProducts extends Controller
         return response()->success(
             $products,
             'Most hearted products retrieved successfully.'
+        );
+    }
+
+    //ad requests products
+    public function adRequestsProducts(Request $request)
+    {
+        $adRequestsProducts = ModelsTrendingProducts::with(['product:id,product_name,product_image,user_id'])
+            ->where('status', 'approved')
+            ->where('is_active', true)
+            ->orderBy('display_order')
+            ->take(8)
+            ->get();
+
+        if ($adRequestsProducts->isEmpty()) {
+            return response()->error(
+                'No ad requests products found.',
+                404
+            );
+        }
+        $adRequestsProducts->transform(function ($adRequest) {
+            return [
+                'id' => $adRequest->id,
+                'product_id' => $adRequest->product_id,
+                'product_name' => $adRequest->Product->product_name ?? null,
+                'product_image' => $adRequest->Product->product_image ?? null,
+                'user_id' => $adRequest->user_id ?? null,
+                'status' => $adRequest->status,
+                'is_active' => $adRequest->is_active,
+                'display_order' => $adRequest->display_order,
+                'created_at' => $adRequest->created_at,
+            ];
+        });
+        return response()->success(
+            $adRequestsProducts,
+            'Ad requests products retrieved successfully.'
         );
     }
 

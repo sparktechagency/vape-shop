@@ -1,51 +1,47 @@
 <?php
 
-namespace App\Http\Controllers\Product;
+namespace App\Http\Controllers;
 
 use App\Enums\UserRole\Role;
-use App\Models\TrendingProducts;
-use App\Http\Requests\Product\TrendingAdProductRequest;
-use App\Models\Payment;
+use App\Http\Requests\MostFollowersAdRequest;
+use App\Models\MostFollowerAd;
+use App\Models\User;
+use App\Notifications\MostFollowersRequestConfirmation;
+use App\Notifications\NewMostFollowersAdRequestNotification;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\TrendingAdProductResource;
-use App\Models\User;
-use App\Notifications\NewTrendingAdRequestNotification;
-use App\Notifications\TrendingRequestConfirmation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
-class TrendingAdProductController extends Controller
+class MostFollowersAdsController extends Controller
 {
-    protected $paymentService;
 
+    protected $paymentService;
     public function __construct(PaymentService $paymentService)
     {
         $this->paymentService = $paymentService;
     }
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $user = Auth::user();
-        $trendingAdProducts = TrendingProducts::with(['product','payments'])
+        $mostFollowersAds = MostFollowerAd::with(['user'])
             ->where('user_id', $user->id)
             ->latest()
             ->paginate(10);
 
-        if ($trendingAdProducts->isEmpty()) {
+        if ($mostFollowersAds->isEmpty()) {
             return response()->error(
-                'No trending ad products found.',
+                'No most followers ads found.',
                 404
             );
         }
         return response()->success(
-            TrendingAdProductResource::collection($trendingAdProducts),
-            'Trending ad products retrieved successfully.'
+            $mostFollowersAds,
+            'Most followers ads retrieved successfully.'
         );
     }
 
@@ -60,7 +56,7 @@ class TrendingAdProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(TrendingAdProductRequest $request)
+    public function store(MostFollowersAdRequest $request)
     {
         DB::beginTransaction();
         try {
@@ -71,45 +67,43 @@ class TrendingAdProductController extends Controller
             $validatedData = $request->validated();
 
             // Create a new trending ad product using the validated data
-            $trendingAdProduct = TrendingProducts::create([
+            $mostFollowersAdRequest = MostFollowerAd::create([
                 'user_id' => $user->id,
-                'product_id' => $validatedData['product_id'],
-                // 'amount' => $validatedData['amount'],
                 'status' => 'pending',
                 'preferred_duration' => $validatedData['preferred_duration'],
                 'requested_at' => now(),
             ]);
 
-            $trendingAdProduct->amount = $validatedData['amount'];
+            $mostFollowersAdRequest->amount = $validatedData['amount'];
 
 
-            $response = $this->paymentService->processPaymentForPayable($trendingAdProduct, $validatedData);
+            $response = $this->paymentService->processPaymentForPayable($mostFollowersAdRequest, $validatedData);
             // Return a success response
             if ($response['status'] === 'success') {
                 //send notification to admin
                 $admins = User::where('role', Role::ADMIN->value)->get();
                 if ($admins->isNotEmpty()) {
-                    Notification::send($admins, new NewTrendingAdRequestNotification($trendingAdProduct));
+                    Notification::send($admins, new NewMostFollowersAdRequestNotification($mostFollowersAdRequest));
                 }
 
                 // Optionally, you can notify the user as well
-                $user->notify(new TrendingRequestConfirmation($trendingAdProduct));
+                $user->notify(new MostFollowersRequestConfirmation($mostFollowersAdRequest));
                 DB::commit();
                 return response()->success(
-                    $trendingAdProduct,
-                    $response['message'] ?? 'Trending ad product created successfully.',
+                    $mostFollowersAdRequest,
+                    $response['message'] ?? 'Most follower ad request submitted successfully.',
                     201
                 );
             }
             DB::rollBack();
             return response()->error(
-                $response['message'] ?? 'Failed to create trending ad product.',
+                $response['message'] ?? 'Failed to create most follower ad request.',
                 422
             );
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->error(
-                'An error occurred while creating the trending ad product: ' . $e->getMessage(),
+                'An error occurred while creating most followre ad request: ' . $e->getMessage(),
                 500
             );
         }
@@ -120,21 +114,7 @@ class TrendingAdProductController extends Controller
      */
     public function show(string $id)
     {
-        $trendingAdProduct = TrendingProducts::with(['product','payments'])
-            ->where('id', $id)
-            ->first();
-
-        if (!$trendingAdProduct) {
-            return response()->error(
-                'Trending ad product not found.',
-                404
-            );
-        }
-
-        return response()->success(
-            new TrendingAdProductResource($trendingAdProduct),
-            'Trending ad product retrieved successfully.'
-        );
+        //
     }
 
     /**

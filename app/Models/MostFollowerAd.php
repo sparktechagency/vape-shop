@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TrendingProducts extends Model
+class MostFollowerAd extends Model
 {
     protected $guarded = ['id'];
 
-     protected $casts = [
+    protected $casts = [
         'requested_at' => 'datetime',
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
@@ -17,6 +17,7 @@ class TrendingProducts extends Model
         'is_active' => 'boolean',
     ];
 
+    
     /**
      * Get all of the trading request's payments.
      */
@@ -25,26 +26,19 @@ class TrendingProducts extends Model
         return $this->morphMany(Payment::class, 'payable');
     }
 
-    public function product()
-    {
-        return $this->belongsTo(ManageProduct::class, 'product_id');
-    }
-
 
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    //relationship approveby
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
-    //relationship rejectedby
+
     public function rejectedBy()
     {
         return $this->belongsTo(User::class, 'rejected_by');
     }
-
 }
