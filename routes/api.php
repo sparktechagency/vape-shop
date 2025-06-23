@@ -68,8 +68,6 @@ Route::group([
     ]
 ], function () {
     Route::apiResource('product-manage', ManageProductController::class)->except(['create', 'edit']);
-
-
 });
 
 
@@ -90,10 +88,13 @@ Route::group(['middleware' => 'jwt.auth'], function () {
     Route::apiResource('post-comment', PostCommentController::class)->except(['create', 'edit', 'update', 'show']);
     //hearted product
     Route::apiResource('hearted-product', HeartedProductController::class)->except(['create', 'edit', 'update', 'show', 'destroy']);
-
-    //reviews product
-    Route::apiResource('product-review', ReviewController::class)->except(['create', 'edit', 'update', 'show']);
 });
+
+//reviews product
+Route::apiResource('product-review', ReviewController::class)->except(['create', 'edit', 'update', 'show']);
+Route::post('/reviews/{review}/toggle-like', [ReviewController::class, 'toggleReviewLike']);
+//most rated reviews
+Route::get('/most-rated-reviews', [ReviewController::class, 'mostRatedReviews']);
 
 //forum routes
 //Forum group
@@ -150,5 +151,5 @@ Route::get('/get-all-categories', [HomeProductController::class, 'getAllCategori
 //Ad trending products routes
 Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value]], function () {
     Route::apiResource('trending-ad-product', TrendingAdProductController::class)->except(['create', 'edit']);
-    Route::apiResource('most-followers-ad', MostFollowersAdsController::class)->except(['create', 'edit','show', 'update',]);
+    Route::apiResource('most-followers-ad', MostFollowersAdsController::class)->except(['create', 'edit', 'show', 'update',]);
 });

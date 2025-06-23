@@ -64,7 +64,18 @@ class PostController extends Controller
     public function show(string $id)
     {
         try {
-            $post = Post::with(['user:id,first_name,last_name,role', 'comments'])->where('id',$id)->first();
+            $post = Post::with(['user:id,first_name,last_name,role,avatar',
+
+            'comments' => function ($query) {
+                $query->whereNull('parent_id')
+                      ->with(['user:id,first_name,last_name,role,avatar']);
+            },
+            'comments.replies'
+            ])
+                ->where('id',$id)
+                ->first();
+
+
             $post->makeVisible('user');
             if (!$post) {
                 return response()->error('Post not found', 404);

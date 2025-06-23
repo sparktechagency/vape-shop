@@ -25,6 +25,6 @@ class PostComment extends Model
 
     public function replies()
     {
-        return $this->hasMany(PostComment::class, 'parent_id')->with('replies');
+        return $this->hasMany(PostComment::class, 'parent_id')->with('user:id,first_name,last_name,role,avatar');
     }
 }

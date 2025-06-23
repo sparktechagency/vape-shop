@@ -33,4 +33,22 @@ class Review extends Model
     {
         return $this->belongsTo(Region::class);
     }
+
+
+
+    //likeable relationship
+    public function likedByUsers(){
+        return $this->belongsToMany(
+            User::class,
+            'reviews_likeables',
+            'review_id',
+            'user_id'
+        );
+    }
+
+    //replies relationship
+    public function replies()
+    {
+        return $this->hasMany(Review::class, 'parent_id')->with('user:id,first_name,last_name,role,avatar');
+    }
 }

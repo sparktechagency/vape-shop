@@ -23,7 +23,7 @@ class FavouriteController extends Controller
             return response()->error('Invalid role specified.', 422);
         }
         if($role){
-            $favourites = $user->favourites()->select('users.id', 'users.first_name', 'users.role')->where('role', $role)->get();
+            $favourites = $user->favourites()->select('users.id', 'users.first_name', 'users.role','users.avatar')->where('role', $role)->get();
         }
 
         $favourites->makeHidden(['total_followers','first_name', 'total_following', 'email', 'password', 'remember_token']);

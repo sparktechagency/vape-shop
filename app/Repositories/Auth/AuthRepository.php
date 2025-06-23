@@ -220,6 +220,7 @@ class AuthRepository implements AuthRepositoryInterface
             return $favoriteUser->role === Role::STORE->value;
         });
         unset($user->favourites);
+        // dd($favouriteStores, $favouriteBrands);
 
         $user->favourite_store_list = FavouriteUserResource::collection($favouriteStores->values());
         $user->favourite_brand_list = FavouriteUserResource::collection($favouriteBrands->values());

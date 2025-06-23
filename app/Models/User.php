@@ -238,4 +238,13 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->favouritesBy()->where('user_id', auth()->id())->exists();
     }
+
+    /**
+     *
+     * The reviews that are liked by the user.
+     */
+    public function likedReviews()
+    {
+        return $this->belongsToMany(Review::class, 'reviews_likeables', 'user_id', 'review_id');
+    }
 }

@@ -4,15 +4,21 @@ namespace App\Http\Controllers\Product;
 
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\Controller;
+use App\Models\ManageProduct;
 use App\Models\Review;
 use App\Models\StoreProduct;
 use App\Models\User;
-use App\Repositories\Products\HeartedProductsRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ReviewController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('jwt.auth', ['except' => ['index', 'show','mostRatedReviews']]);
+    }
 
     /**
      * Display a listing of the resource.
@@ -33,28 +39,35 @@ class ReviewController extends Controller
             return response()->error($validator->errors()->first(), 422, $validator->errors());
         }
 
-        switch ($role) {
-            case Role::BRAND->value:
-                $reviews = Review::where('manage_product_id', $request->input('product_id'))
-                    ->with(['manageProducts:id,user_id,product_name,product_image', 'user:id,first_name,last_name,email,role'])
-                    ->paginate(10);
-                break;
-            case Role::STORE->value:
-                $reviews = Review::where('store_product_id', $request->input('product_id'))
-                    ->with(['storeProducts:id,product_name,product_image','user:id,first_name,last_name,email,role'])
-                    ->paginate(10);
-                break;
-            case Role::WHOLESALER->value:
-                // Handle wholesaler reviews logic here
-                break;
-            default:
-                return response()->error('Invalid role provided.', 400);
-        }
+
+        $reviews = match ($role) {
+            Role::BRAND->value => $reviews = Review::where('manage_product_id', $request->input('product_id'))
+                ->whereNull('store_product_id')
+                ->whereNull('parent_id')
+                ->with(['user:id,first_name,last_name,role,avatar'])
+                ->withCount(['likedByUsers as like_count', 'replies'])
+                ->with('replies')
+                ->latest()
+                ->paginate(10),
+            Role::STORE->value => Review::where('store_product_id', $request->input('product_id'))
+                ->whereNull('parent_id')
+                ->with(['user:id,first_name,last_name,email,role'])
+                ->withCount(['likedByUsers as like_count', 'replies'])
+                ->with('replies')
+                ->latest()
+                ->paginate(10),
+            Role::WHOLESALER->value => Review::where('wholesaler_product_id', $request->input('product_id'))
+                ->whereNull('parent_id')
+                ->with(['user:id,first_name,last_name,email,role'])
+                ->withCount(['likedByUsers as like_count', 'replies'])
+                ->with('replies')
+                ->latest()
+                ->paginate(10),
+            default =>  response()->error('Invalid role provided.', 400),
+        };
 
         // Return the reviews
         return response()->success($reviews, 'Reviews retrieved successfully.', 200);
-
-
     }
 
     //product rule based on role
@@ -93,8 +106,9 @@ class ReviewController extends Controller
         $validator = Validator::make($request->all(), [
             'product_id' => $productRule,
             'role' => 'required|integer|in:' . Role::BRAND->value . ',' . Role::STORE->value . ',' . Role::WHOLESALER->value,
-            'rating' => 'required|integer|min:1|max:5',
+            'rating' => $request->filled('parent_id') ? 'nullable|integer|min:1|max:5' : 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',
+            'parent_id' => 'nullable|exists:reviews,id',
         ]);
         //validate errors
         if ($validator->fails()) {
@@ -107,8 +121,9 @@ class ReviewController extends Controller
                 $review = Review::create([
                     'user_id' => auth()->id(),
                     'manage_product_id' => $request->input('product_id'),
-                    'rating' => $request->input('rating'),
+                    $request->filled('parent_id') ?: 'rating' =>  $request->input('rating'),
                     'comment' => $request->input('comment'),
+                    'parent_id' => $request->input('parent_id'),
                 ]);
                 break;
             case Role::STORE->value:
@@ -200,5 +215,55 @@ class ReviewController extends Controller
             return $data;
         }
         return null;
+    }
+
+
+    //toggle review like
+    public function toggleReviewLike(Review $review)
+    {
+
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->error('User not authenticated.', 401);
+            }
+
+            $result = $review->likedByUsers()->toggle($user->id);
+            if (count($result['attached']) > 0) {
+                return response()->success(null, 'Review liked successfully.', 200);
+            } elseif (count($result['detached']) > 0) {
+                return response()->success(null, 'Review unliked successfully.', 200);
+            }
+            return response()->error('No changes made to the review like status.', 400);
+        } catch (\Exception $e) {
+            return response()->error('An error occurred while toggling review like.', 500, $e->getMessage());
+            // Optionally, you can log the exception or handle it further
+            //throw $th;
+        }
+    }
+
+
+    //most rated reviews
+
+    public function mostRatedReviews(Request $request)
+    {
+
+        // Fetch most rated reviews based on role
+
+        $mostRatedReviews = Review::whereNotNull('rating')
+            ->whereNull('store_product_id')
+            ->whereNull('parent_id')
+            ->with(['manageProducts:id,user_id,product_name,product_image,product_price,slug','user:id,first_name,last_name,role,avatar'])
+            ->withCount(['likedByUsers as like_count', 'replies'])
+            ->with('replies')
+            ->having('like_count', '>', 0)
+            ->orderByDesc('like_count')
+            ->take(50)
+            ->get();
+
+        if ($mostRatedReviews->isEmpty()) {
+            return response()->error('No most rated reviews found.', 404);
+        }
+        return response()->success($mostRatedReviews, 'Most rated reviews retrieved successfully.', 200);
     }
 }
