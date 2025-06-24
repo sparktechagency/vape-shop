@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\UserRole\Role;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -33,6 +34,19 @@ class UserResource extends JsonResource
             'avg_rating' => $this->avg_rating,
             'total_reviews' => $this->total_reviews,
             'is_favourite' => $this->is_favourite,
+            'is_banned' => $this->is_banned,
+
+            $this->mergeWhen($this->relationLoaded('favourites'), function () {
+
+                [$favouriteStores, $favouriteBrands] = $this->favourites->partition(function ($favoriteUser) {
+                    return $favoriteUser->role === Role::STORE->value;
+                });
+
+                return [
+                    'favourite_stores' => FavouriteUserResource::collection($favouriteStores),
+                    'favourite_brands' => FavouriteUserResource::collection($favouriteBrands),
+                ];
+            }),
         ];
     }
 }

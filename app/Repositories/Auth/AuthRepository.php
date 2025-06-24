@@ -216,9 +216,6 @@ class AuthRepository implements AuthRepositoryInterface
             return $favoriteUser->role === Role::STORE->value;
         });
         // $user = Auth::user()->load('address.region', 'favourites');
-        [$favouriteStores, $favouriteBrands] = $user->favourites->partition(function ($favoriteUser) {
-            return $favoriteUser->role === Role::STORE->value;
-        });
         unset($user->favourites);
         // dd($favouriteStores, $favouriteBrands);
 

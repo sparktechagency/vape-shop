@@ -16,6 +16,7 @@ class PostController extends Controller
     {
         $this->middleware('jwt.auth')->except(['index', 'show']);
         $this->middleware('guest')->only(['index', 'show']);
+        $this->middleware('banned');
         $this->postService = $postService;
     }
 
@@ -51,11 +52,10 @@ class PostController extends Controller
         try {
             $data = $request->validated();
             $post = $this->postService->createPost($data);
-            return response()->success($post,'Post created successfully');
+            return response()->success($post, 'Post created successfully');
         } catch (\Exception $e) {
             return response()->error('Failed to create post', 500, $e->getMessage());
         }
-
     }
 
     /**
@@ -64,22 +64,29 @@ class PostController extends Controller
     public function show(string $id)
     {
         try {
-            $post = Post::with(['user:id,first_name,last_name,role,avatar',
+            $contentType = request()->query('content_type', 'post');
+            $post = Post::with([
+                'user:id,first_name,last_name,role,avatar',
 
-            'comments' => function ($query) {
-                $query->whereNull('parent_id')
-                      ->with(['user:id,first_name,last_name,role,avatar']);
-            },
-            'comments.replies'
+                'comments' => function ($query) {
+                    $query->whereNull('parent_id')
+                        ->with(['user:id,first_name,last_name,role,avatar']);
+                },
+                'comments.replies'
             ])
-                ->where('id',$id)
-                ->first();
-
-
-            $post->makeVisible('user');
-            if (!$post) {
-                return response()->error('Post not found', 404);
+                ->where('id', $id);
+            if ($contentType === 'article') {
+                $post->where('content_type', 'article');
+            } else {
+                $post->where('content_type', 'post');
             }
+            $post = $post->first();
+
+            if (!$post) {
+                $message = $contentType === 'article' ? 'Article not found' : 'Post not found';
+                return response()->error($message, 404);
+            }
+            $post->makeVisible('user');
             return response()->success($post, 'Post retrieved successfully');
         } catch (\Exception $e) {
             return response()->error('Failed to retrieve post', 500, $e->getMessage());

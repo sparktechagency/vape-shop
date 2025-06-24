@@ -3,6 +3,7 @@ namespace App\Services\Auth;
 use App\Interfaces\Auth\AuthRepositoryInterface;
 use App\Models\User;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthService
@@ -29,6 +30,11 @@ class AuthService
     public function login(array $credentials)
     {
         $token = JWTAuth::attempt($credentials);
+        //check if user is banned
+        if (Auth::check() && Auth::user()->banned_at) {
+            Auth::logout();
+            return 'user_banned';
+        }
         if (!$token) {
             return 'invalid_credentials';
         }

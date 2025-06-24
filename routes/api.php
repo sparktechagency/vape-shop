@@ -2,6 +2,7 @@
 
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
+use App\Http\Controllers\Admin\ArticlesController;
 use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AuthController;
@@ -37,32 +38,43 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('/logout', 'logout');
     Route::post('/verify-email', 'verifyEmail');
     Route::post('/resend-otp', 'resendOtp');
-    Route::post('/reset-password', 'resetPassword')->middleware('jwt.auth');
-    Route::get('/me', 'me')->middleware('jwt.auth');
+    Route::post('/reset-password', 'resetPassword')->middleware('jwt.auth','banned');
+    Route::get('/me', 'me')->middleware('jwt.auth','banned');
     Route::get('/profile/{id}', 'profile')->middleware('guest');
-    Route::post('/update-password', 'updatePassword')->middleware('jwt.auth');
-    Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth');
+    Route::post('/update-password', 'updatePassword')->middleware('jwt.auth', 'banned');
+    Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth', 'banned');
 });
 
 //admin routes
-Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'check.role:' . Role::ADMIN->value]], function () {
+Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth','banned', 'check.role:' . Role::ADMIN->value]], function () {
     Route::get('/manage-users', [UserManagementController::class, 'manageUsers']);
     Route::get('/user/{id}', [UserManagementController::class, 'getUserById']);
     Route::get('/get-all-users', [UserManagementController::class, 'getAllUsers']);
+    Route::put('/ban-user/{id}', [UserManagementController::class, 'banUser']);
+    Route::put('/unban-user/{id}', [UserManagementController::class, 'unbanUser']);
+    Route::get('/get-banned-users', [UserManagementController::class, 'getBannedUsers']);
 
     //slider
     Route::apiResource('slider', SliderController::class)->except(['create', 'edit']);
+    //article
+    Route::get('/get-all-articles', [ArticlesController::class, 'getAllArticles']);
+    //delete article
+    Route::delete('/delete/article/{id}', [ArticlesController::class, 'deleteArticle']);
+    //update article
 
     //advertisement
     Route::get('/get-all-ad-requests', [AdApprovalsManageController::class, 'getAllAdRequests']);
     Route::get('/get-ad-request-by-id/{id}', [AdApprovalsManageController::class, 'getAdRequestById']);
     Route::put('/update-ad-request-status/{id}', [AdApprovalsManageController::class, 'updateAdRequestStatus']);
+
+
 });
 
 //manage product for brand, store and wholesaler
 Route::group([
     'middleware' => [
         'jwt.auth',
+        'banned',
         'check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value]), // Correctly implode into a string
         'check.product.owner'
     ]
@@ -73,7 +85,7 @@ Route::group([
 
 
 //manage follow
-Route::group(['middleware' => 'jwt.auth'], function () {
+Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     Route::post('/follow', [FollowersController::class, 'follow']);
     Route::post('/unfollow', [FollowersController::class, 'unfollow']);
     Route::get('/get-followers-list', [FollowersController::class, 'getAllFollowers']);

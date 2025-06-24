@@ -14,6 +14,7 @@ class ForumThreadController extends Controller
     {
         $this->middleware('jwt.auth')->except(['index', 'show']);
         $this->middleware('guest')->only(['index', 'show']);
+        $this->middleware('banned');
         $this->forumThreadService = $forumThreadService;
     }
 

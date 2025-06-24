@@ -37,6 +37,7 @@ class User extends Authenticatable implements JWTSubject
         'avg_rating',
         'total_reviews',
         'is_favourite',
+        'is_banned'
         // 'region',
     ];
 
@@ -63,6 +64,7 @@ class User extends Authenticatable implements JWTSubject
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'banned_at' => 'datetime',
         ];
     }
 
@@ -237,6 +239,12 @@ class User extends Authenticatable implements JWTSubject
     public function getIsFavouriteAttribute(): bool
     {
         return $this->favouritesBy()->where('user_id', auth()->id())->exists();
+    }
+
+    //is banned attribute
+    public function getIsBannedAttribute(): bool
+    {
+        return $this->banned_at !== null;
     }
 
     /**

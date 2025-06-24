@@ -51,6 +51,8 @@ class AuthController extends Controller
             return response()->error('Invalid credentials.', 401);
         } elseif ($result == 'email_not_verified') {
             return response()->error('Email not verified.', 401);
+        } elseif ($result == 'user_banned') {
+            return response()->error('Your account has been suspended. Please contact support.', 403);
         }
         return response()->success($result, 'Login successful.');
     }

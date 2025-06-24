@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.role' => App\Http\Middleware\CheckRole::class,
             'check.product.owner' => App\Http\Middleware\CheckProductOwner::class,
             'guest' => App\Http\Middleware\GuestMiddleware::class,
+            'banned' => App\Http\Middleware\CheckIfBanned::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

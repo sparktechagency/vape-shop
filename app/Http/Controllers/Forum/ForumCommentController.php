@@ -17,6 +17,7 @@ class ForumCommentController extends Controller
     {
         $this->middleware('jwt.auth')->except(['index']);
         $this->middleware('guest')->only(['index']);
+        $this->middleware('banned');
 
 
         $model = new ForumComment();
