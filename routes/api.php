@@ -3,6 +3,7 @@
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
 use App\Http\Controllers\Admin\ArticlesController;
+use App\Http\Controllers\admin\DashboardController;
 use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AuthController;
@@ -47,6 +48,9 @@ Route::controller(AuthController::class)->group(function () {
 
 //admin routes
 Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth','banned', 'check.role:' . Role::ADMIN->value]], function () {
+    Route::get('/dashboard', [DashboardController::class, 'dashboardController']);
+
+
     Route::get('/manage-users', [UserManagementController::class, 'manageUsers']);
     Route::get('/user/{id}', [UserManagementController::class, 'getUserById']);
     Route::get('/get-all-users', [UserManagementController::class, 'getAllUsers']);
