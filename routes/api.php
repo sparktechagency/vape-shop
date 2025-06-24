@@ -48,7 +48,7 @@ Route::controller(AuthController::class)->group(function () {
 
 //admin routes
 Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth','banned', 'check.role:' . Role::ADMIN->value]], function () {
-    Route::get('/dashboard', [DashboardController::class, 'dashboardController']);
+    Route::get('/dashboard', [DashboardController::class, 'dashboard']);
 
 
     Route::get('/manage-users', [UserManagementController::class, 'manageUsers']);
