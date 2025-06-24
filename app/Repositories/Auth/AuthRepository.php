@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AuthRepository implements AuthRepositoryInterface
 {
@@ -170,6 +171,8 @@ class AuthRepository implements AuthRepositoryInterface
     public function updateProfile(array $data): array
     {
         $user = Auth::user();
+        $avatar = request()->file('avatar');
+        $coverPhoto = request()->file('cover_photo');
         if (!$user) {
             return [
                 'success' => false,
@@ -177,6 +180,26 @@ class AuthRepository implements AuthRepositoryInterface
                 'code' => 404,
             ];
         }
+
+         if ($avatar) {
+            $oldImagePath = getStorageFilePath($user->avatar);
+            if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
+                Storage::disk('public')->delete($oldImagePath);
+            }
+            $user->avatar = $avatar->store('avatars', 'public');
+        }
+
+        //cover photo
+        if ($coverPhoto) {
+            $oldImagePath = getStorageFilePath($user->cover_photo);
+            if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
+                Storage::disk('public')->delete($oldImagePath);
+            }
+            $user->cover_photo = $coverPhoto->store('cover_photos', 'public');
+        }
+
+
+
         $firstName = $this->getFirstNameByRole($user->role, $data);
         $user->first_name = $firstName;
         $user->last_name = $data['last_name'] ?? $user->last_name;

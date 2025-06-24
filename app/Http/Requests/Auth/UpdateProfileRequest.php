@@ -28,6 +28,8 @@ class UpdateProfileRequest extends FormRequest
 
         $rules = [
             'last_name' => 'nullable|string|max:255',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             // 'role' => 'required|string|max:255|in:2,3,4,5,6',
             // 'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'nullable|regex:/^\+?[0-9]{10,15}$/|unique:users,phone,'. Auth::id(),
@@ -54,6 +56,8 @@ class UpdateProfileRequest extends FormRequest
         return [
             'first_name' => 'First name',
             'last_name' => 'Last name',
+            'avatar' => 'Avatar',
+            'cover_photo' => 'Cover photo',
             'email' => 'Email',
             'phone' => 'Phone',
             'address' => 'Address',

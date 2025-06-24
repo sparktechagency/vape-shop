@@ -124,6 +124,12 @@ class User extends Authenticatable implements JWTSubject
         return $value ? asset('storage/' . $value) : "https://ui-avatars.com/api/?background=random&name={$this->first_name}+{$this->last_name}&bold=true";
     }
 
+    //get cover photo
+    public function getCoverPhotoAttribute($value)
+    {
+        return $value ? asset('storage/' . $value) : null;
+    }
+
     //get region name
     // public function getRegionAttribute(): string
     // {
