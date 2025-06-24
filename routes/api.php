@@ -1,33 +1,34 @@
 <?php
 
 use App\Enums\UserRole\Role;
-use App\Http\Controllers\Admin\AdApprovalsManageController;
-use App\Http\Controllers\Admin\ArticlesController;
-use App\Http\Controllers\admin\DashboardController;
-use App\Http\Controllers\Admin\SliderController;
-use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CountryRegionController;
-use App\Http\Controllers\FavouriteController;
-use App\Http\Controllers\FollowersController;
-use App\Http\Controllers\Forum\ForumCommentController;
-use App\Http\Controllers\Forum\ForumGroupController;
-use App\Http\Controllers\Forum\ForumThreadController;
-use App\Http\Controllers\Front\HomeController;
-use App\Http\Controllers\MostFollowersAdsController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\Post\LikePostController;
-use App\Http\Controllers\Post\PostCommentController;
-use App\Http\Controllers\Post\PostController;
-use App\Http\Controllers\product\HeartedProductController;
-use App\Http\Controllers\Product\HomeProductController;
-use App\Http\Controllers\Product\ManageProductController;
-use App\Http\Controllers\Product\ReviewController;
-use App\Http\Controllers\Product\TrendingAdProductController;
-use App\Http\Controllers\Product\TrendingProducts;
-use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use Illuminate\Container\Attributes\Auth;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\FavouriteController;
+use App\Http\Controllers\FollowersController;
+use App\Http\Controllers\Post\PostController;
+use App\Http\Controllers\Front\HomeController;
+use App\Http\Controllers\Admin\SliderController;
+use App\Http\Controllers\CountryRegionController;
+use App\Http\Controllers\Post\LikePostController;
+use App\Http\Controllers\Admin\ArticlesController;
+use App\Http\Controllers\Product\ReviewController;
+use App\Http\Controllers\Product\TrendingProducts;
+use App\Http\Controllers\admin\DashboardController;
+use App\Http\Controllers\Forum\ForumGroupController;
+use App\Http\Controllers\MostFollowersAdsController;
+use App\Http\Controllers\Post\PostCommentController;
+use App\Http\Controllers\Forum\ForumThreadController;
+use App\Http\Controllers\Forum\ForumCommentController;
+use App\Http\Controllers\Product\HomeProductController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Product\ManageProductController;
+use App\Http\Controllers\product\HeartedProductController;
+use App\Http\Controllers\Admin\AdApprovalsManageController;
+use App\Http\Controllers\Product\TrendingAdProductController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -104,6 +105,14 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     Route::apiResource('post-comment', PostCommentController::class)->except(['create', 'edit', 'update', 'show']);
     //hearted product
     Route::apiResource('hearted-product', HeartedProductController::class)->except(['create', 'edit', 'update', 'show', 'destroy']);
+
+    //message routes
+    Route::post('send-message', [MessageController::class, 'sendMessage']);
+    Route::get('get-message', [MessageController::class, 'getMessage']);
+    Route::get('mark-read', [MessageController::class, 'markRead']);
+    Route::get('search-new-user', [MessageController::class, 'searchNewUser']);
+    Route::get('chat-list', [MessageController::class, 'chatList']);
+
 });
 
 //reviews product
@@ -172,3 +181,5 @@ Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value]],
     Route::apiResource('trending-ad-product', TrendingAdProductController::class)->except(['create', 'edit']);
     Route::apiResource('most-followers-ad', MostFollowersAdsController::class)->except(['create', 'edit', 'show', 'update',]);
 });
+
+
