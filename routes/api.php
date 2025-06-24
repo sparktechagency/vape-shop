@@ -108,6 +108,9 @@ Route::post('/reviews/{review}/toggle-like', [ReviewController::class, 'toggleRe
 //most rated reviews
 Route::get('/most-rated-reviews', [ReviewController::class, 'mostRatedReviews']);
 
+//user latest reviews
+Route::get('/user-latest-reviews', [ReviewController::class, 'userLatestReviews']);
+
 //forum routes
 //Forum group
 Route::apiResource('forum-group', ForumGroupController::class)->except(['create', 'edit']);

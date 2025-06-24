@@ -134,8 +134,9 @@ class ReviewController extends Controller
                     'store_product_id' => $request->input('product_id'),
                     'region_id' => $data['region_id'] ?? null,
                     'manage_product_id' => $data['manage_product_id'] ?? null,
-                    'rating' => $request->input('rating'),
+                    $request->filled('parent_id') ?: 'rating' =>  $request->input('rating'),
                     'comment' => $request->input('comment'),
+                    'parent_id' => $request->input('parent_id'),
                 ]);
                 break;
             case Role::WHOLESALER->value:
@@ -254,7 +255,13 @@ class ReviewController extends Controller
         $mostRatedReviews = Review::whereNotNull('rating')
             ->whereNull('store_product_id')
             ->whereNull('parent_id')
-            ->with(['manageProducts:id,user_id,product_name,product_image,product_price,slug','user:id,first_name,last_name,role,avatar'])
+            ->with(['manageProducts' => function ($query){
+                $query->select('id', 'user_id','category_id', 'product_name', 'product_image', 'product_price', 'slug')
+                ->with('category:id,name');
+
+            },
+
+            'user:id,first_name,last_name,role,avatar'])
             ->withCount(['likedByUsers as like_count', 'replies'])
             ->with('replies')
             ->having('like_count', '>', 0)
@@ -266,5 +273,77 @@ class ReviewController extends Controller
             return response()->error('No most rated reviews found.', 404);
         }
         return response()->success($mostRatedReviews, 'Most rated reviews retrieved successfully.', 200);
+    }
+
+    //auth user letest reviews
+    public function userLatestReviews(Request $request){
+        try {
+            $user = Auth::user();
+            $perPage = $request->input('per_page', 10);
+            // dd($user);
+            if (!$user) {
+                return response()->error('User not authenticated.', 401);
+            }
+
+            $role = $user->role;
+             $reviews = match($role){
+                Role::BRAND->value => $user->reviewsOnManageProducts()
+                            ->whereNull('parent_id')
+                            ->whereNull('store_product_id')
+                            ->with([
+                                 'manageProducts' => function ($query) {
+                                     $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
+                                     ->with('category:id,name');
+                                 },
+                                 'user:id,first_name,last_name,role,avatar',
+                             ])
+                             ->withCount(['likedByUsers as like_count', 'replies'])
+                             ->with('replies')
+                             ->latest()
+                             ->paginate($perPage),
+                Role::STORE->value => $user->reviewsOnStoreProducts()
+                            ->whereNull('parent_id')
+                            //  ->whereNull('wholesaler_product_id')
+                            ->with([
+                                 'storeProducts' => function ($query) {
+                                     $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
+                                     ->with('category:id,name');
+                                 },
+                                 'user:id,first_name,last_name,role,avatar',
+                             ])
+                             ->withCount(['likedByUsers as like_count', 'replies'])
+                             ->with('replies')
+                             ->latest()
+                             ->paginate($perPage),
+                Role::WHOLESALER->value => $user->reviewsOnWholesalerProducts()
+                            ->whereNull('parent_id')
+                            ->with([
+                                 'wholesalerProducts' => function ($query) {
+                                     $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
+                                     ->with('category:id,name');
+                                 },
+                                 'user:id,first_name,last_name,role,avatar',
+                             ])
+                             ->withCount(['likedByUsers as like_count', 'replies'])
+                             ->with('replies')
+                             ->latest()
+                             ->paginate($perPage),
+                default => response()->error('Invalid user role.', 400),
+             };
+
+            // $reviews = Review::where('user_id', $user->id)
+            //     ->with(['manageProducts:id,user_id,product_name,product_image,product_price,slug','storeProduct:id,user_id,product_name,product_image,product_price,slug'])
+            //     ->withCount(['likedByUsers as like_count', 'replies'])
+            //     ->with('replies')
+            //     ->latest()
+            //     ->paginate(10);
+
+            // if ($reviews->isEmpty()) {
+            //     return response()->error('No reviews found for this user.', 404);
+            // }
+            return response()->success($reviews, 'User reviews retrieved successfully.', 200);
+        } catch (\Exception $e) {
+            return response()->error('Error occurred while retrieving user reviews.', 500, $e->getMessage());
+        }
     }
 }

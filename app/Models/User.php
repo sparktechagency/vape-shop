@@ -166,6 +166,32 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(StoreProduct::class);
     }
 
+    //relationship with reviews on manage products
+    public function reviewsOnManageProducts()
+    {
+        return $this->hasManyThrough(
+            Review::class,
+            ManageProduct::class,
+            'user_id',          // manage_products table foreign key
+            'manage_product_id', // reviews table foreign key
+            'id',              // user table local key
+            'id'                // manage_products table local key
+        );
+    }
+
+    //relationship with reviews on store products
+     public function reviewsOnStoreProducts()
+    {
+        return $this->hasManyThrough(
+            Review::class,
+            StoreProduct::class,
+            'user_id',          // store_products table foreign key
+            'store_product_id', // reviews table foreign key
+            'id',              // user table local key
+            'id'                // store_products table local key
+        );
+    }
+
     public function followers()
     {
         return $this->belongsToMany(User::class, 'followers', 'following_id', 'follower_id')->withTimestamps();
