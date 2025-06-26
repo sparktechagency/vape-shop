@@ -13,6 +13,18 @@ class HomeService
         $this->repository = $repository;
     }
 
+
+    //search brand, shops, products, all account except admin,  and everything
+    public function search(?string $searchTerm, ?string $type, int $perPage, int $regionId)
+    {
+        // Validate the type
+        if (!in_array($type, ['products', 'store', 'brand', 'wholesaler', 'accounts'])) {
+            throw new \InvalidArgumentException('Invalid type provided. Allowed types are: products, store, brand, wholesaler and accounts.');
+        }
+        // Validate the search term
+        return $this->repository->search($searchTerm, $type, $perPage, $regionId);
+    }
+
     public function getAllStoreBrandWholesaler($type, $perPage = 12)
     {
         // Validate the type

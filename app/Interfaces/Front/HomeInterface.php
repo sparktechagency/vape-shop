@@ -4,6 +4,8 @@ namespace App\Interfaces\Front;
 
 interface HomeInterface
 {
+    //search brand, shops, products, all account except admin,  and everything
+    public function search(?string $searchTerm, ?string $type = 'products', int $perPage = 10, int $regionId);
    //get all store or brand or wholesaler
     public function getAllStoreBrandWholesaler($type, $perPage);
 
