@@ -108,10 +108,10 @@ class ManageProduct extends Model
     //avarage rating
     public function getAverageRatingAttribute()
     {
-        return $this->reviews()->avg('rating') ?: 0; // Return 0
-        if ($this->reviews()->count() === 0) {
-            return 0; // Return 0 if there are no reviews
+        $avg = $this->reviews()->avg('rating');
+        if ($avg === null) {
+            return 0;
         }
-        return $this->reviews()->avg('rating');
+        return round($avg, 1);
     }
 }

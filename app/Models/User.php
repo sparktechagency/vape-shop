@@ -255,7 +255,7 @@ class User extends Authenticatable implements JWTSubject
             default => 0,
         };
 
-        return round($average ?? 0, 2);
+        return round($average ?? 0, 1);
     }
 
     //total reviews attribute

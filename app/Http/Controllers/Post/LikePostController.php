@@ -46,6 +46,9 @@ class LikePostController extends Controller
     {
         try {
             $likes = $this->postLikeService->getLikesByPostId((int)$postId);
+            if (empty($likes)) {
+                return response()->error('No likes found for this post', 404);
+            }
             return response()->success($likes, 'Likes retrieved successfully');
         } catch (\Exception $e) {
             return response()->error('Failed to retrieve likes', 500, $e->getMessage());

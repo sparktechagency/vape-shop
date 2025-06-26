@@ -56,7 +56,7 @@ class NewMostFollowersAdRequestNotification extends Notification implements Shou
             'status' => $this->mostFollowersAd->status,
             'preferred_duration' => $this->mostFollowersAd->preferred_duration,
             'requested_at' => $this->mostFollowersAd->requested_at,
-            'message' => 'A new Most Followers Ad request has been created.',
+            'message' => 'A new most Follower Ad request has been created.',
             'time'=> now()
         ];
     }

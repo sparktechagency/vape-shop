@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Product\ManageProductController;
 use App\Http\Controllers\product\HeartedProductController;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\Product\TrendingAdProductController;
 
 // Route::get('/user', function (Request $request) {
@@ -101,6 +102,9 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     Route::get('/get-likes-count/{postId}', [LikePostController::class, 'getLikesCount']);
     Route::get('/get-likes-by-post-id/{postId}', [LikePostController::class, 'getLikesByPostId']);
 
+    //feed
+    Route::get('/feed', [FeedController::class, 'feed']);
+
     //post comment
     Route::apiResource('post-comment', PostCommentController::class)->except(['create', 'edit', 'update', 'show']);
     //hearted product
@@ -157,6 +161,8 @@ Route::group(['middleware' => 'guest'], function () {
     Route::get('most-hearted-products', [TrendingProducts::class, 'mostHeartedProducts']);
     //get ad requests products
     Route::get('ad-request-trending-products', [TrendingProducts::class, 'adRequestsProducts']);
+    //ad requests most followers
+    Route::get('ad-request-most-follower', [MostFollowersAdsController::class, 'adRequestMostFollower']);
     //get most followers brand
     Route::get('most-followers-brand', [TrendingProducts::class, 'mostFollowersBrand']);
 

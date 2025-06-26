@@ -52,7 +52,7 @@ class TrendingProducts extends Controller
     //ad requests products
     public function adRequestsProducts(Request $request)
     {
-        $adRequestsProducts = ModelsTrendingProducts::with(['product:id,product_name,product_image,user_id'])
+        $adRequestsProducts = ModelsTrendingProducts::with(['product:id,product_name,product_image,user_id,product_price'])
             ->where('status', 'approved')
             ->where('is_active', true)
             ->orderBy('display_order')
@@ -71,9 +71,13 @@ class TrendingProducts extends Controller
                 'product_id' => $adRequest->product_id,
                 'product_name' => $adRequest->Product->product_name ?? null,
                 'product_image' => $adRequest->Product->product_image ?? null,
+                'product_price' => $adRequest->Product->product_price ?? null,
+                'total_heart' => $adRequest->Product->total_heart ?? 0,
+                'is_hearted' => $adRequest->Product->is_hearted ?? false,
                 'user_id' => $adRequest->user_id ?? null,
                 'status' => $adRequest->status,
                 'is_active' => $adRequest->is_active,
+                'average_rating' => $adRequest->Product->average_rating ?? 0,
                 'display_order' => $adRequest->display_order,
                 'created_at' => $adRequest->created_at,
             ];

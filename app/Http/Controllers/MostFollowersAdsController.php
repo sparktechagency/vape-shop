@@ -140,4 +140,27 @@ class MostFollowersAdsController extends Controller
     {
         //
     }
+
+    //ad requests products
+    public function adRequestMostFollower(Request $request)
+    {
+        $adRequestMostFollowers = MostFollowerAd::with(['user:id,first_name,last_name,role,cover_photo,avatar'])
+            ->where('status', 'approved')
+            ->where('is_active', true)
+            ->orderBy('display_order')
+            ->take(8)
+            ->get();
+
+        if ($adRequestMostFollowers->isEmpty()) {
+            return response()->error(
+                'No ad requests products found.',
+                404
+            );
+        }
+
+        return response()->success(
+            $adRequestMostFollowers,
+            'Ad requests products retrieved successfully.'
+        );
+    }
 }

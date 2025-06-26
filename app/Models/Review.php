@@ -10,6 +10,9 @@ class Review extends Model
 
     //table name
     protected $table = 'reviews';
+    protected $appends = [
+        'is_liked',
+    ];
 
 
     //relationship with user
@@ -50,5 +53,11 @@ class Review extends Model
     public function replies()
     {
         return $this->hasMany(Review::class, 'parent_id')->with('user:id,first_name,last_name,role,avatar');
+    }
+
+    //is liked attribute
+    public function getIsLikedAttribute()
+    {
+        return $this->likedByUsers()->exists();
     }
 }

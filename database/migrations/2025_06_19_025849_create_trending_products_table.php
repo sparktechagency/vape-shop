@@ -24,7 +24,7 @@ return new class extends Migration
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('approved_at')->nullable();
             $table->timestamp('rejected_at')->nullable();
-            $table->tinyInteger('display_order')->default(0);
+            $table->tinyInteger('display_order')->nullable()->default(0);
             $table->boolean('is_active')->default(false);
             $table->text('rejection_reason')->nullable();
             $table->timestamps();

@@ -18,6 +18,8 @@ class Post extends Model
 
     protected $appends = [
         'role',
+        'like_count',
+        'is_post_liked',
     ];
     protected $hidden = ['user'];
 
@@ -68,6 +70,19 @@ class Post extends Model
     public function getArticleImageAttribute($value)
     {
         return $value ? asset('storage/' . $value) : null;
+    }
+
+    //get attribute for postlikecoutn
+    public function getLikeCountAttribute()
+    {
+        return $this->likes()->count();
+    }
+
+    //is post liked by user
+    public function getIsPostLikedAttribute()
+    {
+        $userId = auth()->id();
+        return $userId ? $this->likes()->where('user_id', $userId)->exists() : false;
     }
 
 }

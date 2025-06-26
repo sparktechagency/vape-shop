@@ -89,7 +89,7 @@ class AdApprovalsManageController extends Controller
             $validator = Validator::make($request->all(), [
                 'status' => 'required|in:pending,approved,rejected,expired',
                 'is_active' => 'required|boolean',
-                'display_order' => 'required|integer|min:1|max:8',
+                'display_order' => 'nullable|integer|min:1|max:8',
                 'rejection_reason' => 'nullable|string|max:255',
             ]);
 

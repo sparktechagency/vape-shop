@@ -36,11 +36,11 @@ class PostLikeRepository implements PostLikeInterface {
     {
         return $this->likeModel->where('post_id', $postId)->count();
     }
-    
+
     //getLikesByPostId
     public function getLikesByPostId(int $postId): array
     {
-        return $this->likeModel->with('user:id,first_name,last_name,role,avatar')
+        return $this->likeModel->with('user:id,first_name,last_name,role,avatar', 'post:id,user_id,title,content')
                     ->where('post_id', $postId)
                     ->get()
                     ->toArray();

@@ -23,6 +23,7 @@ class TrendingAdProductController extends Controller
 
     public function __construct(PaymentService $paymentService)
     {
+        $this->middleware(['jwt.auth', 'check.role:' . Role::BRAND->value])->except(['index', 'show']);
         $this->paymentService = $paymentService;
     }
 

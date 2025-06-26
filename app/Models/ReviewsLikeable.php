@@ -22,4 +22,12 @@ class ReviewsLikeable extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    //is the review liked by the user?
+    public function isLikedByUser($userId)
+    {
+        return $this->where('review_id', $this->review_id)
+            ->where('user_id', $userId)
+            ->exists();
+    }
 }
