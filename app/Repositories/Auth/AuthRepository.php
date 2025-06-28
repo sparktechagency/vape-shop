@@ -232,7 +232,7 @@ class AuthRepository implements AuthRepositoryInterface
 
         $user = User::where('id', $id)->first();
 
-        $user->load('address.region', 'favourites');
+        $user->load('address.region', 'favourites', 'about');
 
 
         [$favouriteStores, $favouriteBrands] = $user->favourites->partition(function ($favoriteUser) {

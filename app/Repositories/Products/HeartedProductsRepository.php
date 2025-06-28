@@ -7,6 +7,7 @@ use App\Interfaces\Products\HeartedProductsInterface;
 use App\Models\Heart;
 use App\Models\StoreProduct;
 use App\Models\User;
+use App\Models\WholesalerProduct;
 
 class HeartedProductsRepository implements HeartedProductsInterface
 {
@@ -21,7 +22,7 @@ class HeartedProductsRepository implements HeartedProductsInterface
     {
         $perPage = request()->query('per_page', 10);
         return $this->model->where('user_id', $userId)
-                           ->with(['manageProduct:id,user_id,product_name,product_image,product_price', 'storeProduct:id,user_id,product_name,product_image,product_price'])
+                           ->with(['manageProduct:id,user_id,product_name,product_image,product_price', 'storeProduct:id,user_id,product_name,product_image,product_price', 'wholesalerProduct:id,user_id,product_name,product_image,product_price'])
                            ->orderBy('created_at', 'desc')
                            ->paginate($perPage)
                            ->toArray();
@@ -41,6 +42,13 @@ class HeartedProductsRepository implements HeartedProductsInterface
                 $heart = $this->model->where('store_product_id', $productId)
                                      ->where('user_id', $userId)
                                      ->whereHas('storeProduct', function ($query) use ($productId) {
+                                         $query->where('id', $productId);
+                                     })->first();
+                break;
+            case Role::WHOLESALER->value:
+                $heart = $this->model->where('wholesaler_product_id', $productId)
+                                     ->where('user_id', $userId)
+                                     ->whereHas('wholesalerProduct', function ($query) use ($productId) {
                                          $query->where('id', $productId);
                                      })->first();
                 break;
@@ -70,6 +78,15 @@ class HeartedProductsRepository implements HeartedProductsInterface
                     'region_id' => $data['region_id'] ?? null, // Assuming region_id is needed for store products
                 ]);
                 break;
+            case Role::WHOLESALER->value:
+                $data = $this->getProductAndRegionId($productId, $role);
+                $model = $this->model->create([
+                    'wholesaler_product_id' => $productId,
+                    'manage_product_id' => $data['manage_product_id'] ?? null, // Optional, if manage_product_id is needed
+                    'region_id' => $data['region_id'] ?? null, // Assuming region_id
+                    'user_id' => $userId,
+                ]);
+                break;
             default:
                 throw new \InvalidArgumentException('Invalid role provided.');
         }
@@ -80,9 +97,16 @@ class HeartedProductsRepository implements HeartedProductsInterface
 
     private function getProductAndRegionId($productId, $role)
     {
+        $data = [];
         if ($role === Role::STORE->value) {
-            $data = [];
             $product = StoreProduct::find($productId);
+        } elseif ($role === Role::WHOLESALER->value) {
+            $product = WholesalerProduct::find($productId);
+        }else {
+            $product = null;
+        }
+
+
             if($product){
                 if ($product->user_id && User::find($product->user_id)->address) {
                     $data['region_id'] = User::find($product->user_id)->address->region_id;
@@ -94,9 +118,9 @@ class HeartedProductsRepository implements HeartedProductsInterface
                     $data['manage_product_id'] = null;
                 }
 
+                return $data;
             }
-            return $data;
-        }
+
         return null;
     }
 

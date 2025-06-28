@@ -6,6 +6,7 @@ use App\Enums\UserRole\Role;
 use App\Interfaces\Products\ManageProductsInterface;
 use App\Models\ManageProduct;
 use App\Models\StoreProduct;
+use App\Models\WholesalerProduct;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -17,14 +18,19 @@ class ManageProductsRepository implements ManageProductsInterface
      */
     public function getAllProducts(): array
     {
+        $perPage = request()->get('per_page', 10);
         if (Auth::user()->role === Role::STORE->value) {
             return StoreProduct::where('user_id', Auth::id())
                 // ->with('user')
-                ->paginate(10)
+                ->paginate($perPage)
+                ->toArray();
+        }elseif (Auth::user()->role === Role::WHOLESALER->value) {
+            return WholesalerProduct::with('user')
+                ->paginate($perPage)
                 ->toArray();
         }
         return ManageProduct::where('user_id', Auth::id())
-            ->paginate(10)
+            ->paginate($perPage)
             ->toArray();
     }
 
@@ -39,10 +45,14 @@ class ManageProductsRepository implements ManageProductsInterface
 
 
         if (Auth::user()->role === Role::STORE->value) {
-            return StoreProduct::findOrFail($id)->toArray();
-        } else {
-
-            return ManageProduct::findOrFail($id)->toArray();
+            $product = StoreProduct::find($id);
+            return $product ? $product->toArray() : [];
+        } elseif (Auth::user()->role === Role::WHOLESALER->value) {
+            $product = WholesalerProduct::with('user')->find($id);
+            return $product ? $product->toArray() : [];
+        }else {
+            $product = ManageProduct::find($id);
+            return $product ? $product->toArray() : [];
         }
     }
 
@@ -55,8 +65,13 @@ class ManageProductsRepository implements ManageProductsInterface
     {
 
         // dd(Auth::user()->role);
-        if (Auth::user()->role === Role::STORE->value) {
-            $product = new StoreProduct();
+        if (Auth::user()->role === Role::STORE->value || Auth::user()->role === Role::WHOLESALER->value) {
+            // dd($data);
+            if(Auth::user()->role === Role::WHOLESALER->value) {
+                $product = new WholesalerProduct();
+            } else {
+                $product = new StoreProduct();
+            }
             $product->user_id = $data['user_id'];
             if (isset($data['product_id']) && $data['product_id']) {
                 $manageProduct = ManageProduct::with('user')->findOrFail($data['product_id']);
@@ -68,15 +83,26 @@ class ManageProductsRepository implements ManageProductsInterface
                 $product->product_id = $manageProduct->id;
                 $product->category_id = $manageProduct->category_id;
                 $product->product_name = $manageProduct->product_name;
-                $product->slug = $manageProduct->slug;
+                if (Auth::user()->role === Role::STORE->value) {
+                    $product->slug = generateUniqueSlug(StoreProduct::class, $manageProduct->product_name);
+                } elseif (Auth::user()->role === Role::WHOLESALER->value) {
+                    $product->slug = generateUniqueSlug(WholesalerProduct::class, $manageProduct->product_name);
+                }
                 // $product->slug = $data['slug'];
                 $product->product_image = $data['product_image'] ?? $manageProduct->product_image;
                 $product->brand_id = $manageProduct->user_id ?? null;
                 $product->brand_name = $manageProduct->user->first_name;
+            }else{
+                // dd($data);
+                $product->product_name = $data['product_name'];
+                $product->category_id = $data['category_id'];
+            if (Auth::user()->role === Role::STORE->value) {
+                $product->slug = generateUniqueSlug(StoreProduct::class, $data['product_name']);
+            } elseif (Auth::user()->role === Role::WHOLESALER->value) {
+                $product->slug = generateUniqueSlug(WholesalerProduct::class, $data['product_name']);
             }
-            $product->product_name = $data['product_name'];
-            $product->category_id = $data['category_id'];
-            $product->slug = $data['slug'] ?? generateUniqueSlug(StoreProduct::class, $data['product_name']);
+            }
+
             $product->product_price = $data['product_price'];
             $product->product_discount = $data['product_discount'];
             $product->product_discount_unit = $data['product_discount_unit'];
@@ -113,8 +139,12 @@ class ManageProductsRepository implements ManageProductsInterface
      */
     public function updateProduct(int $id, array $data): array
     {
-        if (Auth::user()->role === Role::STORE->value) {
-            $product = StoreProduct::findOrFail($id);
+        if (Auth::user()->role === Role::STORE->value || Auth::user()->role === Role::WHOLESALER->value) {
+            if(Auth::user()->role === Role::WHOLESALER->value) {
+                $product = WholesalerProduct::findOrFail($id);
+            } else {
+                $product = StoreProduct::findOrFail($id);
+            }
             if ($product->product_id) {
                 $manageProduct = ManageProduct::findOrFail($product->product_id);
                 $data['product_name'] = $manageProduct->product_name;
@@ -147,7 +177,10 @@ class ManageProductsRepository implements ManageProductsInterface
     {
         if (Auth::user()->role === Role::STORE->value) {
             $product = StoreProduct::findOrFail($id);
-        } else {
+        } elseif (Auth::user()->role === Role::WHOLESALER->value) {
+            $product = WholesalerProduct::findOrFail($id);
+        }
+        else {
             $product = ManageProduct::findOrFail($id);
         }
 

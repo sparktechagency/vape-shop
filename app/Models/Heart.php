@@ -27,6 +27,12 @@ class Heart extends Model
         return $this->belongsTo(StoreProduct::class);
     }
 
+    //relationship with wholesaler product
+    public function wholesalerProduct()
+    {
+        return $this->belongsTo(WholesalerProduct::class);
+    }
+
     //get is_heart attribute
     public function getIsHeartedAttribute()
     {

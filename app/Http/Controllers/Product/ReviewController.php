@@ -8,6 +8,7 @@ use App\Models\ManageProduct;
 use App\Models\Review;
 use App\Models\StoreProduct;
 use App\Models\User;
+use App\Models\WholesalerProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -140,7 +141,16 @@ class ReviewController extends Controller
                 ]);
                 break;
             case Role::WHOLESALER->value:
-                // Handle wholesaler review creation logic here
+                $data = $this->getProductAndRegionId($request->input('product_id'), Role::WHOLESALER->value);
+                $review = Review::create([
+                    'user_id' => auth()->id(),
+                    'wholesaler_product_id' => $request->input('product_id'),
+                    'region_id' => $data['region_id'] ?? null,
+                    'manage_product_id' => $data['manage_product_id'] ?? null,
+                    $request->filled('parent_id') ?: 'rating' =>  $request->input('rating'),
+                    'comment' => $request->input('comment'),
+                    'parent_id' => $request->input('parent_id'),
+                ]);
                 break;
             default:
                 return response()->error('Invalid role provided.', 400);
@@ -200,9 +210,14 @@ class ReviewController extends Controller
 
     private function getProductAndRegionId($productId, $role)
     {
+        $data = [];
         if ($role === Role::STORE->value) {
-            $data = [];
             $product = StoreProduct::find($productId);
+        }elseif ($role === Role::WHOLESALER->value) {
+            $product = WholesalerProduct::find($productId);
+        }else {
+            $product = null;
+        }
             if ($product) {
                 if ($product->user_id && User::find($product->user_id)->address) {
                     $data['region_id'] = User::find($product->user_id)->address->region_id;
@@ -213,9 +228,8 @@ class ReviewController extends Controller
                 } else {
                     $data['manage_product_id'] = null;
                 }
+                return $data;
             }
-            return $data;
-        }
         return null;
     }
 

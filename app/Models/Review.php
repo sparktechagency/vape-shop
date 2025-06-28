@@ -31,6 +31,12 @@ class Review extends Model
     {
         return $this->belongsTo(StoreProduct::class, 'store_product_id');
     }
+
+    //relationship with wholesaler product
+    public function wholesalerProducts()
+    {
+        return $this->belongsTo(WholesalerProduct::class, 'wholesaler_product_id');
+    }
     //relationship with region
     public function region()
     {

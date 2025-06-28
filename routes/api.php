@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole\Role;
+use App\Http\Controllers\AboutController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Product\ManageProductController;
 use App\Http\Controllers\product\HeartedProductController;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
+use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\Product\TrendingAdProductController;
 
@@ -72,6 +74,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth','banned', 'check.
     Route::get('/get-all-ad-requests', [AdApprovalsManageController::class, 'getAllAdRequests']);
     Route::get('/get-ad-request-by-id/{id}', [AdApprovalsManageController::class, 'getAdRequestById']);
     Route::put('/update-ad-request-status/{id}', [AdApprovalsManageController::class, 'updateAdRequestStatus']);
+
+    //transaction history
+    Route::get('/transaction-history', [TransactionController::class, 'index']);
 
 
 });
@@ -140,6 +145,9 @@ Route::apiResource('forum-comment', ForumCommentController::class)->except(['cre
 
 //post and article routes
 Route::apiResource('post', PostController::class)->except(['create', 'edit']);
+
+//About page
+Route::apiResource('about', AboutController::class)->except(['create', 'edit', 'update', 'show','destroy']);
 
 
 

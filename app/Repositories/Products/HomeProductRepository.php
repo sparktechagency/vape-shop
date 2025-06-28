@@ -7,6 +7,7 @@ use App\Http\Resources\ProductDeteails;
 use App\Interfaces\Products\HomeProductInterface;
 use App\Models\ManageProduct;
 use App\Models\StoreProduct;
+use App\Models\WholesalerProduct;
 
 class HomeProductRepository implements HomeProductInterface
 {
@@ -26,8 +27,10 @@ class HomeProductRepository implements HomeProductInterface
                 ->paginate($perPage)
                 ->toArray();
             case Role::WHOLESALER->value:
-                // Implement logic for wholesaler if needed
-                return [];
+                return WholesalerProduct::with('category')
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage)
+                ->toArray();
             default:
                 //error handling or default case
                 throw new \Exception("Invalid role provided.");
@@ -60,8 +63,16 @@ class HomeProductRepository implements HomeProductInterface
                 $product = new ProductDeteails($product);
                 return $product;
             case Role::WHOLESALER->value:
-                // Implement logic for wholesaler if needed
-                return [];
+                $product = WholesalerProduct::with('category', 'user')
+                        ->findOrFail($id)
+                        ->makeVisible(['user', 'category']);
+                $relatedProducts = WholesalerProduct::where('id', '!=', $id)
+                    ->inRandomOrder()
+                    ->take(4)
+                    ->get();
+                $product->relatedProducts = $relatedProducts;
+                $product = new ProductDeteails($product);
+                return $product;
             default:
                 //error handling or default case
                 throw new \Exception("Invalid role provided.");

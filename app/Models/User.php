@@ -172,6 +172,12 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(StoreProduct::class);
     }
 
+    //relationship with wholesaler products
+    public function wholesalerProducts()
+    {
+        return $this->hasMany(WholesalerProduct::class);
+    }
+
     //relationship with reviews on manage products
     public function reviewsOnManageProducts()
     {
@@ -232,6 +238,12 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(ForumGroup::class);
     }
 
+
+    //relationship with about us
+    public function about()
+    {
+        return $this->hasOne(About::class);
+    }
 
 
     //reviews relationship
