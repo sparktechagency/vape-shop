@@ -30,6 +30,7 @@ use App\Http\Controllers\Product\ManageProductController;
 use App\Http\Controllers\product\HeartedProductController;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
 use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\Product\TrendingAdProductController;
 
@@ -197,4 +198,14 @@ Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value]],
     Route::apiResource('most-followers-ad', MostFollowersAdsController::class)->except(['create', 'edit', 'show', 'update',]);
 });
 
+
+//notification routes
+Route::middleware('jwt.auth')->prefix('notifications')->as('notifications.')->group(function () {
+
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::get('/stats', [NotificationController::class, 'stats'])->name('stats');
+    Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('markAllAsRead');
+    Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('markAsRead');
+    Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
+});
 
