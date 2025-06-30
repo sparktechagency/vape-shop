@@ -119,7 +119,6 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     //message routes
     Route::post('send-message', [MessageController::class, 'sendMessage']);
     Route::get('get-message', [MessageController::class, 'getMessage']);
-    Route::get('mark-read', [MessageController::class, 'markRead']);
     Route::get('search-new-user', [MessageController::class, 'searchNewUser']);
     Route::get('chat-list', [MessageController::class, 'chatList']);
 

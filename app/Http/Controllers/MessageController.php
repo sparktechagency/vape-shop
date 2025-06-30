@@ -136,15 +136,4 @@ class MessageController extends Controller
         ]);
     }
 
-    public function markRead()
-    {
-        Message::where('sender_id', Auth::user()->id)
-            ->where('is_read', 0)
-            ->update(['is_read' => 1]);
-        return response([
-            'status'  => true,
-            'message' => 'Message read successfully',
-        ]);
-    }
-
 }
