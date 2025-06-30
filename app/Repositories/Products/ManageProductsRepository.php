@@ -89,7 +89,7 @@ class ManageProductsRepository implements ManageProductsInterface
                     $product->slug = generateUniqueSlug(WholesalerProduct::class, $manageProduct->product_name);
                 }
                 // $product->slug = $data['slug'];
-                $product->product_image = $data['product_image'] ?? $manageProduct->product_image;
+                $product->product_image = $data['product_image'] ?? getStorageFilePath($manageProduct->product_image);
                 $product->brand_id = $manageProduct->user_id ?? null;
                 $product->brand_name = $manageProduct->user->first_name;
             }else{
