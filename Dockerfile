@@ -1,54 +1,47 @@
-# Base image PHP 8.2 FPM
+# Use PHP 8.2 with FPM as the base image
 FROM php:8.2-fpm
 
-ARG user
-ARG uid
+# Set environment variable to install packages without user interaction
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install required libraries for GD extension and other utilities
+# Install essential system dependencies and PHP extension dependencies
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    libwebp-dev \
-    zip \
-    unzip \
     git \
     curl \
-    vim \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install gd pdo pdo_mysql
+    zip \
+    unzip \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libpq-dev
 
+# Configure and install the gd extension
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd
 
-RUN docker-php-ext-install pdo pdo_mysql bcmath
+# Install other required PHP extensions
+RUN docker-php-ext-install -j$(nproc) pdo pdo_mysql mbstring exif pcntl bcmath zip
 
-
-# Install Composer
+# Get the latest Composer binary
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set Laravel working directory
+# Set the working directory
 WORKDIR /var/www
 
-# Copy project files into the container
+# Copy the application source code into the container
+# The 'vendor' directory will be created by the composer install command
 COPY . .
 
-# Set permissions for storage and cache folders
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+# Install Composer dependencies
+RUN composer install --no-interaction --no-plugins --no-scripts --optimize-autoloader
 
-# Install Laravel dependencies
-# RUN composer install --no-dev --optimize-autoloader
 
-# Expose the port 9000 (or whatever PHP-FPM runs on)
+# First, we set the ownership and permissions.
+# Then, using '&&', we start the main process, 'php-fpm'.
+CMD /bin/sh -c 'chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache && chmod -R 775 /var/www/storage /var/www/bootstrap/cache && php-fpm'
+
+# Expose port 9000 for PHP-FPM
 EXPOSE 9000
-
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
-
-# Switch to the new user
-USER $user
-# Install npm dependencies
-# Run PHP-FPM (or your entrypoint script)
-CMD ["php-fpm"]
-
