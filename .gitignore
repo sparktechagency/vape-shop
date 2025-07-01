@@ -5,6 +5,7 @@
 /public/storage
 /storage/*.key
 /storage/*
+!/storage/app/public
 !/storage/.gitignore
 /bootstrap/cache
 /vendor
