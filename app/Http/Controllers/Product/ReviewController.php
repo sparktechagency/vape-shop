@@ -295,7 +295,9 @@ class ReviewController extends Controller
 
             $userId = $request->get('user_id');
             $user = $userId ? User::find($userId) : Auth::user();
+            // dd($user);
             $userReview = $user ? $user->storeReviews()->whereNull('parent_id')->latest()->take(10)->get() : null;
+            dd($userReview);
             if (!$user) {
                 return response()->error('User not authenticated.', 401);
             }
