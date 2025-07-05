@@ -29,12 +29,11 @@ jobs:
             git stash pop || echo "No changes to apply from stash" || true
             cd ${{ secrets.ROOT_DIRECTORY }}
             sudo docker compose down
-            sudo docker compose up -d --build
+            sudo docker compose up -d --build --no-deps vapeshop-app backend-webserver queue-worker scheduler
             sudo docker exec vapeshop-app php artisan migrate --force
             sudo docker exec vapeshop-app php artisan config:cache
             sudo docker exec vapeshop-app php artisan route:cache
             sudo docker exec vapeshop-app php artisan optimize:clear
-            sudo docker exec vapeshop-app php artisan queue:restart
             cd ${{ secrets.APP_DIRECTORY }}
             sudo chown -R www-data:www-data storage bootstrap/cache
             sudo chmod -R 775 storage bootstrap/cache
