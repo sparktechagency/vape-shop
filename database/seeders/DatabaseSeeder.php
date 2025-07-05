@@ -69,10 +69,10 @@ class DatabaseSeeder extends Seeder
             // Add other seeders here
             CategorySeeder::class,
             CountryRegionSeeder::class,
-            UserSeeder::class,
-            ManageProductSeeder::class,
-            StoreProductSeeder::class,
-            HeartSeeder::class,
+            // UserSeeder::class,
+            // ManageProductSeeder::class,
+            // StoreProductSeeder::class,
+            // HeartSeeder::class,
         ]);
 
         $user = User::create([
