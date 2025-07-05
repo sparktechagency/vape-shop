@@ -19,7 +19,7 @@ if(!function_exists('sentOTP')){
             'otp_expire_time' => $otp_expire_time
         ];
 
-        // Mail::to($data['email'])->send(new OTP($data));
+        Mail::to($data['email'])->send(new OTP($data));
         return $data;
     }
 }
