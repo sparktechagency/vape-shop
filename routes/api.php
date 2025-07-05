@@ -145,7 +145,8 @@ Route::apiResource('forum-comment', ForumCommentController::class)->except(['cre
 
 //post and article routes
 Route::apiResource('post', PostController::class)->except(['create', 'edit']);
-
+//get post by user id
+Route::get('/get-posts-by-user-id/{userId}', [PostController::class, 'getPostsByUserId']);
 //About page
 Route::apiResource('about', AboutController::class)->except(['create', 'edit', 'update', 'show','destroy']);
 

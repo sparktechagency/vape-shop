@@ -133,4 +133,28 @@ class PostController extends Controller
             return response()->error('Failed to delete post', 500, $e->getMessage());
         }
     }
+
+    // get all posts by user
+    public function getPostsByUserId($userId){
+        try {
+            $perPage = request()->input('per_page', 10);
+            $posts = Post::with([
+                'user:id,first_name,last_name,role,avatar',
+                'comments' => function ($query) {
+                    $query->whereNull('parent_id')
+                        ->with(['user:id,first_name,last_name,role,avatar']);
+                },
+                'comments.replies'
+            ])
+            ->where('user_id', $userId)
+            ->paginate($perPage);
+            if ($posts->isEmpty()) {
+                return response()->error('No posts found for this user', 404);
+            }
+            return response()->success($posts, 'Posts retrieved successfully');
+
+        } catch (\Exception $e) {
+            return response()->error('Failed to retrieve posts', 500, $e->getMessage());
+        }
+    }
 }
