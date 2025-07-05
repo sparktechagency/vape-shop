@@ -96,13 +96,13 @@ class ManageProductsRepository implements ManageProductsInterface
                 // dd($data);
                 $product->product_name = $data['product_name'];
                 $product->category_id = $data['category_id'];
+                $product->product_image = $data['product_image'];
             if (Auth::user()->role === Role::STORE->value) {
                 $product->slug = generateUniqueSlug(StoreProduct::class, $data['product_name']);
             } elseif (Auth::user()->role === Role::WHOLESALER->value) {
                 $product->slug = generateUniqueSlug(WholesalerProduct::class, $data['product_name']);
             }
             }
-
             $product->product_price = $data['product_price'];
             $product->product_discount = $data['product_discount'];
             $product->product_discount_unit = $data['product_discount_unit'];

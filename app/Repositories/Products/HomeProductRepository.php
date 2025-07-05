@@ -17,20 +17,24 @@ class HomeProductRepository implements HomeProductInterface
         $perPage = request()->get('per_page', 10); // Get the number of items per page, default to 10
         switch ($role) {
             case Role::BRAND->value:
-               return ManageProduct::with('category' )
+               $products = ManageProduct::with('category', 'user:id,first_name,last_name,avatar' )
                 ->orderBy('created_at', 'desc')
-                ->paginate($perPage)
-                ->toArray();
+                ->paginate($perPage);
+
+                $products->getCollection()->makeVisible(['user']);
+                return $products->toArray();
             case Role::STORE->value:
-               return StoreProduct::with('category')
+                $products = StoreProduct::with('category', 'user:id,first_name,last_name,avatar')
                 ->orderBy('created_at', 'desc')
-                ->paginate($perPage)
-                ->toArray();
+                ->paginate($perPage);
+                $products->getCollection()->makeVisible(['user']);
+                return $products->toArray();
             case Role::WHOLESALER->value:
-                return WholesalerProduct::with('category')
+                $products = WholesalerProduct::with('category', 'user:id,first_name,last_name,avatar')
                 ->orderBy('created_at', 'desc')
-                ->paginate($perPage)
-                ->toArray();
+                ->paginate($perPage);
+                $products->getCollection()->makeVisible(['user']);
+                return $products->toArray();
             default:
                 //error handling or default case
                 throw new \Exception("Invalid role provided.");
