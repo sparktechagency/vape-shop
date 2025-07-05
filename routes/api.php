@@ -114,7 +114,7 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     //post comment
     Route::apiResource('post-comment', PostCommentController::class)->except(['create', 'edit', 'update', 'show']);
     //hearted product
-    Route::apiResource('hearted-product', HeartedProductController::class)->except(['create', 'edit', 'update', 'show', 'destroy']);
+
 
     //message routes
     Route::post('send-message', [MessageController::class, 'sendMessage']);
@@ -123,6 +123,7 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     Route::get('chat-list', [MessageController::class, 'chatList']);
 
 });
+Route::apiResource('hearted-product', HeartedProductController::class)->middleware('jwt.auth')->except(['create', 'edit', 'update', 'show', 'destroy']);
 
 //reviews product
 Route::apiResource('product-review', ReviewController::class)->except(['create', 'edit', 'update', 'show']);

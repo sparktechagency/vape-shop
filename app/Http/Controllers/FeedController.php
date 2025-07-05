@@ -38,6 +38,7 @@ class FeedController extends Controller
                 404
             );
         }
+        $post->getCollection()->makeVisible(['user']);
         return response()->success(
             $post,
             'Feed retrieved successfully.'
