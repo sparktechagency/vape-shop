@@ -32,7 +32,7 @@ public function rules(): array
         'role' => 'required|string|max:255|in:2,3,4,5,6',
         'email' => 'required|string|email|max:255|unique:users',
         'password' => 'required|string|min:8|confirmed',
-        'phone' => 'nullable|regex:/^\+?[0-9]{10,15}$/|unique:users',
+        'phone' => 'nullable|regex:/^\+?[0-9\s\-\(\)]{10,20}$/|unique:users',
         'region_id' => $this->input('role') == Role::STORE->value ? 'required|string|max:255|exists:regions,id' : 'nullable|string|max:255| exists:regions,id',
         'address' => $this->input('role') == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
         'zip_code' => $this->input('role') == Role::STORE->value ? 'required|string|max:10' : 'nullable|string|max:10',
