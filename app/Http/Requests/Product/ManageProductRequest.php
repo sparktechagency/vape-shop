@@ -30,11 +30,11 @@ class ManageProductRequest extends FormRequest
             'brand_name' => 'required_with:product_name|string|max:255',
             'product_discount' => 'nullable|numeric',
             'product_discount_unit' => 'nullable|numeric',
-            'product_stock' => 'required|integer|min:0',
-            'product_description' => 'required|string|max:1000',
+            'product_stock' => 'nullable|integer|min:0',
+            'product_description' => 'nullable|string|max:1000',
             'product_faqs' => 'nullable|array',
-            'product_faqs.*.question' => 'required|string|max:255',
-            'product_faqs.*.answer' => 'required|string|max:1000',
+            'product_faqs.*.question' => 'nullable|string|max:255',
+            'product_faqs.*.answer' => 'nullable|string|max:1000',
         ];
     }
 

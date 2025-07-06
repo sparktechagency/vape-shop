@@ -43,7 +43,7 @@ class HomeController extends Controller
         try {
             $type = $request->input('type');
             $perPage = $request->input('per_page', 12);
-            $data = $this->homeService->getAllStoreBrandWholesaler($type);
+            $data = $this->homeService->getAllStoreBrandWholesaler($type, $perPage);
             if ($data->isEmpty()) {
                 return response()->error('No data found', 404);
             }
