@@ -27,7 +27,7 @@ use App\Http\Controllers\Forum\ForumCommentController;
 use App\Http\Controllers\Product\HomeProductController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Product\ManageProductController;
-use App\Http\Controllers\product\HeartedProductController;
+use App\Http\Controllers\Product\HeartedProductController;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Api\NotificationController;
