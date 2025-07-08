@@ -25,13 +25,17 @@ class ForumGroupRepository implements ForumGroupInterface
         $isGlobal = request()->boolean('show_front');
         $perPage = (int) request()->get('per_page', 10);
         $user_id = request()->get('user_id');
+        $isLatest = request()->boolean('is_latest', false);
 
         $query = $this->model->withCount('threads');
 
         if ($isTrending) {
             $query->orderByDesc('threads_count');
-        } else {
+        } elseif ($isLatest) {
             $query->orderByDesc('created_at');
+        }
+        else {
+            $query->inRandomOrder();
         }
 
 

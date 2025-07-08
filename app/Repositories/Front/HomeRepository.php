@@ -98,7 +98,8 @@ class HomeRepository implements HomeInterface
         $query->when($searchTerm, function ($query, $searchTerm) {
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('first_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%');
+                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%');
             });
         });
         $query->when($regionId, function ($query, $regionId) {
@@ -120,7 +121,8 @@ class HomeRepository implements HomeInterface
         $query->when($searchTerm, function ($query, $searchTerm) {
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('first_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%');
+                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%');
             });
         });
         $query->when($regionId, function ($query, $regionId) {
@@ -140,7 +142,8 @@ class HomeRepository implements HomeInterface
         $query->when($searchTerm, function ($query, $searchTerm) {
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('first_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%');
+                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%');
             });
         });
         $query->when($regionId, function ($query, $regionId) {

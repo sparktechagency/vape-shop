@@ -27,7 +27,8 @@ class HomeController extends Controller
             $regionId = $request->input('region_id', null);
 
             $result = $this->homeService->search($searchTerm, $type, (int)$perPage, (int)$regionId);
-            if ($result->isEmpty()) {
+
+            if (empty($result)) {
                 return response()->error('No data found', 404);
             }
             return response()->success($result, 'Data retrieved successfully');

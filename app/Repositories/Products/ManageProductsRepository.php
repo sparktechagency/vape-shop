@@ -63,7 +63,7 @@ class ManageProductsRepository implements ManageProductsInterface
      */
     public function storeProduct(array $data): array
     {
-
+        // dd($data);
         // dd(Auth::user()->role);
         if (Auth::user()->role === Role::STORE->value || Auth::user()->role === Role::WHOLESALER->value) {
             // dd($data);
@@ -72,6 +72,7 @@ class ManageProductsRepository implements ManageProductsInterface
             } else {
                 $product = new StoreProduct();
             }
+
             $product->user_id = $data['user_id'];
             if (isset($data['product_id']) && $data['product_id']) {
                 $manageProduct = ManageProduct::with('user')->findOrFail($data['product_id']);
@@ -92,6 +93,7 @@ class ManageProductsRepository implements ManageProductsInterface
                 $product->product_image = $data['product_image'] ?? getStorageFilePath($manageProduct->product_image);
                 $product->brand_id = $manageProduct->user_id ?? null;
                 $product->brand_name = $manageProduct->user->first_name;
+                $product->thc_percentage = $manageProduct->thc_percentage ?? $data['thc_percentage'] ?? null;
             }else{
                 // dd($data);
                 $product->product_name = $data['product_name'];
@@ -105,6 +107,7 @@ class ManageProductsRepository implements ManageProductsInterface
             }
             $product->product_price = $data['product_price'];
             $product->product_discount = $data['product_discount'];
+            $product->thc_percentage = $data['thc_percentage'] ?? null;
             $product->product_discount_unit = $data['product_discount_unit'];
             $product->product_stock = $data['product_stock'];
             $product->product_description = $data['product_description'];
@@ -122,6 +125,7 @@ class ManageProductsRepository implements ManageProductsInterface
             $product->brand_name = $data['brand_name'];
             $product->product_discount = $data['product_discount'];
             $product->product_discount_unit = $data['product_discount_unit'];
+            $product->thc_percentage = $data['thc_percentage'] ?? null;
             $product->product_stock = $data['product_stock'];
             $product->product_description = $data['product_description'];
             $product->product_faqs = $data['product_faqs'] ?? null;
@@ -150,7 +154,8 @@ class ManageProductsRepository implements ManageProductsInterface
                 $data['product_name'] = $manageProduct->product_name;
                 $data['slug'] = generateUniqueSlug(StoreProduct::class, $manageProduct->product_name);
                 $data['product_image'] =  getStorageFilePath($manageProduct->product_image);
-
+                $data['category_id'] = $manageProduct->category_id;
+                $data['thc_percentage'] = $manageProduct->thc_percentage ?? null;
                 $data['brand_name'] = $manageProduct->user->first_name;
             }
         } else {
