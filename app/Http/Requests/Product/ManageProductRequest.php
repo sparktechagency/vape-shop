@@ -25,7 +25,7 @@ class ManageProductRequest extends FormRequest
             'category_id' => 'required|exists:categories,id',
             'product_id' => 'nullable|exists:manage_products,id|required_without:product_name',
             'product_name' => 'required_without:product_id|string|max:255',
-            'product_image' => 'required_without:product_id|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'product_image' => 'required_without:product_id|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'product_price' => 'nullable|numeric|min:0',
             'brand_name' => 'required_with:product_name|string|max:255',
             'product_discount' => 'nullable|numeric',
