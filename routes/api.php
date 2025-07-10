@@ -31,6 +31,7 @@ use App\Http\Controllers\Product\HeartedProductController;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\Product\TrendingAdProductController;
 
@@ -94,6 +95,13 @@ Route::group([
     Route::apiResource('product-manage', ManageProductController::class)->except(['create', 'edit']);
 });
 
+//Store Order routes
+Route::group(['middleware' => ['jwt.auth','banned', 'check.role:' . Role::STORE->value]], function () {
+    Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index']);
+    Route::get('/orders/{order}', [\App\Http\Controllers\OrderController::class, 'show']);
+    Route::put('/orders/{order}/status', [\App\Http\Controllers\OrderController::class, 'updateStatus']);
+});
+
 
 
 //manage follow
@@ -121,6 +129,11 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     Route::get('get-message', [MessageController::class, 'getMessage']);
     Route::get('search-new-user', [MessageController::class, 'searchNewUser']);
     Route::get('chat-list', [MessageController::class, 'chatList']);
+
+    //order request
+    Route::post('/order-request', [CheckoutController::class, 'orderRequest'])->middleware('check.role:' . Role::MEMBER->value);
+    Route::get('/checkouts', [CheckoutController::class, 'index'])->middleware('check.role:' . Role::MEMBER->value);
+     Route::get('/checkouts/{checkout:checkout_group_id}', [CheckoutController::class, 'show'])->middleware('check.role:' . Role::MEMBER->value);
 
 });
 Route::apiResource('hearted-product', HeartedProductController::class)->middleware('jwt.auth')->except(['create', 'edit', 'update', 'show', 'destroy']);
@@ -208,5 +221,7 @@ Route::middleware('jwt.auth')->prefix('notifications')->as('notifications.')->gr
     Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('markAllAsRead');
     Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('markAsRead');
     Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
+
+
 });
 

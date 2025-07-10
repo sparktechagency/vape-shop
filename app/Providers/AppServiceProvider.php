@@ -14,6 +14,9 @@ use App\Interfaces\Products\HeartedProductsInterface;
 use App\Interfaces\Products\HomeProductInterface;
 use App\Interfaces\Products\ManageProductsInterface;
 use App\Interfaces\PaymentRepositoryInterface;
+use App\Models\Order;
+use App\Observers\OrderObserver;
+use App\Policies\OrderPolicy;
 use App\Repositories\Auth\AuthRepository;
 use App\Repositories\FollowersRepository;
 use App\Repositories\Forum\ForumGroupRepository;
@@ -32,6 +35,10 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
+
+     protected $policies = [
+        Order::class => OrderPolicy::class,
+    ];
     /**
      * Register any application services.
      */
@@ -59,6 +66,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
+        Order::observe(OrderObserver::class);
         /**
          * @method static \Illuminate\Http\JsonResponse success(mixed $data = null, string $message = 'Success', int $code = 200)
          **/
@@ -79,5 +88,7 @@ class AppServiceProvider extends ServiceProvider
                 'errors' => $errors,
             ], $code);
         });
+
+
     }
 }

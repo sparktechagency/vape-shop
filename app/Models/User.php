@@ -121,7 +121,17 @@ class User extends Authenticatable implements JWTSubject
     //get avatar
     public function getAvatarAttribute($value)
     {
-        return $value ? asset('storage/' . $value) : "https://ui-avatars.com/api/?background=random&name={$this->first_name}+{$this->last_name}&bold=true";
+        $fullName = $this->first_name;
+
+        if (!empty($this->last_name)) {
+            $fullName .= '+' . $this->last_name;
+        }
+
+        $encodedName = urlencode($fullName);
+
+        return $value
+            ? asset('storage/' . $value)
+            : "https://ui-avatars.com/api/?background=random&name={$encodedName}&bold=true";
     }
 
 
@@ -193,7 +203,7 @@ class User extends Authenticatable implements JWTSubject
     }
 
     //relationship with reviews on store products
-     public function reviewsOnStoreProducts()
+    public function reviewsOnStoreProducts()
     {
         return $this->hasManyThrough(
             Review::class,
@@ -203,6 +213,12 @@ class User extends Authenticatable implements JWTSubject
             'id',              // user table local key
             'id'                // store_products table local key
         );
+    }
+
+    //relationship with checkouts
+    public function checkouts()
+    {
+        return $this->hasMany(Checkout::class);
     }
 
     public function followers()
