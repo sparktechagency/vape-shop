@@ -20,9 +20,20 @@ class StoreOrderResource extends JsonResource
             'sub_total' => $this->subtotal,
             'order_date' => $this->created_at->format('d M, Y'),
             'customer' => [
-                'name' => $this->user->full_name,
-                'email' => $this->user->email,
-                'address' => $this->whenLoaded('checkout', $this->checkout->customer_address),
+                'name' =>$this->whenLoaded('checkout', $this->checkout->customer_name) ?? $this->user->full_name,
+                'email' => $this->whenLoaded('checkout', function () {
+                    return $this->checkout->customer_email ?? $this->user->email;
+                }),
+                'dob' => $this->whenLoaded('checkout', function () {
+                    $checkout = $this->checkout ?? null;
+                    $user = $this->user ?? null;
+                    return ($checkout && $checkout->customer_dob)
+                        ? $checkout->customer_dob->format('d M, Y')
+                        : (($user && $user->dob)
+                            ? $user->dob->format('d M, Y')
+                            : null);
+                }),
+                'address' =>$this->whenLoaded('checkout', $this->checkout->customer_address) ?? $this->whenLoaded('checkout', $this->checkout->customer_address),
             ],
             // 'address' => $this->whenLoaded('checkout', $this->checkout->customer_address),
             'order_items' => OrderItemResource::collection($this->whenLoaded('OrderItems')),

@@ -19,19 +19,29 @@ class ManageProductsRepository implements ManageProductsInterface
     public function getAllProducts(): array
     {
         $perPage = request()->get('per_page', 10);
-        if (Auth::user()->role === Role::STORE->value) {
-            return StoreProduct::where('user_id', Auth::id())
-                // ->with('user')
-                ->paginate($perPage)
-                ->toArray();
-        }elseif (Auth::user()->role === Role::WHOLESALER->value) {
-            return WholesalerProduct::with('user')
-                ->paginate($perPage)
-                ->toArray();
-        }
-        return ManageProduct::where('user_id', Auth::id())
+        $is_most_hearted = request('is_most_hearted', false);
+        return match (Auth::user()->role) {
+            Role::STORE->value => StoreProduct::where('user_id', Auth::id())
+            ->when($is_most_hearted, function ($query) {
+                $query->withCount('hearts')->orderByDesc('hearts_count');
+            })
             ->paginate($perPage)
-            ->toArray();
+            ->toArray(),
+
+            Role::WHOLESALER->value => WholesalerProduct::with('user')
+            ->when($is_most_hearted, function ($query) {
+                $query->withCount('hearts')->orderByDesc('hearts_count');
+            })
+            ->paginate($perPage)
+            ->toArray(),
+
+            default => ManageProduct::where('user_id', Auth::id())
+            ->when($is_most_hearted, function ($query) {
+                $query->withCount('hearts')->orderByDesc('hearts_count');
+            })
+            ->paginate($perPage)
+            ->toArray(),
+        };
     }
 
 

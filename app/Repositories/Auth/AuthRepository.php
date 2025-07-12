@@ -204,9 +204,10 @@ class AuthRepository implements AuthRepositoryInterface
         $user->first_name = $firstName;
         $user->last_name = $data['last_name'] ?? $user->last_name;
         $user->phone = $data['phone'] ?? $user->phone;
-        // $user->address = $data['address'] ?? $user->address;
-        // $user->zip_code = $data['zip_code'] ?? $user->zip_code;
-        // $user->region = $data['region'] ?? $user->region;
+        if($user->role == Role::STORE->value) {
+            $user->open_from = $data['open_from'];
+            $user->close_at = $data['close_at'];
+        }
         $user->save();
 
         // Update or create address for the same user id

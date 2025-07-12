@@ -38,6 +38,8 @@ class UpdateProfileRequest extends FormRequest
             'region_id' => Auth::user()->role == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
+            'open_from' => 'nullable|date_format:H:i',
+            'close_at' => 'nullable|date_format:H:i|after:open_from',
         ];
 
         if (Auth::user()->role == Role::STORE->value) {
@@ -49,6 +51,15 @@ class UpdateProfileRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    //message for validation for open and close time
+    public function messages(): array
+    {
+        return [
+            'open_from.date_format' => 'The open from time must be in the format HH:mm.',
+            'close_at.date_format' => 'The close at time must be in the format HH:mm.',
+        ];
     }
 
     public function attributes() : array
@@ -65,6 +76,8 @@ class UpdateProfileRequest extends FormRequest
             'region' => 'Region',
             'store_name' => 'Store name',
             'brand_name' => 'Brand name',
+            'open_from' => 'Open From',
+            'close_at' => 'Close at',
         ];
     }
 

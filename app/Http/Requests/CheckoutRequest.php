@@ -26,7 +26,7 @@ class CheckoutRequest extends FormRequest
             'customer_email' => 'nullable|email|max:255',
             'customer_phone' => 'nullable|string|max:15',
             'customer_address' => 'required|string|max:500',
-            'customer_dob' => 'nullable|date_format:Y-m-d',
+            'customer_dob' => 'nullable|date_format:d-m-Y',
             'cart_items' => 'required|array|min:1',
             'cart_items.*.product_id' => 'required|integer|exists:store_products,id',
             'cart_items.*.quantity' => 'required|integer|min:1',
