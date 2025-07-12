@@ -21,8 +21,19 @@ class AuthorizeNetService implements PaymentGatewayInterface
         $this->isSandbox = config('authorizenet.sandbox', true);
     }
 
-    public function charge(array $paymentData): array
+    public function charge(User $seller, array $paymentData): array
     {
+
+        $credentials = $seller->paymentGatewayCredential;
+
+        if (!$credentials || !$credentials->login_id || !$credentials->transaction_key) {
+            return ['status' => 'failed', 'message' => 'Seller has not configured payment credentials.'];
+        }
+
+        $this->merchantAuthentication->setName($credentials->login_id);
+        $this->merchantAuthentication->setTransactionKey($credentials->transaction_key);
+
+
         $creditCard = new AnetAPI\CreditCardType();
         $creditCard->setCardNumber($paymentData['card_number']);
         $creditCard->setExpirationDate($paymentData['expiration_year'] . '-' . $paymentData['expiration_month']);

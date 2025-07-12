@@ -126,9 +126,12 @@ class MessageController extends Controller
                 $query->where('sender_id', $request->receiver_id)
                     ->where('receiver_id', Auth::id());
             })
-            ->orderBy('created_at', 'asc')
+            ->orderBy('created_at', 'desc')
             ->paginate($per_page);
-
+        $messages->transform(function ($message) {
+            $message->is_sender = $message->sender_id == auth()->id();
+            return $message;
+        });
         return response()->json([
             'status'  => true,
             'message' => 'Messages retrieved successfully',

@@ -316,4 +316,13 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(Review::class, 'reviews_likeables', 'user_id', 'review_id');
     }
+
+    public function paymentGatewayCredential()
+    {
+        return $this->hasOne(PaymentGatewayCredential::class)->where('gateway_name', 'authorizenet');
+    }
+    public function b2bProviders()
+    {
+        return $this->belongsToMany(User::class, 'b2b_connections', 'requester_id', 'provider_id')->withPivot('status');
+    }
 }
