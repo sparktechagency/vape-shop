@@ -63,7 +63,7 @@ class OrderController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:accepted,rejected',
+            'status' => 'required|in:accepted,rejected,cancelled,delivered',
         ]);
 
         if ($validator->fails()) {

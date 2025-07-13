@@ -38,6 +38,7 @@ public function rules(): array
         'zip_code' => $this->input('role') == Role::STORE->value ? 'required|string|max:10' : 'nullable|string|max:10',
         'latitude' => 'nullable|numeric',
         'longitude' => 'nullable|numeric',
+        'ein' => 'nullable|string|max:20|unique:users,ein',
     ];
 
     if ($this->input('role') == Role::STORE->value) {
@@ -93,6 +94,7 @@ public function rules(): array
             'brand_name' => 'Brand Name',
             'latitude' => 'Latitude',
             'longitude' => 'Longitude',
+            'ein' => 'Employer Identification Number (EIN)',
         ];
     }
 

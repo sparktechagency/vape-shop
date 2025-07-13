@@ -48,6 +48,7 @@ class AuthRepository implements AuthRepositoryInterface
         $address->zip_code = $data['zip_code'] ?? null;
         $address->latitude = $data['latitude'] ?? null;
         $address->longitude = $data['longitude'] ?? null;
+        $address->ein = $data['ein'] ?? null;
         $address->save();
 
         $user->load('address');
@@ -204,6 +205,9 @@ class AuthRepository implements AuthRepositoryInterface
         $user->first_name = $firstName;
         $user->last_name = $data['last_name'] ?? $user->last_name;
         $user->phone = $data['phone'] ?? $user->phone;
+        $user->dob = $data['dob'] ?? $user->dob;
+        $user->ein = $data['ein'] ?? $user->ein;
+        $user->pl = $data['pl'] ?? $user->pl;
         if($user->role == Role::STORE->value) {
             $user->open_from = $data['open_from'];
             $user->close_at = $data['close_at'];

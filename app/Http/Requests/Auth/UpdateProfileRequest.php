@@ -30,6 +30,7 @@ class UpdateProfileRequest extends FormRequest
             'last_name' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'dob' => 'nullable|date_format:d-m-Y',
             // 'role' => 'required|string|max:255|in:2,3,4,5,6',
             // 'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'nullable|regex:/^\+?[0-9]{10,15}$/|unique:users,phone,'. Auth::id(),
@@ -40,6 +41,8 @@ class UpdateProfileRequest extends FormRequest
             'longitude' => 'nullable|numeric',
             'open_from' => 'nullable|date_format:H:i',
             'close_at' => 'nullable|date_format:H:i|after:open_from',
+            'ein' => 'nullable|string|max:20|unique:users,ein,'. Auth::id(),
+            'pl' => 'nullable|boolean',
         ];
 
         if (Auth::user()->role == Role::STORE->value) {
@@ -78,6 +81,10 @@ class UpdateProfileRequest extends FormRequest
             'brand_name' => 'Brand name',
             'open_from' => 'Open From',
             'close_at' => 'Close at',
+            'latitude' => 'Latitude',
+            'longitude' => 'Longitude',
+            'ein' => 'EIN',
+            'pl' => 'PL',
         ];
     }
 
