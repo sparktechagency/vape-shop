@@ -34,6 +34,7 @@ use App\Http\Controllers\B2bConnectionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\FeedController;
+use App\Http\Controllers\InboxController;
 use App\Http\Controllers\Product\TrendingAdProductController;
 
 // Route::get('/user', function (Request $request) {
@@ -139,6 +140,12 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     Route::get('/checkouts', [CheckoutController::class, 'index'])->middleware('check.role:' . Role::MEMBER->value);
     Route::get('/checkouts/{checkout:checkout_group_id}', [CheckoutController::class, 'show'])->middleware('check.role:' . Role::MEMBER->value);
 
+    //inbox routes
+    Route::post('/inbox/send-message', [InboxController::class, 'sendMessage']);
+    Route::get('/inbox/{userId}', [InboxController::class, 'getInboxByUserId']);
+    //delete a message
+    Route::delete('/inbox/delete-message/{id}', [InboxController::class, 'deleteMessage']);
+
 
 });
 Route::apiResource('hearted-product', HeartedProductController::class)->middleware('jwt.auth')->except(['create', 'edit', 'update', 'show', 'destroy']);
@@ -158,9 +165,13 @@ Route::apiResource('forum-group', ForumGroupController::class)->except(['create'
 
 //Forum threads
 Route::apiResource('forum-thread', ForumThreadController::class)->except(['create', 'edit']);
+//like and unlike forum threads
+Route::post('/forum-thread/{thread}/like', [ForumThreadController::class,'likeUnlikeThread']);
 
 //Forum comments
 Route::apiResource('forum-comment', ForumCommentController::class)->except(['create', 'edit', 'update', 'show']);
+//like and unlike forum comments
+Route::post('/forum-comment/{id}/like', [ForumCommentController::class, 'likeUnlikeComment']);
 
 //post and article routes
 Route::apiResource('post', PostController::class)->except(['create', 'edit']);

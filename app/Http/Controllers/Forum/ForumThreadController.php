@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Forum;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Forum\ForumThreadRequest;
+use App\Models\FourmLike;
 use App\Services\Forum\ForumThreadService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ForumThreadController extends Controller
 {
@@ -122,4 +124,38 @@ class ForumThreadController extends Controller
             return response()->error('Failed to delete thread', 500, $e->getMessage());
         }
     }
+
+    //like a thread
+    public function likeUnlikeThread(Request $request, string $id)
+    {
+        try{
+            $user = Auth::user();
+
+            //check if the user has already liked the thread
+            $likeExists = FourmLike::where('user_id', $user->id)
+                ->where('likeable_type', 'App\Models\ForumThread')
+                ->where('likeable_id', $id)
+                ->exists();
+            //if exists, remove the like
+            if ($likeExists) {
+                FourmLike::where('user_id', $user->id)
+                    ->where('likeable_type', 'App\Models\ForumThread')
+                    ->where('likeable_id', $id)
+                    ->delete();
+                return response()->success(null, 'Thread unliked successfully', 200);
+            }else{
+                //if not exists, create a new like
+                $like = new FourmLike();
+                $like->user_id = $user->id;
+                $like->likeable_type = 'App\Models\ForumThread';
+                $like->likeable_id = $id;
+                $like->save();
+                return response()->success(null, 'Thread liked successfully', 200);
+            }
+
+        }catch (\Exception $e) {
+            return response()->error('Failed to like thread', 500, $e->getMessage());
+        }
+    }
+
 }
