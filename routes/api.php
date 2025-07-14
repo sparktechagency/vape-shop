@@ -32,9 +32,11 @@ use App\Http\Controllers\Admin\AdApprovalsManageController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\B2bConnectionController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\B2bPricingController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\InboxController;
+use App\Http\Controllers\PaymentGatewayController;
 use App\Http\Controllers\Product\TrendingAdProductController;
 
 // Route::get('/user', function (Request $request) {
@@ -98,7 +100,21 @@ Route::group([
     Route::post('/b2b/request/{provider}', [B2bConnectionController::class, 'sendRequest']);
     Route::patch('/b2b/request/{connection}/update', [B2bConnectionController::class, 'updateRequest']);
     Route::get('/b2b/requests/incoming', [B2bConnectionController::class, 'listIncoming']);
+
+    //b2b pricing
+    Route::post('/b2b/product-pricing', [B2bPricingController::class, 'storeOrUpdate']);
+
+    //b2b checkout
+    Route::post('/b2b/checkout', [CheckoutController::class, 'placeOrder']);
+
 });
+
+//update payment gateway credentials
+Route::post('/update-payment-gateway-credentials', [PaymentGatewayController::class, 'updatePaymentGateway'])
+    ->middleware('jwt.auth','check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value, Role::ADMIN->value]));
+//get payment gateway credentials
+Route::get('/get-payment-gateway-credentials', [PaymentGatewayController::class, 'getPaymentGatewayCredentials'])
+    ->middleware('jwt.auth','check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value, Role::ADMIN->value]));
 
 //Store Order routes
 Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE->value]], function () {
@@ -145,8 +161,6 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     Route::get('/inbox/{userId}', [InboxController::class, 'getInboxByUserId']);
     //delete a message
     Route::delete('/inbox/delete-message/{id}', [InboxController::class, 'deleteMessage']);
-
-
 });
 Route::apiResource('hearted-product', HeartedProductController::class)->middleware('jwt.auth')->except(['create', 'edit', 'update', 'show', 'destroy']);
 
@@ -166,7 +180,7 @@ Route::apiResource('forum-group', ForumGroupController::class)->except(['create'
 //Forum threads
 Route::apiResource('forum-thread', ForumThreadController::class)->except(['create', 'edit']);
 //like and unlike forum threads
-Route::post('/forum-thread/{thread}/like', [ForumThreadController::class,'likeUnlikeThread']);
+Route::post('/forum-thread/{thread}/like', [ForumThreadController::class, 'likeUnlikeThread']);
 
 //Forum comments
 Route::apiResource('forum-comment', ForumCommentController::class)->except(['create', 'edit', 'update', 'show']);

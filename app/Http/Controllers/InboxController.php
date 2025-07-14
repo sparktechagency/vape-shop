@@ -39,7 +39,7 @@ class InboxController extends Controller
         try {
             $perPage = request()->input('per_page', 15); // Default to 15 items per page
             $inbox = Inbox::where('receiver_id', $userId)
-                ->with(['sender:id,first_name,last_name,avatar,role', 'replies.sender:id,first_name,last_name,avatar,role'])
+                ->with(['sender:id,first_name,last_name,avatar,role','receiver:id,first_name,last_name,avatar,role', 'replies.sender:id,first_name,last_name,avatar,role'])
                 ->withCount(['replies' => function ($query) {
                     $query->where('parent_id', '!=', null);
                 }])

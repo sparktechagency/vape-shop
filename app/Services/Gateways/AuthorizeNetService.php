@@ -6,32 +6,40 @@ use App\Interfaces\PaymentGatewayInterface;
 use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
 use net\authorize\api\constants\ANetEnvironment;
+use App\Models\User;
 use Exception;
 
 class AuthorizeNetService implements PaymentGatewayInterface
 {
-    protected $merchantAuthentication;
+    // protected $merchantAuthentication;
     protected $isSandbox;
 
     public function __construct()
     {
-        $this->merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
-        $this->merchantAuthentication->setName(config('authorizenet.login_id'));
-        $this->merchantAuthentication->setTransactionKey(config('authorizenet.transaction_key'));
+        // $this->merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
+        // $this->merchantAuthentication->setName(config('authorizenet.login_id'));
+        // $this->merchantAuthentication->setTransactionKey(config('authorizenet.transaction_key'));
         $this->isSandbox = config('authorizenet.sandbox', true);
     }
 
-    public function charge(User $seller, array $paymentData): array
+    public function charge(User $seller, float $amount, array $paymentData): array
     {
 
-        $credentials = $seller->paymentGatewayCredential;
+        $credentials = $seller->PaymentGatewayCredential;
+        // dd($amount);
 
         if (!$credentials || !$credentials->login_id || !$credentials->transaction_key) {
             return ['status' => 'failed', 'message' => 'Seller has not configured payment credentials.'];
         }
 
-        $this->merchantAuthentication->setName($credentials->login_id);
-        $this->merchantAuthentication->setTransactionKey($credentials->transaction_key);
+         if (!$credentials || !$credentials->login_id || !$credentials->transaction_key) {
+            return ['status' => 'failed', 'message' => 'Seller has not configured payment credentials.'];
+        }
+
+        $merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
+
+        $merchantAuthentication->setName($credentials->login_id);
+        $merchantAuthentication->setTransactionKey($credentials->transaction_key);
 
 
         $creditCard = new AnetAPI\CreditCardType();
@@ -44,11 +52,11 @@ class AuthorizeNetService implements PaymentGatewayInterface
 
         $transactionRequest = new AnetAPI\TransactionRequestType();
         $transactionRequest->setTransactionType("authCaptureTransaction");
-        $transactionRequest->setAmount($paymentData['amount']);
+        $transactionRequest->setAmount($amount);
         $transactionRequest->setPayment($payment);
 
         $request = new AnetAPI\CreateTransactionRequest();
-        $request->setMerchantAuthentication($this->merchantAuthentication);
+        $request->setMerchantAuthentication($merchantAuthentication);
         $request->setTransactionRequest($transactionRequest);
 
         $controller = new AnetController\CreateTransactionController($request);

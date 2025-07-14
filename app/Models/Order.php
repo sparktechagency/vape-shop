@@ -31,4 +31,10 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    //b2b order items
+    public function b2bOrderItems()
+    {
+        return $this->hasMany(B2BOrderItem::class);
+    }
 }

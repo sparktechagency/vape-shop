@@ -2,21 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole\Role;
 use App\Http\Requests\CheckoutRequest;
 use App\Http\Resources\CheckoutResource;
 use App\Models\Checkout;
 use App\Models\Order;
+use App\Models\PlatformFee;
+use App\Models\User;
 use App\Models\OrderItem;
 use App\Models\StoreProduct;
 use App\Notifications\NewOrderRequestNotification;
 use App\Notifications\OrderRequestConfirmationNotification;
+use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class CheckoutController extends Controller
 {
+
+
+    protected $paymentService;
+    public function __construct(PaymentService $paymentService)
+    {
+        $this->paymentService = $paymentService;
+    }
+
+    /**
+     * Handle the incoming request to place an order.
+     *
+     * @param  \App\Http\Requests\CheckoutRequest  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    // public function orderRequest(Request $request)
+
     public function orderRequest(CheckoutRequest $request)
     {
 
@@ -158,9 +179,9 @@ class CheckoutController extends Controller
 
     public function placeOrder(Request $request)
     {
-        $validatedData = $request->validate([
+        $validatedData = Validator::make($request->all(), [
             'customer_name' => 'required|string|max:255',
-            'delivery_address' => 'required|string',
+            'customer_address' => 'required|string',
             'card_details' => 'required|array',
             'card_details.card_number' => 'required|string|min:13|max:16',
             'card_details.expiration_month' => 'required|numeric|min:1|max:12',
@@ -172,115 +193,117 @@ class CheckoutController extends Controller
             'cart_items.*.quantity' => 'required|integer|min:1',
         ]);
 
+        if ($validatedData->fails()) {
+            return response()->error($validatedData->errors()->first(), 422, $validatedData->errors());
+        }
+
+        $validatedData = $validatedData->validated();
         $cardDetails = $validatedData['card_details'];
-        $cartItems = $validatedData['cart_items'];
+        $cartItems = collect($validatedData['cart_items']); // কালেকশন হিসাবে নেওয়া হলো
+        $buyer = Auth::user();
 
-        DB::beginTransaction();
+        // --- নতুন লজিক শুরু ---
 
-        try {
-            $groupedBySeller = $this->groupCartBySeller($cartItems);
-
-            if (empty($groupedBySeller)) {
-                throw new \Exception('Could not find valid products or pricing for the items in your cart.');
-            }
-
-            $grandTotal = array_sum(array_column($groupedBySeller, 'sub_total'));
-
-            $checkout = Checkout::create([
-                'user_id' => Auth::id(),
-                'checkout_group_id' => 'CHK-' . strtoupper(Str::random(12)),
-                'grand_total' => $grandTotal,
-                'customer_name' => $validatedData['customer_name'],
-                'delivery_address' => $validatedData['delivery_address'],
-                'status' => 'pending',
-            ]);
-
-            foreach ($groupedBySeller as $sellerId => $sellerData) {
-                $seller = User::find($sellerId);
-
-                $order = $checkout->orders()->create([
-                    'store_id' => $sellerId,
-                    'user_id' => Auth::id(),
-                    'sub_total' => $sellerData['sub_total'],
-                    'status' => 'pending_payment',
-                ]);
-
-                $order->items()->createMany($sellerData['items']);
-
-                $paymentResponse = $this->paymentService->processPaymentForPayable($order, $cardDetails, $seller);
-
-                if ($paymentResponse['status'] !== 'success') {
-                    throw new \Exception("Payment failed for seller ID: {$sellerId}. Reason: " . $paymentResponse['message']);
-                }
-
-                $order->update(['status' => 'pending_approval']);
-                PlatformFee::create(['order_id' => $order->id, 'seller_id' => $sellerId]);
-
-                if ($seller) {
-                    $seller->notify(new NewOrderRequestNotification($order, Auth::user()));
-                }
-            }
-
-            Auth::user()->notify(new OrderRequestConfirmation($checkout));
-
-            DB::commit();
-
-            return response()->json([
-                'ok' => true,
-                'message' => 'Your order request has been sent successfully.',
-                'checkout_id' => $checkout->checkout_group_id,
-            ], 201);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['ok' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    private function groupCartBySeller(array $cartItems): array
-    {
-        $groupedBySeller = [];
-        $productModels = [];
-        foreach ($cartItems as $item) {
-            $productModels[$item['product_type']][] = $item['product_id'];
-        }
-
+        // ধাপ ২: কার্টের সব পণ্য এবং তাদের বিক্রেতাদের খুঁজে বের করা
         $allProducts = collect();
-        foreach ($productModels as $modelClass => $ids) {
+        $cartItems->groupBy('product_type')->each(function ($items, $modelClass) use (&$allProducts) {
+            $ids = $items->pluck('product_id');
             if (class_exists($modelClass)) {
                 $products = $modelClass::whereIn('id', $ids)->with('b2bPricing')->get();
                 $allProducts = $allProducts->merge($products);
             }
+        });
+
+        if ($allProducts->isEmpty()) {
+            return response()->error('No valid products found in your cart.', 404);
         }
 
-        $productMap = $allProducts->keyBy(fn($p) => get_class($p) . '-' . $p->id);
-        $buyer = Auth::user();
+        // ধাপ ৩: একক বিক্রেতার নিয়ম প্রয়োগ করা (Enforce Single Seller Rule)
+        $sellerIds = $allProducts->pluck('user_id')->unique();
 
-        foreach ($cartItems as $item) {
-            $productKey = $item['product_type'] . '-' . $item['product_id'];
-            $product = $productMap->get($productKey);
+        if ($sellerIds->count() > 1) {
+            return response()->error('You can only order from one seller at a time. Please clear your cart or remove items from other sellers.', 400);
+        }
 
-            if (!$product) continue;
+        $sellerId = $sellerIds->first();
+        $seller = User::findOrFail($sellerId);
 
-            // ডাইনামিক প্রাইসিং লজিক (B2B কানেকশনের উপর ভিত্তি করে)
-            $connectionExists = $buyer->b2bProviders()->where('provider_id', $product->seller_id)->where('status', 'approved')->exists();
-            $price = ($connectionExists && $product->b2bPricing) ? $product->b2bPricing->wholesale_price : $product->price;
+        // --- নতুন লজিক শেষ ---
 
-            $sellerId = $product->seller_id;
-            if (!isset($groupedBySeller[$sellerId])) {
-                $groupedBySeller[$sellerId] = ['items' => [], 'sub_total' => 0];
+        DB::beginTransaction();
+        try {
+            $subTotal = 0;
+            $orderItemsData = [];
+            $productMap = $allProducts->keyBy('id');
+
+            // ধাপ ৪: সাব-টোটাল এবং অর্ডারের আইটেমগুলো প্রস্তুত করা
+            foreach ($cartItems as $item) {
+                $product = $productMap->get($item['product_id']);
+                if (!$product) continue;
+
+                $connectionExists = $buyer->b2bProviders()->where('provider_id', $sellerId)->where('status', 'approved')->exists();
+                $price = ($connectionExists && $product->b2bPricing) ? $product->b2bPricing->wholesale_price : $product->price ?? 18; // Default price if no B2B pricing exists
+
+                // dd($price);
+
+                $subTotal += $price * $item['quantity'];
+                $orderItemsData[] = [
+                    'productable_id' => $product->id,
+                    'productable_type' => get_class($product),
+                    'quantity' => $item['quantity'],
+                    'price' => $price ?? 18,
+                ];
             }
 
-            $lineTotal = $price * $item['quantity'];
+            // ধাপ ৫: চেকআউট এবং অর্ডার তৈরি করা (এখন আর লুপের প্রয়োজন নেই)
+            $checkout = Checkout::create([
+                'user_id' => $buyer->id,
+                'checkout_group_id' => 'CHK-' . strtoupper(Str::random(12)),
+                'grand_total' => $subTotal, // এখন grand_total এবং subtotal একই
+                'customer_name' => $validatedData['customer_name'],
+                'customer_address' => $validatedData['customer_address'],
+                'status' => 'pending',
+                'type' => 'b2b',
+            ]);
 
-            $groupedBySeller[$sellerId]['items'][] = [
-                'productable_id' => $product->id,
-                'productable_type' => get_class($product),
-                'quantity' => $item['quantity'],
-                'price' => $price,
-            ];
-            $groupedBySeller[$sellerId]['sub_total'] += $lineTotal;
+            $order = $checkout->orders()->create([
+                'store_id' => $sellerId,
+                'user_id' => $buyer->id,
+                'subtotal' => $subTotal,
+                'status' => 'pending',
+            ]);
+
+            $order->b2bOrderItems()->createMany($orderItemsData);
+            // dd($order);
+
+            // ধাপ ৬: পেমেন্ট এবং অন্যান্য কাজ সম্পন্ন করা
+             $paymentResponse = $this->paymentService->processPaymentForPayable($order, $cardDetails, $seller);
+
+            if ($paymentResponse['status'] !== 'success') {
+                throw new \Exception("Payment failed. Reason: " . $paymentResponse['message']);
+            }
+
+            $order->update(['status' => 'pending']);
+            PlatformFee::create(['order_id' => $order->id, 'seller_id' => $sellerId]);
+
+            $seller->notify(new NewOrderRequestNotification($order, $buyer));
+            // $buyer->notify(new OrderRequestConfirmationNotification($checkout));
+
+            DB::commit();
+
+            return response()->success($checkout->load('orders.b2bOrderItems'), 'Your order has been sent successfully.', 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+             return response()->json([
+                'ok' => false,
+                'message' => 'An error occurred while placing your order. Please try again.',
+                'error' => [
+                    'message' => $e->getMessage(),
+                    'code' => $e->getCode(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]
+            ], 500);
         }
-
-        return $groupedBySeller;
     }
 }
