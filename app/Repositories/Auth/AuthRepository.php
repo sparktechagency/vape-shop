@@ -33,12 +33,10 @@ class AuthRepository implements AuthRepositoryInterface
         $user->email = $data['email'];
         $user->password = $data['password'];
         $user->phone = $data['phone'] ?? null;
-        // $user->address = $data['address'] ?? null;
-        // $user->zip_code = $data['zip_code'] ?? null;
-        // $user->region = $data['region'] ?? null;
         $user->role = $data['role'];
         $user->otp = $otp_data['otp'];
         $user->otp_expire_at = $otp_data['otp_expire_at'];
+        $user->ein = $data['ein'] ?? null;
         $user->save();
 
         $address = new Address();
@@ -48,7 +46,6 @@ class AuthRepository implements AuthRepositoryInterface
         $address->zip_code = $data['zip_code'] ?? null;
         $address->latitude = $data['latitude'] ?? null;
         $address->longitude = $data['longitude'] ?? null;
-        $address->ein = $data['ein'] ?? null;
         $address->save();
 
         $user->load('address');

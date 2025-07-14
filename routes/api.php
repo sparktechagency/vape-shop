@@ -30,6 +30,7 @@ use App\Http\Controllers\Product\ManageProductController;
 use App\Http\Controllers\Product\HeartedProductController;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
 use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\B2bConnectionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\FeedController;
@@ -45,15 +46,15 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('/logout', 'logout');
     Route::post('/verify-email', 'verifyEmail');
     Route::post('/resend-otp', 'resendOtp');
-    Route::post('/reset-password', 'resetPassword')->middleware('jwt.auth','banned');
-    Route::get('/me', 'me')->middleware('jwt.auth','banned');
+    Route::post('/reset-password', 'resetPassword')->middleware('jwt.auth', 'banned');
+    Route::get('/me', 'me')->middleware('jwt.auth', 'banned');
     Route::get('/profile/{id}', 'profile')->middleware('guest');
     Route::post('/update-password', 'updatePassword')->middleware('jwt.auth', 'banned');
     Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth', 'banned');
 });
 
 //admin routes
-Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth','banned', 'check.role:' . Role::ADMIN->value]], function () {
+Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::ADMIN->value]], function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard']);
 
 
@@ -79,8 +80,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth','banned', 'check.
 
     //transaction history
     Route::get('/transaction-history', [TransactionController::class, 'index']);
-
-
 });
 
 //manage product for brand, store and wholesaler
@@ -93,10 +92,15 @@ Route::group([
     ]
 ], function () {
     Route::apiResource('product-manage', ManageProductController::class)->except(['create', 'edit']);
+
+    //b2b connection
+    Route::post('/b2b/request/{provider}', [B2bConnectionController::class, 'sendRequest']);
+    Route::patch('/b2b/request/{connection}/update', [B2bConnectionController::class, 'updateRequest']);
+    Route::get('/b2b/requests/incoming', [B2bConnectionController::class, 'listIncoming']);
 });
 
 //Store Order routes
-Route::group(['middleware' => ['jwt.auth','banned', 'check.role:' . Role::STORE->value]], function () {
+Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE->value]], function () {
     Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index']);
     Route::get('/orders/{order}', [\App\Http\Controllers\OrderController::class, 'show']);
     Route::put('/orders/{order}/status', [\App\Http\Controllers\OrderController::class, 'updateStatus']);
@@ -133,7 +137,8 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     //order request
     Route::post('/order-request', [CheckoutController::class, 'orderRequest'])->middleware('check.role:' . Role::MEMBER->value);
     Route::get('/checkouts', [CheckoutController::class, 'index'])->middleware('check.role:' . Role::MEMBER->value);
-     Route::get('/checkouts/{checkout:checkout_group_id}', [CheckoutController::class, 'show'])->middleware('check.role:' . Role::MEMBER->value);
+    Route::get('/checkouts/{checkout:checkout_group_id}', [CheckoutController::class, 'show'])->middleware('check.role:' . Role::MEMBER->value);
+
 
 });
 Route::apiResource('hearted-product', HeartedProductController::class)->middleware('jwt.auth')->except(['create', 'edit', 'update', 'show', 'destroy']);
@@ -162,7 +167,7 @@ Route::apiResource('post', PostController::class)->except(['create', 'edit']);
 //get post by user id
 Route::get('/get-posts-by-user-id/{userId}', [PostController::class, 'getPostsByUserId']);
 //About page
-Route::apiResource('about', AboutController::class)->except(['create', 'edit', 'update', 'show','destroy']);
+Route::apiResource('about', AboutController::class)->except(['create', 'edit', 'update', 'show', 'destroy']);
 
 
 
@@ -221,7 +226,4 @@ Route::middleware('jwt.auth')->prefix('notifications')->as('notifications.')->gr
     Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('markAllAsRead');
     Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('markAsRead');
     Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
-
-
 });
-

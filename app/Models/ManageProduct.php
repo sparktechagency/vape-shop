@@ -114,4 +114,13 @@ class ManageProduct extends Model
         }
         return round($avg, 1);
     }
+
+    public function b2bPricing()
+    {
+        return $this->morphOne(B2bPricing::class, 'productable');
+    }
+    public function orderItems()
+    {
+        return $this->morphMany(B2BOrderItem::class, 'productable');
+    }
 }

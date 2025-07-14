@@ -21,7 +21,7 @@ class StoreProduct extends Model
 
     protected $hidden = ['user'];
 
-     //product_faqs attribute
+    //product_faqs attribute
     public function setProductFaqsAttribute($value)
     {
         $this->attributes['product_faqs'] = is_array($value) ? json_encode($value) : $value;
@@ -94,5 +94,14 @@ class StoreProduct extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class, 'store_product_id');
+    }
+
+    public function b2bPricing()
+    {
+        return $this->morphOne(B2bPricing::class, 'productable');
+    }
+    public function orderItems()
+    {
+        return $this->morphMany(B2BOrderItem::class, 'productable');
     }
 }

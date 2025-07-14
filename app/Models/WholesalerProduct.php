@@ -23,7 +23,7 @@ class WholesalerProduct extends Model
     protected $hidden = ['user'];
 
 
-//product_faqs attribute
+    //product_faqs attribute
     public function setProductFaqsAttribute($value)
     {
         $this->attributes['product_faqs'] = is_array($value) ? json_encode($value) : $value;
@@ -86,7 +86,7 @@ class WholesalerProduct extends Model
     }
 
 
-     //hearted product count
+    //hearted product count
     public function getTotalHeartAttribute()
     {
         return $this->hasMany(Heart::class, 'wholesaler_product_id')->count();
@@ -98,5 +98,14 @@ class WholesalerProduct extends Model
         return $this->hasMany(Heart::class, 'wholesaler_product_id')
             ->where('user_id', auth()->id())
             ->exists();
+    }
+
+    public function b2bPricing()
+    {
+        return $this->morphOne(B2bPricing::class, 'productable');
+    }
+    public function orderItems()
+    {
+        return $this->morphMany(B2BOrderItem::class, 'productable');
     }
 }
