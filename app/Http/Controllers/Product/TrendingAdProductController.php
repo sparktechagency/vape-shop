@@ -82,9 +82,11 @@ class TrendingAdProductController extends Controller
             ]);
 
             $trendingAdProduct->amount = $validatedData['amount'];
+            // dd($trendingAdProduct);
 
-
-            $response = $this->paymentService->processPaymentForPayable($trendingAdProduct, $validatedData);
+            $adminId = User::where('role', Role::ADMIN->value)->first();
+            // dd($adminId);
+            $response = $this->paymentService->processPaymentForPayable($trendingAdProduct, $validatedData, $adminId);
             // Return a success response
             if ($response['status'] === 'success') {
                 //send notification to admin

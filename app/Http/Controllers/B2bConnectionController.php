@@ -93,7 +93,8 @@ class B2bConnectionController extends Controller
             $perPage = $request->input('per_page', 15); // Default to 15 items per page
 
         $columns = [
-            'users.id',
+            'b2b_connections.id',
+            'users.id as user_id',
             'users.first_name',
             'users.last_name',
             'users.role',

@@ -96,6 +96,22 @@ Route::group([
 ], function () {
     Route::apiResource('product-manage', ManageProductController::class)->except(['create', 'edit']);
 
+});
+
+//middleware for brand store and wholesaler
+Route::group([
+    'middleware' => [
+        'jwt.auth',
+        'banned',
+        'check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])]
+] , function () {
+    //update payment gateway credentials
+    Route::post('/update-payment-gateway-credentials', [PaymentGatewayController::class, 'updatePaymentGateway']);
+    //get payment gateway credentials
+    Route::get('/get-payment-gateway-credentials', [PaymentGatewayController::class, 'getPaymentGatewayCredentials']);
+
+
+
     //b2b connection
     Route::post('/b2b/request/{provider}', [B2bConnectionController::class, 'sendRequest']);
     Route::patch('/b2b/request/{connection}/update', [B2bConnectionController::class, 'updateRequest']);
@@ -103,18 +119,14 @@ Route::group([
 
     //b2b pricing
     Route::post('/b2b/product-pricing', [B2bPricingController::class, 'storeOrUpdate']);
+    Route::get('/b2b/product-list/{seller}', [B2bPricingController::class, 'listProductsOfSeller']);
 
     //b2b checkout
     Route::post('/b2b/checkout', [CheckoutController::class, 'placeOrder']);
-
 });
 
-//update payment gateway credentials
-Route::post('/update-payment-gateway-credentials', [PaymentGatewayController::class, 'updatePaymentGateway'])
-    ->middleware('jwt.auth','check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value, Role::ADMIN->value]));
-//get payment gateway credentials
-Route::get('/get-payment-gateway-credentials', [PaymentGatewayController::class, 'getPaymentGatewayCredentials'])
-    ->middleware('jwt.auth','check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value, Role::ADMIN->value]));
+
+
 
 //Store Order routes
 Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE->value]], function () {

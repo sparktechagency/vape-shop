@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\B2bProductResource;
 use Illuminate\Http\Request;
 use App\Models\B2bPricing;
+use App\Models\User;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -63,4 +67,46 @@ class B2bPricingController extends Controller
 
         return response()->success($b2bPricing, 'B2B pricing saved successfully.');
     }
+
+
+    public function listProductsOfSeller(Request $request, User $seller)
+    {
+        $buyer = Auth::user();
+
+        $isApproved = $buyer->b2bProviders()
+                            ->where('provider_id', $seller->id)
+                            ->where('status', 'approved')
+                            ->exists();
+
+        if (!$isApproved) {
+            return response()->error('You do not have an approved B2B connection to view these products.', 403);
+        }
+
+        $allProducts = collect();
+
+        $allProducts = $allProducts->merge($seller->manageProducts()->with('b2bPricing')->get());
+        $allProducts = $allProducts->merge($seller->wholesalerProducts()->with('b2bPricing')->get());
+        $allProducts = $allProducts->merge($seller->storeProducts()->with('b2bPricing')->get());
+
+        $b2bProducts = $allProducts->filter(function ($product) {
+               return !is_null($product->b2bPricing);
+        });
+
+
+        $perPage = $request->input('per_page', 15);
+        $currentPage = Paginator::resolveCurrentPage('page');
+
+        $paginatedProducts = new LengthAwarePaginator(
+            $b2bProducts->forPage($currentPage, $perPage)->values(),
+            $b2bProducts->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+
+        return B2bProductResource::collection($paginatedProducts);
+    }
+
+
 }

@@ -20,12 +20,13 @@ class PaymentService
 
     public function processPaymentForPayable(Model $payableItem, array $cardDetails, User $seller): array
     {
-        // dd($payableItem);
+        $amount = $payableItem->subtotal ?? $payableItem->amount;
+        // dd($amount);
         // $chargeData = array_merge($cardDetails, ['amount' => $payableItem->amount]);
 
         // $response = $this->paymentGateway->charge($chargeData);
 
-        $response = $this->paymentGateway->charge($seller, $payableItem->subtotal, $cardDetails);
+        $response = $this->paymentGateway->charge($seller, $amount, $cardDetails);
 
         if ($response['status'] === 'success') {
             $this->paymentRepository->create([
@@ -33,7 +34,7 @@ class PaymentService
                 'payable_type'   => get_class($payableItem),
                 'payment_method' => $response['payment_method'] ?? 'authorizenet',
                 'transaction_id' => $response['transaction_id'],
-                'amount'         => $payableItem->subtotal,
+                'amount'         => $amount,
                 'status'         => 'completed',
             ]);
             // $payableItem->update(['status' => 'paid']);

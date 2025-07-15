@@ -2,6 +2,7 @@
 
 namespace App\Services\Gateways;
 
+use App\Enums\UserRole\Role;
 use App\Interfaces\PaymentGatewayInterface;
 use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
@@ -26,14 +27,25 @@ class AuthorizeNetService implements PaymentGatewayInterface
     {
 
         $credentials = $seller->PaymentGatewayCredential;
-        // dd($amount);
+
 
         if (!$credentials || !$credentials->login_id || !$credentials->transaction_key) {
-            return ['status' => 'failed', 'message' => 'Seller has not configured payment credentials.'];
-        }
+            $sellerName = $seller->full_name; // অথবা আপনার business_name ফিল্ড
+            $role = (int)$seller->role; // Assuming role is stored in the User model
 
-         if (!$credentials || !$credentials->login_id || !$credentials->transaction_key) {
-            return ['status' => 'failed', 'message' => 'Seller has not configured payment credentials.'];
+            $roleName = match ($role) {
+                Role::STORE->value => Role::STORE->value,
+                Role::BRAND->value => Role::BRAND->value,
+                Role::WHOLESALER->value => Role::WHOLESALER->value,
+                Role::ADMIN->value => Role::ADMIN->label(),
+                default => 'Seller',
+            };
+
+
+            $message = "Payment failed because this {$roleName} ('{$sellerName}') has not completed their payment setup. Please contact directly for assistance.";
+
+            return ['status' => 'failed', 'message' => $message];
+            // return ['status' => 'failed', 'message' => 'Seller has not configured payment credentials.'];
         }
 
         $merchantAuthentication = new AnetAPI\MerchantAuthenticationType();

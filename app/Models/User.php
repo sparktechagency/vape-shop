@@ -37,7 +37,8 @@ class User extends Authenticatable implements JWTSubject
         'avg_rating',
         'total_reviews',
         'is_favourite',
-        'is_banned'
+        'is_banned',
+        'unread_senders_count',
         // 'region',
     ];
 
@@ -306,6 +307,16 @@ class User extends Authenticatable implements JWTSubject
     public function getIsBannedAttribute(): bool
     {
         return $this->banned_at !== null;
+    }
+
+    //unread senders count attribute
+    public function getUnreadSendersCountAttribute()
+    {
+
+        return Message::where('receiver_id', $this->id)
+                      ->where('is_read', 0)
+                      ->distinct('sender_id')
+                      ->count();
     }
 
     /**

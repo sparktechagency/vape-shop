@@ -6,11 +6,13 @@ use App\Enums\UserRole\Role;
 use App\Http\Requests\CheckoutRequest;
 use App\Http\Resources\CheckoutResource;
 use App\Models\Checkout;
+use App\Models\ManageProduct;
 use App\Models\Order;
 use App\Models\PlatformFee;
 use App\Models\User;
 use App\Models\OrderItem;
 use App\Models\StoreProduct;
+use App\Models\WholesalerProduct;
 use App\Notifications\NewOrderRequestNotification;
 use App\Notifications\OrderRequestConfirmationNotification;
 use App\Services\PaymentService;
@@ -177,58 +179,75 @@ class CheckoutController extends Controller
     }
 
 
+
+    /**
+     * Handles the entire B2B order placement process for a single seller.
+     */
     public function placeOrder(Request $request)
     {
-        $validatedData = Validator::make($request->all(), [
-            'customer_name' => 'required|string|max:255',
-            'customer_address' => 'required|string',
-            'card_details' => 'required|array',
+        $validator = Validator::make($request->all(), [
+            'customer_name' => 'nullable|string|max:255',
+            'customer_address' => 'nullable|string',
+            'card_details' => 'nullable|array',
             'card_details.card_number' => 'required|string|min:13|max:16',
             'card_details.expiration_month' => 'required|numeric|min:1|max:12',
             'card_details.expiration_year' => 'required|numeric|digits:4',
             'card_details.cvc' => 'required|string|min:3|max:4',
             'cart_items' => 'required|array|min:1',
             'cart_items.*.product_id' => 'required|integer',
-            'cart_items.*.product_type' => 'required|string|in:App\Models\ManageProduct,App\Models\WholesalerProduct,App\Models\StoreProduct',
-            'cart_items.*.quantity' => 'required|integer|min:1',
+            'cart_items.*.quantity' => 'required|integer|min:1'
         ]);
 
-        if ($validatedData->fails()) {
-            return response()->error($validatedData->errors()->first(), 422, $validatedData->errors());
+        if ($validator->fails()) {
+            return response()->error($validator->errors()->first(), 422, $validator->errors());
         }
 
-        $validatedData = $validatedData->validated();
-        $cardDetails = $validatedData['card_details'];
-        $cartItems = collect($validatedData['cart_items']); // কালেকশন হিসাবে নেওয়া হলো
+        $validatedData = $validator->validated();
+        $cartItemsInput = $validatedData['cart_items'];
         $buyer = Auth::user();
 
-        // --- নতুন লজিক শুরু ---
+        $cartProductIds = array_column($cartItemsInput, 'product_id');
+        // dd($cartProductIds);
+        $productTypeMap = $this->findProductTypesForIds($cartProductIds);
 
-        // ধাপ ২: কার্টের সব পণ্য এবং তাদের বিক্রেতাদের খুঁজে বের করা
+
+        //find product types for each product ID
+        $cartItems = [];
+        foreach ($cartItemsInput as $item) {
+            if ($productTypeMap->has($item['product_id'])) {
+                $item['product_type'] = $productTypeMap->get($item['product_id'])->product_type;
+                $cartItems[] = $item;
+            }
+        }
+
+        //
+        if (count($cartItems) !== count($cartItemsInput)) {
+            return response()->error('One or more products in your cart are invalid.', 404);
+        }
+        $cartItems = collect($cartItems);
+
+
         $allProducts = collect();
         $cartItems->groupBy('product_type')->each(function ($items, $modelClass) use (&$allProducts) {
             $ids = $items->pluck('product_id');
             if (class_exists($modelClass)) {
+
                 $products = $modelClass::whereIn('id', $ids)->with('b2bPricing')->get();
                 $allProducts = $allProducts->merge($products);
             }
         });
-
+        // return $allProducts;
         if ($allProducts->isEmpty()) {
             return response()->error('No valid products found in your cart.', 404);
         }
 
-        // ধাপ ৩: একক বিক্রেতার নিয়ম প্রয়োগ করা (Enforce Single Seller Rule)
         $sellerIds = $allProducts->pluck('user_id')->unique();
-
         if ($sellerIds->count() > 1) {
-            return response()->error('You can only order from one seller at a time. Please clear your cart or remove items from other sellers.', 400);
+            return response()->error('You can only order from one seller at a time.', 400);
         }
-
         $sellerId = $sellerIds->first();
         $seller = User::findOrFail($sellerId);
 
-        // --- নতুন লজিক শেষ ---
 
         DB::beginTransaction();
         try {
@@ -236,30 +255,44 @@ class CheckoutController extends Controller
             $orderItemsData = [];
             $productMap = $allProducts->keyBy('id');
 
-            // ধাপ ৪: সাব-টোটাল এবং অর্ডারের আইটেমগুলো প্রস্তুত করা
+            //b2b pricing validation
             foreach ($cartItems as $item) {
                 $product = $productMap->get($item['product_id']);
                 if (!$product) continue;
 
+
                 $connectionExists = $buyer->b2bProviders()->where('provider_id', $sellerId)->where('status', 'approved')->exists();
-                $price = ($connectionExists && $product->b2bPricing) ? $product->b2bPricing->wholesale_price : $product->price ?? 18; // Default price if no B2B pricing exists
+                if (!$connectionExists) {
+                    throw new \Exception("You do not have an approved B2B connection to purchase '{$product->product_name}'.");
+                }
 
-                // dd($price);
+                // return $product;
+                $b2bPriceRecord = $product->b2bPricing;
 
+                if (!$b2bPriceRecord) {
+                    throw new \Exception("A B2B price has not been set for the product '{$product->product_name}'.");
+                }
+
+
+                if ($item['quantity'] < $b2bPriceRecord->moq) {
+                    throw new \Exception("The quantity for '{$product->product_name}' does not meet the minimum order requirement of {$b2bPriceRecord->moq}.");
+                }
+
+                 $price = $b2bPriceRecord->wholesale_price;
                 $subTotal += $price * $item['quantity'];
                 $orderItemsData[] = [
                     'productable_id' => $product->id,
                     'productable_type' => get_class($product),
                     'quantity' => $item['quantity'],
-                    'price' => $price ?? 18,
+                    'price' => $price,
                 ];
             }
 
-            // ধাপ ৫: চেকআউট এবং অর্ডার তৈরি করা (এখন আর লুপের প্রয়োজন নেই)
+
             $checkout = Checkout::create([
                 'user_id' => $buyer->id,
                 'checkout_group_id' => 'CHK-' . strtoupper(Str::random(12)),
-                'grand_total' => $subTotal, // এখন grand_total এবং subtotal একই
+                'grand_total' => $subTotal,
                 'customer_name' => $validatedData['customer_name'],
                 'customer_address' => $validatedData['customer_address'],
                 'status' => 'pending',
@@ -274,36 +307,57 @@ class CheckoutController extends Controller
             ]);
 
             $order->b2bOrderItems()->createMany($orderItemsData);
-            // dd($order);
 
-            // ধাপ ৬: পেমেন্ট এবং অন্যান্য কাজ সম্পন্ন করা
-             $paymentResponse = $this->paymentService->processPaymentForPayable($order, $cardDetails, $seller);
+
+            $paymentResponse = $this->paymentService->processPaymentForPayable(
+                $order,
+                $validatedData['card_details'],
+                $seller
+            );
 
             if ($paymentResponse['status'] !== 'success') {
                 throw new \Exception("Payment failed. Reason: " . $paymentResponse['message']);
             }
 
+
             $order->update(['status' => 'pending']);
             PlatformFee::create(['order_id' => $order->id, 'seller_id' => $sellerId]);
-
             $seller->notify(new NewOrderRequestNotification($order, $buyer));
-            // $buyer->notify(new OrderRequestConfirmationNotification($checkout));
 
             DB::commit();
 
             return response()->success($checkout->load('orders.b2bOrderItems'), 'Your order has been sent successfully.', 201);
+
         } catch (\Exception $e) {
             DB::rollBack();
-             return response()->json([
-                'ok' => false,
-                'message' => 'An error occurred while placing your order. Please try again.',
-                'error' => [
-                    'message' => $e->getMessage(),
-                    'code' => $e->getCode(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine()
-                ]
-            ], 500);
+            return response()->error($e->getMessage(), 400);
         }
     }
+
+    /**
+     * Finds the correct model class for a list of product IDs using a single UNION query.
+     */
+    private function findProductTypesForIds(array $productIds): \Illuminate\Support\Collection
+    {
+        // Query for manage_products table
+        $manageProducts = DB::table('manage_products')
+            ->whereIn('id', $productIds)
+            ->select('id', DB::raw("'" . addslashes(ManageProduct::class) . "' as product_type"));
+
+        // Query for wholesale_products table
+        $wholesaleProducts = DB::table('wholesaler_products')
+            ->whereIn('id', $productIds)
+            ->select('id', DB::raw("'" . addslashes(WholesalerProduct::class) . "' as product_type"));
+
+
+        $storeProductsQuery = DB::table('store_products')
+            ->whereIn('id', $productIds)
+            ->select('id', DB::raw("'" . addslashes(StoreProduct::class) . "' as product_type"))
+            ->unionAll($manageProducts)
+            ->unionAll($wholesaleProducts);
+
+
+        return DB::query()->fromSub($storeProductsQuery, 'products')->get()->keyBy('id');
+    }
 }
+
