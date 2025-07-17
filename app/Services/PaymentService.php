@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Interfaces\PaymentGatewayInterface;
 use App\Interfaces\PaymentRepositoryInterface;
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -39,6 +40,27 @@ class PaymentService
             ]);
             // $payableItem->update(['status' => 'paid']);
         }
+        return $response;
+    }
+
+
+    public function processRefundForOrder(Order $order): array
+    {
+        $payment = $order->payments()->where('status', 'completed')->first();
+        // dd($payment);
+        if (!$payment) {
+            return ['status' => 'failed', 'message' => 'No completed payment found to refund.'];
+        }
+        // dd($order   );
+        $seller = $order->store;
+        // dd($seller);
+        $response = $this->paymentGateway->refund($seller, $payment->transaction_id, $payment->amount);
+        // dd($response->success);
+
+        if ($response['success'] === true) {
+            $payment->update(['status' => 'refunded']);
+        }
+
         return $response;
     }
 }

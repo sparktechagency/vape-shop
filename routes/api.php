@@ -67,6 +67,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
     Route::put('/ban-user/{id}', [UserManagementController::class, 'banUser']);
     Route::put('/unban-user/{id}', [UserManagementController::class, 'unbanUser']);
     Route::get('/get-banned-users', [UserManagementController::class, 'getBannedUsers']);
+    Route::delete('/delete-user/{id}', [UserManagementController::class, 'deleteUser']);
 
     //slider
     Route::apiResource('slider', SliderController::class)->except(['create', 'edit']);
@@ -123,6 +124,7 @@ Route::group([
 
     //b2b checkout
     Route::post('/b2b/checkout', [CheckoutController::class, 'placeOrder']);
+    Route::get('/b2b/orders/{checkout:checkout_group_id}/cancel', [CheckoutController::class, 'cancelOrder']);
 });
 
 
@@ -165,8 +167,8 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
 
     //order request
     Route::post('/order-request', [CheckoutController::class, 'orderRequest'])->middleware('check.role:' . Role::MEMBER->value);
-    Route::get('/checkouts', [CheckoutController::class, 'index'])->middleware('check.role:' . Role::MEMBER->value);
-    Route::get('/checkouts/{checkout:checkout_group_id}', [CheckoutController::class, 'show'])->middleware('check.role:' . Role::MEMBER->value);
+    Route::get('/checkouts', [CheckoutController::class, 'index']);
+    Route::get('/checkouts/{checkout:checkout_group_id}', [CheckoutController::class, 'show']);
 
     //inbox routes
     Route::post('/inbox/send-message', [InboxController::class, 'sendMessage']);

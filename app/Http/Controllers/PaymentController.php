@@ -43,7 +43,8 @@ class PaymentController extends Controller
             'amount'     => '500.00',
             'status'     => 'pending',
         ]);
-        $trendingRequest['amount'] = 500.00; // Assuming the amount is fixed for this example
+        dd($trendingRequest);
+        $trendingRequest['amount'] = 500.00;
 
         $response = $this->paymentService->processPaymentForPayable($trendingRequest, $cardDetails);
 

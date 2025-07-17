@@ -38,7 +38,7 @@ class User extends Authenticatable implements JWTSubject
         'total_reviews',
         'is_favourite',
         'is_banned',
-        'unread_senders_count',
+        'unread_conversations_count',
         // 'region',
     ];
 
@@ -275,6 +275,12 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasManyThrough(Review::class, ManageProduct::class);
     }
 
+    //all reviews
+    public function allReviews()
+    {
+        return $this->hasMany(Review::class)->whereNull('parent_id');
+    }
+
     //average rating attribute
     public function getAvgRatingAttribute()
     {
@@ -282,6 +288,7 @@ class User extends Authenticatable implements JWTSubject
         $average = match ($this->role) {
             Role::STORE->value => $this->storeReviews()->avg('rating'),
             Role::BRAND->value => $this->brandReviews()->avg('rating'),
+            Role::WHOLESALER->value => $this->wholesalerProducts()->avg('rating'),
             default => 0,
         };
 
@@ -294,6 +301,7 @@ class User extends Authenticatable implements JWTSubject
         return match ($this->role) {
             Role::STORE->value => $this->storeReviews()->count(),
             Role::BRAND->value => $this->brandReviews()->count(),
+            Role::WHOLESALER->value => $this->wholesalerProducts()->count(),
             default => 0,
         };
     }
@@ -310,7 +318,7 @@ class User extends Authenticatable implements JWTSubject
     }
 
     //unread senders count attribute
-    public function getUnreadSendersCountAttribute()
+    public function getUnreadConversationsCountAttribute()
     {
 
         return Message::where('receiver_id', $this->id)

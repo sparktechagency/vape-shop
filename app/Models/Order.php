@@ -37,4 +37,9 @@ class Order extends Model
     {
         return $this->hasMany(B2BOrderItem::class);
     }
+    //payments
+    public function payments()
+    {
+        return $this->morphMany(Payment::class, 'payable');
+    }
 }

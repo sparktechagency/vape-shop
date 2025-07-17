@@ -99,4 +99,18 @@ class UserManagementController extends Controller
         }
         return response()->success($bannedUsers, 'Banned users retrieved successfully.');
     }
+
+    //delete user by admin
+    public function deleteUser($id)
+    {
+        $user = User::find($id);
+        if (!$user) {
+            return response()->error('User not found', 404);
+        }
+        if ($user->delete()) {
+            return response()->success(null, 'User deleted successfully.');
+        } else {
+            return response()->error('Failed to delete user', 500);
+        }
+    }
 }

@@ -359,5 +359,56 @@ class CheckoutController extends Controller
 
         return DB::query()->fromSub($storeProductsQuery, 'products')->get()->keyBy('id');
     }
+
+
+    //order cancel
+     public function cancelOrder(Checkout $checkout)
+    {
+
+        if (Auth::id() !== $checkout->user_id) {
+            return response()->error('You do not have permission to cancel this order.', 403);
+        }
+
+        if ($checkout->status === 'cancelled') {
+            return response()->error('This order has already been cancelled.', 400);
+        }
+
+
+        if ($checkout->status !== 'pending') {
+            return response()->error(
+                'This order cannot be cancelled at its current stage.',
+                400,
+                'Invalid Order Status'
+            );
+        }
+
+        $order =  $checkout->orders()->where('status', 'pending')->first();
+
+        // dd($order);
+        $refundResponse = $this->paymentService->processRefundForOrder($order);
+        // dd($refundResponse);
+        if ($refundResponse['success'] !== true) {
+            return response()->error(
+                'Refund failed: ' . $refundResponse['message'],
+                500,
+                'Refund Error'
+            );
+        }
+
+
+        $checkout->update(['status' => 'cancelled']);
+        $checkout->orders()->each(function ($order) {
+            $order->update(['status' => 'cancelled']);
+        });
+
+
+        // $order->store->notify(new OrderCancelledByCustomerNotification($order));
+
+        return response()->success(
+            null,
+            'Your order has been cancelled successfully.',
+        );
+    }
+
 }
 
