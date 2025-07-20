@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Message;
@@ -6,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use DB;
 
 class MessageController extends Controller
 {
@@ -38,53 +40,79 @@ class MessageController extends Controller
         $userId = Auth::id();
         $search = $request->search;
 
-        $chatList = Message::with(['receiver:id,first_name,last_name,avatar', 'sender:id,first_name,last_name,avatar'])
+        $chatListQuery = Message::with(['receiver:id,first_name,last_name,avatar', 'sender:id,first_name,last_name,avatar'])
             ->where(function ($query) use ($userId) {
                 $query->where('sender_id', $userId)
                     ->orWhere('receiver_id', $userId);
             });
 
-        // Apply search
+        // Apply search if provided
         if ($search) {
-            $chatList->where(function ($query) use ($search) {
-                // Filter receiver side
+            $chatListQuery->where(function ($query) use ($search, $userId) {
                 $query->whereHas('receiver', function ($q) use ($search) {
-                    if ($search) {
+                    $q->where('first_name', 'LIKE', '%' . $search . '%')
+                        ->orWhere('last_name', 'LIKE', '%' . $search . '%')
+                        ->orWhere('email', 'LIKE', '%' . $search . '%');
+                })
+                    ->orWhereHas('sender', function ($q) use ($search) {
                         $q->where('first_name', 'LIKE', '%' . $search . '%')
                             ->orWhere('last_name', 'LIKE', '%' . $search . '%')
                             ->orWhere('email', 'LIKE', '%' . $search . '%');
-                    }
-                })
-                // OR filter sender side
-                    ->orWhereHas('sender', function ($q) use ($search) {
-                        if ($search) {
-                            $q->where('first_name', 'LIKE', '%' . $search . '%')
-                                ->orWhere('last_name', 'LIKE', '%' . $search . '%')
-                                ->orWhere('email', 'LIKE', '%' . $search . '%');
-                        }
                     });
             });
         }
 
-        $chatList = $chatList->latest('created_at')->get()->unique(function ($message) use ($userId) {
-            return $message->sender_id === $userId
-            ? $message->receiver_id
-            : $message->sender_id;
-        })->values();
+        // Get the latest message for each conversation to form the chat list
+        $latestMessages = $chatListQuery->latest('created_at')->get()->unique(function ($message) use ($userId) {
+            return $message->sender_id === $userId ? $message->receiver_id : $message->sender_id;
+        });
 
-        $chatList = $chatList->map(function ($message) use ($userId) {
-            $message->user = $message->sender_id === $userId
-            ? $message->receiver
-            : $message->sender;
+        // Get the IDs of the other users in the conversations
+        $partnerIds = $latestMessages->map(function ($message) use ($userId) {
+            return $message->sender_id === $userId ? $message->receiver_id : $message->sender_id;
+        });
 
+         $unreadCounts = Message::where('receiver_id', $userId)
+            ->where('is_read', false)
+            ->whereIn('sender_id', $partnerIds)
+            ->select('sender_id', DB::raw('count(*) as messages_count'))
+            ->groupBy('sender_id')
+            ->get()
+            ->keyBy('sender_id'); // keyBy makes it easy to look up counts by sender_id
+
+
+        $chatList = $latestMessages->map(function ($message) use ($userId, $unreadCounts) {
+
+            $partner = $message->sender_id === $userId ? $message->receiver : $message->sender;
+            $unreadCount = $unreadCounts->get($partner->id)?->messages_count ?? 0;
+            $message->user = $partner;
+            $message->unread_messages_count = $unreadCount;
             unset($message->sender, $message->receiver);
+
             return $message;
         });
 
+        // return $chatList->values();
         return response()->json([
             'status'    => true,
-            'chat_list' => $chatList,
-        ]);
+            'chat_list' => $chatList->values(),
+        ]); // values() resets array keys
+    }
+
+    //mark all messages as read
+     public function markAsRead($senderId)
+    {
+      $userId = Auth::id();
+       $read = Message::where('sender_id', $senderId)
+               ->where('receiver_id', $userId)
+               ->where('is_read', false) // Only update unread messages
+               ->update(['is_read' => true]);
+
+        return response()->success(
+            $read,
+            'Messages marked as read successfully',
+            200
+        );
     }
 
     public function sendMessage(Request $request)
@@ -105,7 +133,8 @@ class MessageController extends Controller
         return response()->json([
             'status'  => true,
             'message' => 'Message saved successfully',
-            'data'    => $message], 200);
+            'data'    => $message
+        ], 200);
     }
 
     public function getMessage(Request $request)
@@ -138,5 +167,4 @@ class MessageController extends Controller
             'data'    => $messages,
         ]);
     }
-
 }

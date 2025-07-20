@@ -164,6 +164,7 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     Route::get('get-message', [MessageController::class, 'getMessage']);
     Route::get('search-new-user', [MessageController::class, 'searchNewUser']);
     Route::get('chat-list', [MessageController::class, 'chatList']);
+    Route::post('mark-as-read/{senderId}', [MessageController::class, 'markAsRead']);
 
     //order request
     Route::post('/order-request', [CheckoutController::class, 'orderRequest'])->middleware('check.role:' . Role::MEMBER->value);
