@@ -21,14 +21,14 @@ class ManageProductsRepository implements ManageProductsInterface
         $perPage = request()->get('per_page', 10);
         $is_most_hearted = request('is_most_hearted', false);
         return match (Auth::user()->role) {
-            Role::STORE->value => StoreProduct::where('user_id', Auth::id())
+            Role::STORE => StoreProduct::where('user_id', Auth::id())
             ->when($is_most_hearted, function ($query) {
                 $query->withCount('hearts')->orderByDesc('hearts_count');
             })
             ->paginate($perPage)
             ->toArray(),
 
-            Role::WHOLESALER->value => WholesalerProduct::with('user')
+            Role::WHOLESALER => WholesalerProduct::with('user')
             ->when($is_most_hearted, function ($query) {
                 $query->withCount('hearts')->orderByDesc('hearts_count');
             })
@@ -54,10 +54,10 @@ class ManageProductsRepository implements ManageProductsInterface
     {
 
 
-        if (Auth::user()->role === Role::STORE->value) {
+        if (Auth::user()->role === Role::STORE) {
             $product = StoreProduct::find($id);
             return $product ? $product->toArray() : [];
-        } elseif (Auth::user()->role === Role::WHOLESALER->value) {
+        } elseif (Auth::user()->role === Role::WHOLESALER) {
             $product = WholesalerProduct::with('user')->find($id);
             return $product ? $product->toArray() : [];
         }else {
@@ -75,9 +75,9 @@ class ManageProductsRepository implements ManageProductsInterface
     {
         // dd($data);
         // dd(Auth::user()->role);
-        if (Auth::user()->role === Role::STORE->value || Auth::user()->role === Role::WHOLESALER->value) {
+        if (Auth::user()->role === Role::STORE || Auth::user()->role === Role::WHOLESALER) {
             // dd($data);
-            if(Auth::user()->role === Role::WHOLESALER->value) {
+            if(Auth::user()->role === Role::WHOLESALER) {
                 $product = new WholesalerProduct();
             } else {
                 $product = new StoreProduct();
@@ -94,9 +94,9 @@ class ManageProductsRepository implements ManageProductsInterface
                 $product->product_id = $manageProduct->id;
                 $product->category_id = $manageProduct->category_id;
                 $product->product_name = $manageProduct->product_name;
-                if (Auth::user()->role === Role::STORE->value) {
+                if (Auth::user()->role === Role::STORE) {
                     $product->slug = generateUniqueSlug(StoreProduct::class, $manageProduct->product_name);
-                } elseif (Auth::user()->role === Role::WHOLESALER->value) {
+                } elseif (Auth::user()->role === Role::WHOLESALER) {
                     $product->slug = generateUniqueSlug(WholesalerProduct::class, $manageProduct->product_name);
                 }
                 // $product->slug = $data['slug'];
@@ -109,9 +109,9 @@ class ManageProductsRepository implements ManageProductsInterface
                 $product->product_name = $data['product_name'];
                 $product->category_id = $data['category_id'];
                 $product->product_image = $data['product_image'];
-            if (Auth::user()->role === Role::STORE->value) {
+            if (Auth::user()->role === Role::STORE) {
                 $product->slug = generateUniqueSlug(StoreProduct::class, $data['product_name']);
-            } elseif (Auth::user()->role === Role::WHOLESALER->value) {
+            } elseif (Auth::user()->role === Role::WHOLESALER) {
                 $product->slug = generateUniqueSlug(WholesalerProduct::class, $data['product_name']);
             }
             }
@@ -153,8 +153,8 @@ class ManageProductsRepository implements ManageProductsInterface
      */
     public function updateProduct(int $id, array $data): array
     {
-        if (Auth::user()->role === Role::STORE->value || Auth::user()->role === Role::WHOLESALER->value) {
-            if(Auth::user()->role === Role::WHOLESALER->value) {
+        if (Auth::user()->role === Role::STORE || Auth::user()->role === Role::WHOLESALER) {
+            if(Auth::user()->role === Role::WHOLESALER) {
                 $product = WholesalerProduct::findOrFail($id);
             } else {
                 $product = StoreProduct::findOrFail($id);
@@ -190,9 +190,9 @@ class ManageProductsRepository implements ManageProductsInterface
      */
     public function deleteProduct(int $id): bool
     {
-        if (Auth::user()->role === Role::STORE->value) {
+        if (Auth::user()->role === Role::STORE) {
             $product = StoreProduct::findOrFail($id);
-        } elseif (Auth::user()->role === Role::WHOLESALER->value) {
+        } elseif (Auth::user()->role === Role::WHOLESALER) {
             $product = WholesalerProduct::findOrFail($id);
         }
         else {

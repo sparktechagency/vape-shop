@@ -17,7 +17,7 @@ class StoreProductSeeder extends Seeder
      */
     public function run(): void
     {
-        $storeUsers = User::where('role', \App\Enums\UserRole\Role::STORE->value)->get();
+        $storeUsers = User::where('role', \App\Enums\UserRole\Role::STORE)->get();
         $manageProducts = ManageProduct::all();
         $categories = Category::pluck('id');
 
@@ -28,7 +28,7 @@ class StoreProductSeeder extends Seeder
 
         foreach ($storeUsers as $storeUser) {
 
-            // 3 ta manage product 
+            // 3 ta manage product
             foreach ($manageProducts->random(3) as $product) {
                 StoreProduct::create([
                     'user_id' => $storeUser->id,

@@ -17,6 +17,7 @@ class ForumCommentController extends Controller
     public function __construct()
     {
         $this->middleware('jwt.auth')->except(['index']);
+        $this->middleware('check.subscription')->except(['index']);
         $this->middleware('guest')->only(['index']);
         $this->middleware('banned');
 

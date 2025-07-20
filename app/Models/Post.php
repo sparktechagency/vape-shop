@@ -63,7 +63,7 @@ class Post extends Model
     //role attribute
     public function getRoleAttribute()
     {
-        return $this->user->role ? Role::from($this->user->role)->label() : null;
+        return $this->user->role ? $this->user->role->label() : null;
     }
 
     //image attribute

@@ -17,6 +17,7 @@ class ForumGroupController extends Controller
         $this->middleware('jwt.auth')->except(['index', 'show']);
         $this->middleware('guest')->only(['index', 'show']);
         $this->middleware('banned');
+        $this->middleware('check.subscription')->except(['index', 'show']);
         $this->forumGroupService = $forumGroupService;
     }
 

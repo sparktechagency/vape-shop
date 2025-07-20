@@ -76,12 +76,12 @@ class MostFollowersAdsController extends Controller
 
             $mostFollowersAdRequest->amount = $validatedData['amount'];
 
-            $admin = User::where('role', Role::ADMIN->value)->first();
+            $admin = User::where('role', Role::ADMIN)->first();
             $response = $this->paymentService->processPaymentForPayable($mostFollowersAdRequest, $validatedData, $admin);
             // Return a success response
             if ($response['status'] === 'success') {
                 //send notification to admin
-                $admins = User::where('role', Role::ADMIN->value)->get();
+                $admins = User::where('role', Role::ADMIN)->get();
                 if ($admins->isNotEmpty()) {
                     Notification::send($admins, new NewMostFollowersAdRequestNotification($mostFollowersAdRequest));
                 }

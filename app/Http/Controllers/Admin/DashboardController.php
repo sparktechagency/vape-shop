@@ -24,7 +24,7 @@ class DashboardController extends Controller
             SUM(role = ?) as total_brands,
             SUM(role = ?) as total_stores,
             SUM(role = ?) as total_wholesalers
-        ", [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])->first();
+        ", [Role::BRAND, Role::STORE, Role::WHOLESALER])->first();
 
         $currentPeriodStart = Carbon::now()->subDays(7);
         $currentPeriodEnd = Carbon::now();
@@ -37,22 +37,22 @@ class DashboardController extends Controller
 
         $newUsersPreviousPeriod = User::whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])->count();
 
-        $newBrandsCurrentPeriod = User::where('role', Role::BRAND->value)
+        $newBrandsCurrentPeriod = User::where('role', Role::BRAND)
             ->whereBetween('created_at', [$currentPeriodStart, $currentPeriodEnd])
             ->count();
-        $newBrandsPreviousPeriod = User::where('role', Role::BRAND->value)
+        $newBrandsPreviousPeriod = User::where('role', Role::BRAND)
             ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
             ->count();
-        $newStoresCurrentPeriod = User::where('role', Role::STORE->value)
+        $newStoresCurrentPeriod = User::where('role', Role::STORE)
             ->whereBetween('created_at', [$currentPeriodStart, $currentPeriodEnd])
             ->count();
-        $newStoresPreviousPeriod = User::where('role', Role::STORE->value)
+        $newStoresPreviousPeriod = User::where('role', Role::STORE)
             ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
             ->count();
-        $newWholesalersCurrentPeriod = User::where('role', Role::WHOLESALER->value)
+        $newWholesalersCurrentPeriod = User::where('role', Role::WHOLESALER)
             ->whereBetween('created_at', [$currentPeriodStart, $currentPeriodEnd])
             ->count();
-        $newWholesalersPreviousPeriod = User::where('role', Role::WHOLESALER->value)
+        $newWholesalersPreviousPeriod = User::where('role', Role::WHOLESALER)
             ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
             ->count();
 

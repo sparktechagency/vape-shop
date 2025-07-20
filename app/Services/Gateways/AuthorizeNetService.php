@@ -30,14 +30,14 @@ class AuthorizeNetService implements PaymentGatewayInterface
 
 
         if (!$credentials || !$credentials->login_id || !$credentials->transaction_key) {
-            $sellerName = $seller->full_name; // অথবা আপনার business_name ফিল্ড
+            $sellerName = $seller->full_name;
             $role = (int)$seller->role; // Assuming role is stored in the User model
 
             $roleName = match ($role) {
-                Role::STORE->value => Role::STORE->value,
-                Role::BRAND->value => Role::BRAND->value,
-                Role::WHOLESALER->value => Role::WHOLESALER->value,
-                Role::ADMIN->value => Role::ADMIN->label(),
+                Role::STORE => Role::STORE,
+                Role::BRAND => Role::BRAND,
+                Role::WHOLESALER => Role::WHOLESALER,
+                Role::ADMIN => Role::ADMIN->label(),
                 default => 'Seller',
             };
 

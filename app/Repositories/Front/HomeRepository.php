@@ -54,7 +54,7 @@ class HomeRepository implements HomeInterface
         $is_most_hearted = request('is_most_hearted', false);
         switch ($type) {
             case 'store':
-                if ($user->role !== Role::STORE->value) return [];
+                if ($user->role !== Role::STORE) return [];
                 $query = StoreProduct::where('user_id', $userId)->withCount('hearts');
 
                 if ($is_most_hearted) {
@@ -69,7 +69,7 @@ class HomeRepository implements HomeInterface
                 ];
 
             case 'brand':
-                if ($user->role !== Role::BRAND->value) return [];
+                if ($user->role !== Role::BRAND) return [];
                 $query = ManageProduct::where('user_id', $userId)->withCount('hearts');
                 if ($is_most_hearted) {
                     $query->orderByDesc('hearts_count');
@@ -167,7 +167,7 @@ class HomeRepository implements HomeInterface
     //all accounts except admin
     private function getAllAccounts($perPage, $searchTerm = null, $regionId = null)
     {
-        $query = User::where('role', '!=', Role::ADMIN->value);
+        $query = User::where('role', '!=', Role::ADMIN);
         $query->when($searchTerm, function ($query, $searchTerm) {
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('first_name', 'like', '%' . $searchTerm . '%')

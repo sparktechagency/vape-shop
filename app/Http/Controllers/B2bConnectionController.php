@@ -34,7 +34,7 @@ class B2bConnectionController extends Controller
                 'Request Already Exists'
             );
         }
-        if ($provider->role !== Role::BRAND->value && $provider->role !== Role::WHOLESALER->value && $provider->role !== Role::STORE->value) {
+        if ($provider->role !== Role::BRAND && $provider->role !== Role::WHOLESALER && $provider->role !== Role::STORE) {
             return response()->error(
                 'Invalid provider role. Only brands, wholesalers, and stores can be providers.',
                 400,

@@ -35,9 +35,9 @@ class B2bPricingController extends Controller
         $seller = Auth::user();
 
         $productableType = match ($seller->role) {
-            Role::STORE->value => \App\Models\StoreProduct::class,
-            Role::WHOLESALER->value => \App\Models\WholesalerProduct::class,
-            Role::BRAND->value => \App\Models\ManageProduct::class,
+            Role::STORE => \App\Models\StoreProduct::class,
+            Role::WHOLESALER => \App\Models\WholesalerProduct::class,
+            Role::BRAND => \App\Models\ManageProduct::class,
             default => null,
         };
 

@@ -15,6 +15,7 @@ class ForumThreadController extends Controller
     public function __construct(ForumThreadService $forumThreadService)
     {
         $this->middleware('jwt.auth')->except(['index', 'show']);
+        $this->middleware('check.subscription')->except(['index', 'show']);
         $this->middleware('guest')->only(['index', 'show']);
         $this->middleware('banned');
         $this->forumThreadService = $forumThreadService;

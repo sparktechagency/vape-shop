@@ -39,7 +39,7 @@ class UserSeeder extends Seeder
                 'first_name' => $store,
                 'email' => strtolower(str_replace(' ', '', $store)) . '@store.com',
                 'password' => Hash::make('11111111'),
-                'role' => Role::STORE->value,
+                'role' => Role::STORE,
                 'email_verified_at' => now(),
             ]);
 
@@ -57,7 +57,7 @@ class UserSeeder extends Seeder
                 'first_name' => $brand,
                 'email' => strtolower(str_replace(' ', '', $brand)) . '@brand.com',
                 'password' => Hash::make('11111111'),
-                'role' => Role::BRAND->value,
+                'role' => Role::BRAND,
                 'email_verified_at' => now(),
             ]);
         }

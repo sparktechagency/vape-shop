@@ -18,11 +18,11 @@ class ReviewSeeder extends Seeder
     {
         // Store Product Hearts
         $storeProducts = StoreProduct::inRandomOrder()->take(10)->get();
-        $storeUsers = User::where('role', Role::MEMBER->value)->get();
+        $storeUsers = User::where('role', Role::MEMBER)->get();
 
         foreach ($storeProducts as $product) {
             $randomUsers = $storeUsers->random(min(3, $storeUsers->count()));
-            $data = $this->getProductAndRegionId($product->id, Role::STORE->value);
+            $data = $this->getProductAndRegionId($product->id, Role::STORE);
             foreach ($randomUsers as $user) {
                 Review::create([
                     'user_id' => $user->id,
@@ -37,7 +37,7 @@ class ReviewSeeder extends Seeder
 
         // Manage Product Hearts
         $manageProducts = ManageProduct::inRandomOrder()->take(10)->get();
-        $brandUsers = User::where('role', \App\Enums\UserRole\Role::MEMBER->value)->get();
+        $brandUsers = User::where('role', \App\Enums\UserRole\Role::MEMBER)->get();
 
         foreach ($manageProducts as $product) {
             $randomUsers = $brandUsers->random(min(3, $brandUsers->count()));
@@ -54,7 +54,7 @@ class ReviewSeeder extends Seeder
 
     private function getProductAndRegionId($productId, $role)
     {
-        if ($role === Role::STORE->value) {
+        if ($role === Role::STORE) {
             $data = [];
             $product = StoreProduct::find($productId);
             if($product){

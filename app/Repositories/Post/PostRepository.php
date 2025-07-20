@@ -27,7 +27,7 @@ class PostRepository implements PostInterface
             $data['content_type'] = 'post';
         }
         $data['user_id'] = Auth::id();
-        // if ($content_type !== 'article' && (Auth::user()->role === Role::MEMBER->value || Auth::user()->role === Role::ADMIN->value || Auth::user()->role === Role::ASSOCIATION)) {
+        // if ($content_type !== 'article' && (Auth::user()->role === Role::MEMBER || Auth::user()->role === Role::ADMIN || Auth::user()->role === Role::ASSOCIATION)) {
         //     throw new \Exception('You are not allowed to create a post');
         // }
         return $this->post->create($data);

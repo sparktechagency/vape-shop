@@ -28,7 +28,7 @@ class AuthRepository implements AuthRepositoryInterface
         $otp_data = sentOtp($otp_data, 5);
         $user = new User();
         $user->first_name = $firstName;
-        $user->last_name = (int) $data['role'] === Role::MEMBER->value ? $data['last_name'] : null;
+        $user->last_name = (int) $data['role'] === Role::MEMBER ? $data['last_name'] : null;
         $user->dob = $data['dob'] ?? null;
         $user->email = $data['email'];
         $user->password = $data['password'];
@@ -61,9 +61,9 @@ class AuthRepository implements AuthRepositoryInterface
     private function getFirstNameByRole($role, $data): string
     {
         switch ($role) {
-            case Role::STORE->value:
+            case Role::STORE:
                 return $data['store_name'];
-            case Role::BRAND->value:
+            case Role::BRAND:
                 return $data['brand_name'];
             default:
                 return $data['first_name'];
@@ -205,7 +205,7 @@ class AuthRepository implements AuthRepositoryInterface
         $user->dob = $data['dob'] ?? $user->dob;
         $user->ein = $data['ein'] ?? $user->ein;
         $user->pl = $data['pl'] ?? $user->pl;
-        if($user->role == Role::STORE->value) {
+        if($user->role == Role::STORE) {
             $user->open_from = $data['open_from'];
             $user->close_at = $data['close_at'];
         }
@@ -238,7 +238,7 @@ class AuthRepository implements AuthRepositoryInterface
 
 
         [$favouriteStores, $favouriteBrands] = $user->favourites->partition(function ($favoriteUser) {
-            return $favoriteUser->role === Role::STORE->value;
+            return $favoriteUser->role === Role::STORE;
         });
         // $user = Auth::user()->load('address.region', 'favourites');
         unset($user->favourites);

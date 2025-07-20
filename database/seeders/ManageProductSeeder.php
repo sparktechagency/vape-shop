@@ -17,7 +17,7 @@ class ManageProductSeeder extends Seeder
      */
      public function run(): void
     {
-        $brandUsers = User::where('role',Role::BRAND->value)->get();
+        $brandUsers = User::where('role',Role::BRAND)->get();
         $categories = Category::pluck('id');
 
         if ($brandUsers->isEmpty()) {

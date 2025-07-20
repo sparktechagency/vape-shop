@@ -23,7 +23,7 @@ class TrendingAdProductController extends Controller
 
     public function __construct(PaymentService $paymentService)
     {
-        $this->middleware(['jwt.auth', 'check.role:' . Role::BRAND->value])->except(['index', 'show']);
+        $this->middleware(['jwt.auth', 'check.role:' . Role::BRAND])->except(['index', 'show']);
         $this->paymentService = $paymentService;
     }
 
@@ -84,13 +84,13 @@ class TrendingAdProductController extends Controller
             $trendingAdProduct->amount = $validatedData['amount'];
             // dd($trendingAdProduct);
 
-            $adminId = User::where('role', Role::ADMIN->value)->first();
+            $adminId = User::where('role', Role::ADMIN)->first();
             // dd($adminId);
             $response = $this->paymentService->processPaymentForPayable($trendingAdProduct, $validatedData, $adminId);
             // Return a success response
             if ($response['status'] === 'success') {
                 //send notification to admin
-                $admins = User::where('role', Role::ADMIN->value)->get();
+                $admins = User::where('role', Role::ADMIN)->get();
                 if ($admins->isNotEmpty()) {
                     Notification::send($admins, new NewTrendingAdRequestNotification($trendingAdProduct));
                 }

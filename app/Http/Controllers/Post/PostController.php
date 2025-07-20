@@ -15,6 +15,7 @@ class PostController extends Controller
     public function __construct(PostService $postService)
     {
         $this->middleware('jwt.auth')->except(['index', 'show']);
+        $this->middleware('check.subscription')->except(['index', 'show']);
         $this->middleware('guest')->only(['index', 'show']);
         $this->middleware('banned');
         $this->postService = $postService;

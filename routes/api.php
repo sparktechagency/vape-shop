@@ -38,6 +38,7 @@ use App\Http\Controllers\FeedController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\PaymentGatewayController;
 use App\Http\Controllers\Product\TrendingAdProductController;
+use App\Http\Controllers\SubscriptionController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -92,7 +93,8 @@ Route::group([
         'jwt.auth',
         'banned',
         'check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value]), // Correctly implode into a string
-        'check.product.owner'
+        'check.product.owner',
+        'check.subscription'
     ]
 ], function () {
     Route::apiResource('product-manage', ManageProductController::class)->except(['create', 'edit']);
@@ -104,7 +106,8 @@ Route::group([
     'middleware' => [
         'jwt.auth',
         'banned',
-        'check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])]
+        'check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])],
+        'check.subscription'
 ] , function () {
     //update payment gateway credentials
     Route::post('/update-payment-gateway-credentials', [PaymentGatewayController::class, 'updatePaymentGateway']);
@@ -131,7 +134,7 @@ Route::group([
 
 
 //Store Order routes
-Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE->value]], function () {
+Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE->value, 'check.subscription']], function () {
     Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index']);
     Route::get('/orders/{order}', [\App\Http\Controllers\OrderController::class, 'show']);
     Route::put('/orders/{order}/status', [\App\Http\Controllers\OrderController::class, 'updateStatus']);
@@ -140,7 +143,7 @@ Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE
 
 
 //manage follow
-Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
+Route::group(['middleware' => ['jwt.auth', 'banned', 'check.subscription']], function () {
     Route::post('/follow', [FollowersController::class, 'follow']);
     Route::post('/unfollow', [FollowersController::class, 'unfollow']);
     Route::get('/get-followers-list', [FollowersController::class, 'getAllFollowers']);
@@ -177,6 +180,7 @@ Route::group(['middleware' => ['jwt.auth', 'banned']], function () {
     //delete a message
     Route::delete('/inbox/delete-message/{id}', [InboxController::class, 'deleteMessage']);
 });
+
 Route::apiResource('hearted-product', HeartedProductController::class)->middleware('jwt.auth')->except(['create', 'edit', 'update', 'show', 'destroy']);
 
 //reviews product
@@ -252,10 +256,19 @@ Route::get('/get-all-categories', [HomeProductController::class, 'getAllCategori
 
 
 //Ad trending products routes
-Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value]], function () {
+Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value, 'check.subscription']], function () {
     Route::apiResource('trending-ad-product', TrendingAdProductController::class)->except(['create', 'edit']);
     Route::apiResource('most-followers-ad', MostFollowersAdsController::class)->except(['create', 'edit', 'show', 'update',]);
 });
+
+
+//Subscription routes
+Route::get('/plans', [SubscriptionController::class, 'getPlans']);
+
+Route::middleware('jwt.auth')->group(function () {
+    Route::post('/subscriptions/create', [SubscriptionController::class, 'processSubscription']);
+});
+
 
 
 //notification routes

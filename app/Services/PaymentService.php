@@ -21,7 +21,7 @@ class PaymentService
 
     public function processPaymentForPayable(Model $payableItem, array $cardDetails, User $seller): array
     {
-        $amount = $payableItem->subtotal ?? $payableItem->amount;
+        $amount = $payableItem->subtotal ?? $payableItem->amount ?? $payableItem->price;
         // dd($amount);
         // $chargeData = array_merge($cardDetails, ['amount' => $payableItem->amount]);
 

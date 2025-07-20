@@ -39,6 +39,7 @@ class User extends Authenticatable implements JWTSubject
         'is_favourite',
         'is_banned',
         'unread_conversations_count',
+        'is_subscribed',
         // 'region',
     ];
 
@@ -66,6 +67,7 @@ class User extends Authenticatable implements JWTSubject
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'banned_at' => 'datetime',
+            'role' => Role::class
         ];
     }
 
@@ -106,9 +108,14 @@ class User extends Authenticatable implements JWTSubject
     }
 
 
-    public function getRoleLabelAttribute(): string
+    // public function getRoleLabelAttribute(): string
+    // {
+    //     return $this->role ? Role::from($this->role)->label() : '';
+    // }
+
+     public function getRoleLabelAttribute(): string
     {
-        return $this->role ? Role::from($this->role)->label() : '';
+        return $this->role ? $this->role->label() : '';
     }
 
     //full  name
@@ -286,9 +293,9 @@ class User extends Authenticatable implements JWTSubject
     {
 
         $average = match ($this->role) {
-            Role::STORE->value => $this->storeReviews()->avg('rating'),
-            Role::BRAND->value => $this->brandReviews()->avg('rating'),
-            Role::WHOLESALER->value => $this->wholesalerProducts()->avg('rating'),
+            Role::STORE => $this->storeReviews()->avg('rating'),
+            Role::BRAND => $this->brandReviews()->avg('rating'),
+            Role::WHOLESALER => $this->wholesalerProducts()->avg('rating'),
             default => 0,
         };
 
@@ -299,9 +306,9 @@ class User extends Authenticatable implements JWTSubject
     public function getTotalReviewsAttribute(): int
     {
         return match ($this->role) {
-            Role::STORE->value => $this->storeReviews()->count(),
-            Role::BRAND->value => $this->brandReviews()->count(),
-            Role::WHOLESALER->value => $this->wholesalerProducts()->count(),
+            Role::STORE => $this->storeReviews()->count(),
+            Role::BRAND => $this->brandReviews()->count(),
+            Role::WHOLESALER => $this->wholesalerProducts()->count(),
             default => 0,
         };
     }
@@ -322,9 +329,9 @@ class User extends Authenticatable implements JWTSubject
     {
 
         return Message::where('receiver_id', $this->id)
-                      ->where('is_read', 0)
-                      ->distinct('sender_id')
-                      ->count();
+            ->where('is_read', 0)
+            ->distinct('sender_id')
+            ->count();
     }
 
     /**
@@ -347,5 +354,25 @@ class User extends Authenticatable implements JWTSubject
     public function b2bRequesters()
     {
         return $this->belongsToMany(User::class, 'b2b_connections', 'provider_id', 'requester_id')->withPivot('status');
+    }
+
+    //subscription relationship
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where('ends_at', '>', now())
+            ->exists();
+    }
+
+    //is subscribed attribute
+    public function getIsSubscribedAttribute(): bool
+    {
+        return $this->hasActiveSubscription();
     }
 }

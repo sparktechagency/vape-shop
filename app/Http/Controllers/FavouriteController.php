@@ -19,7 +19,7 @@ class FavouriteController extends Controller
         if (!$user) {
             return response()->error('Unauthorized', 401);
         }
-        if(!in_array($role, [Role::BRAND->value, Role::STORE->value])) {
+        if(!in_array($role, [Role::BRAND, Role::STORE])) {
             return response()->error('Invalid role specified.', 422);
         }
         if($role){
@@ -63,7 +63,7 @@ class FavouriteController extends Controller
             return response()->error('You cannot favourite yourself.', 422);
         }
 
-        if (!$favoriteUser || !in_array($favoriteUser->role, [Role::BRAND->value, Role::STORE->value])) {
+        if (!$favoriteUser || !in_array($favoriteUser->role, [Role::BRAND, Role::STORE])) {
             return response()->error('Invalid favorite user.', 422);
         }
 
