@@ -52,15 +52,15 @@ class HeartedProductController extends Controller
             $role = (int)$request->input('role');
             // Build validation rules based on role
             $productRule = match ($role) {
-                Role::BRAND => 'required|exists:manage_products,id',
-                Role::STORE => 'required|exists:store_products,id',
-                Role::WHOLESALER => 'required|exists:wholesaler_products,id',
+                Role::BRAND->value => 'required|exists:manage_products,id',
+                Role::STORE->value => 'required|exists:store_products,id',
+                Role::WHOLESALER->value => 'required|exists:wholesaler_products,id',
                 default => 'required|exists:manage_products,id',
             };
 
             $validator = Validator::make($request->all(), [
                 'product_id' => $productRule,
-                'role' => 'required|in:' . Role::BRAND . ',' . Role::STORE . ',' . Role::WHOLESALER,
+                'role' => 'required|in:' . Role::BRAND->value . ',' . Role::STORE->value . ',' . Role::WHOLESALER->value,
             ]);
             if ($validator->fails()) {
                 return response()->error($validator->errors()->first(), 422, $validator->errors());

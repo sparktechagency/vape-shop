@@ -9,6 +9,7 @@ use App\Models\StoreProduct;
 use App\Models\WholesalerProduct;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckProductOwner
@@ -16,42 +17,43 @@ class CheckProductOwner
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function handle(Request $request, Closure $next): Response
     {
-        
-        if (auth()->user()->role === Role::STORE) {
-            $product = StoreProduct::find($request->route('product_manage'));
-        } elseif (auth()->user()->role === Role::WHOLESALER) {
-            $product = WholesalerProduct::find($request->route('product_manage'));
+        // dd(auth()->user()->role);
+        if (auth()->user()->role === Role::STORE->value) {
+            $product = StoreProduct::select('user_id')->find($request->route('product_manage'));
+        } elseif (auth()->user()->role === Role::WHOLESALER->value) {
+            $product = WholesalerProduct::select('user_id')->find($request->route('product_manage'));
         } else {
-            $product = ManageProduct::find($request->route('product_manage'));
+            $product = ManageProduct::select('user_id')->find($request->route('product_manage'));
         }
-
-        $post = Post::find($request->route('post'));
+        $post = Post::select('user_id')->find($request->route('post'));
 
         if ($post && $post->user_id !== auth()->id()) {
 
-            $roleLabel = $post->role ? $post->role->label() : 'correct';
+
+            // Update session with the new role
+            session(['user_role' => auth()->user()->role]);
 
             return response()->error(
                 'You are not authorized to perform this action.',
                 403,
-                'You are not the owner of this post. Please login with the "' . $roleLabel . '" account.'
+                'You are not the owner of this post. Please login with "' . $post->role . ' Role" account'
             );
         }
 
         if ($product && $product->user_id !== auth()->id()) {
 
-            $roleLabel = $product->role ? $product->role->label() : 'correct';
+
+            // Update session with the new role
+            session(['user_role' => auth()->user()->role]);
 
             return response()->error(
                 'You are not authorized to perform this action.',
                 403,
-                'You are not the owner of this product. Please login with the "' . $roleLabel . '" account.'
+                'You are not the owner of this product. Please login with "' . $product->role . ' Role" account'
             );
         }
 

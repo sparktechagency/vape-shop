@@ -67,7 +67,7 @@ class User extends Authenticatable implements JWTSubject
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'banned_at' => 'datetime',
-            'role' => Role::class
+            // 'role' => Role::class
         ];
     }
 
@@ -113,9 +113,9 @@ class User extends Authenticatable implements JWTSubject
     //     return $this->role ? Role::from($this->role)->label() : '';
     // }
 
-     public function getRoleLabelAttribute(): string
+    public function getRoleLabelAttribute(): string
     {
-        return $this->role ? $this->role->label() : '';
+        return $this->role ? Role::from($this->role)->label() : '';
     }
 
     //full  name
@@ -282,6 +282,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasManyThrough(Review::class, ManageProduct::class);
     }
 
+    public function wholesalerReviews()
+    {
+        return $this->hasManyThrough(Review::class, WholesalerProduct::class);
+    }
+
     //all reviews
     public function allReviews()
     {
@@ -293,9 +298,9 @@ class User extends Authenticatable implements JWTSubject
     {
 
         $average = match ($this->role) {
-            Role::STORE => $this->storeReviews()->avg('rating'),
-            Role::BRAND => $this->brandReviews()->avg('rating'),
-            Role::WHOLESALER => $this->wholesalerProducts()->avg('rating'),
+            Role::STORE->value => $this->storeReviews()->avg('rating'),
+            Role::BRAND->value => $this->brandReviews()->avg('rating'),
+            Role::WHOLESALER->value => $this->wholesalerReviews()->avg('rating'),
             default => 0,
         };
 
@@ -306,9 +311,9 @@ class User extends Authenticatable implements JWTSubject
     public function getTotalReviewsAttribute(): int
     {
         return match ($this->role) {
-            Role::STORE => $this->storeReviews()->count(),
-            Role::BRAND => $this->brandReviews()->count(),
-            Role::WHOLESALER => $this->wholesalerProducts()->count(),
+            Role::STORE->value => $this->storeReviews()->count(),
+            Role::BRAND->value => $this->brandReviews()->count(),
+            Role::WHOLESALER->value => $this->wholesalerReviews()->count(),
             default => 0,
         };
     }
@@ -374,5 +379,12 @@ class User extends Authenticatable implements JWTSubject
     public function getIsSubscribedAttribute(): bool
     {
         return $this->hasActiveSubscription();
+    }
+
+    public function joinedForumGroups()
+    {
+        return $this->belongsToMany(ForumGroup::class, 'forum_group_members')
+            ->withPivot('status')
+            ->withTimestamps();
     }
 }

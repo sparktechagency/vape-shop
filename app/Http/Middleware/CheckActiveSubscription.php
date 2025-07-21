@@ -19,7 +19,7 @@ class CheckActiveSubscription
     {
         $user = Auth::user();
 
-        if ($user && in_array($user->role, [Role::BRAND, Role::STORE, Role::WHOLESALER])) {
+        if ($user && in_array($user->role, [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])) {
 
             if (!$user->hasActiveSubscription()) {
 
@@ -29,7 +29,7 @@ class CheckActiveSubscription
                 return response()->json([
                     'ok' => false,
                     'is_subscribed' => false,
-                    'message' => 'Your subscription has expired. Please renew your subscription to continue using the service.',
+                    'message' => 'Your subscription has expired. Please renew your subscription.'
                 ], 403); // 403 Forbidden status code
             }
         }

@@ -34,10 +34,10 @@ class AuthorizeNetService implements PaymentGatewayInterface
             $role = (int)$seller->role; // Assuming role is stored in the User model
 
             $roleName = match ($role) {
-                Role::STORE => Role::STORE,
-                Role::BRAND => Role::BRAND,
-                Role::WHOLESALER => Role::WHOLESALER,
-                Role::ADMIN => Role::ADMIN->label(),
+                Role::STORE->value => Role::STORE->value,
+                Role::BRAND->value => Role::BRAND->value,
+                Role::WHOLESALER->value => Role::WHOLESALER->value,
+                Role::ADMIN->value => Role::ADMIN->label(),
                 default => 'Seller',
             };
 

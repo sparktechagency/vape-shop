@@ -39,7 +39,7 @@ class UserResource extends JsonResource
             $this->mergeWhen($this->relationLoaded('favourites'), function () {
 
                 [$favouriteStores, $favouriteBrands] = $this->favourites->partition(function ($favoriteUser) {
-                    return $favoriteUser->role === Role::STORE;
+                    return $favoriteUser->role === Role::STORE->value;
                 });
 
                 return [

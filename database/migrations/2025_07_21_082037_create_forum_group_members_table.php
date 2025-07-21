@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subscriptions', function (Blueprint $table) {
+        Schema::create('forum_group_members', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('forum_group_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('plan_id')->constrained()->onDelete('cascade');
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at');
-            $table->enum('status', ['pending','active', 'cancelled', 'expired'])->default('active');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
+            $table->unique(['forum_group_id', 'user_id']);
         });
     }
 
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('subscriptions');
+        Schema::dropIfExists('forum_group_members');
     }
 };

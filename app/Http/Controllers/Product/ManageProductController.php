@@ -75,7 +75,7 @@ class ManageProductController extends Controller
     public function show(string $id)
     {
         try {
-            // dd(Auth::user()->role === Role::STORE);
+            // dd(Auth::user()->role === Role::STORE->value);
             $product = $this->manageProduct->getProductById((int)$id);
             if (empty($product)) {
                 return response()->error('Product not found.', 404);

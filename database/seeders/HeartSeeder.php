@@ -15,11 +15,11 @@ class HeartSeeder extends Seeder
     {
         // Store Product Hearts
         $storeProducts = StoreProduct::inRandomOrder()->take(10)->get();
-        $storeUsers = User::where('role', Role::MEMBER)->get();
+        $storeUsers = User::where('role', Role::MEMBER->value)->get();
 
         foreach ($storeProducts as $product) {
             $randomUsers = $storeUsers->random(min(3, $storeUsers->count()));
-            $data = $this->getProductAndRegionId($product->id, Role::STORE);
+            $data = $this->getProductAndRegionId($product->id, Role::STORE->value);
             foreach ($randomUsers as $user) {
                 Heart::create([
                     'user_id' => $user->id,
@@ -32,7 +32,7 @@ class HeartSeeder extends Seeder
 
         // Manage Product Hearts
         $manageProducts = ManageProduct::inRandomOrder()->take(10)->get();
-        $brandUsers = User::where('role', \App\Enums\UserRole\Role::MEMBER)->get();
+        $brandUsers = User::where('role', \App\Enums\UserRole\Role::MEMBER->value)->get();
 
         foreach ($manageProducts as $product) {
             $randomUsers = $brandUsers->random(min(3, $brandUsers->count()));
@@ -47,7 +47,7 @@ class HeartSeeder extends Seeder
 
     private function getProductAndRegionId($productId, $role)
     {
-        if ($role === Role::STORE) {
+        if ($role === Role::STORE->value) {
             $data = [];
             $product = StoreProduct::find($productId);
             if($product){

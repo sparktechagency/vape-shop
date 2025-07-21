@@ -21,12 +21,12 @@ class UserManagementController extends Controller
         $perPage = $request->input('per_page', 10);
 
         $query = match ($role) {
-            Role::MEMBER => User::where('role', Role::MEMBER),
-            Role::STORE => User::where('role', Role::STORE),
-            Role::BRAND => User::where('role', Role::BRAND),
-            Role::WHOLESALER => User::where('role', Role::WHOLESALER),
+            Role::MEMBER->value => User::where('role', Role::MEMBER->value),
+            Role::STORE->value => User::where('role', Role::STORE->value),
+            Role::BRAND->value => User::where('role', Role::BRAND->value),
+            Role::WHOLESALER->value => User::where('role', Role::WHOLESALER->value),
             Role::ASSOCIATION->value => User::where('role', Role::ASSOCIATION->value),
-            default => User::where('role', '!=', Role::ADMIN)
+            default => User::where('role', '!=', Role::ADMIN->value)
         };
 
         $users = $query->with('favourites')->latest()->paginate($perPage);

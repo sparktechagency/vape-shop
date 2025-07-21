@@ -87,7 +87,7 @@ class SubscriptionController extends Controller
         $plan = Plan::find($validatedData['plan_id']);
         $user = Auth::user();
 
-        $admin = User::where('role', Role::ADMIN)->first();
+        $admin = User::where('role', Role::ADMIN->value)->first();
 
 
         $paymentResponse = $this->paymentService->processPaymentForPayable($plan, $validatedData['card_details'], $admin);
@@ -108,4 +108,101 @@ class SubscriptionController extends Controller
 
         return response()->success(null, 'Subscription activated successfully!');
     }
+
+
+
+    // public function processSubscription(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'plan_ids' => 'required|array|min:1',
+    //         'plan_ids.*' => 'required|exists:plans,id',
+    //         'card_details' => 'required|array',
+    //         'card_details.card_number' => 'required|string',
+    //         'card_details.expiration_month' => 'required|numeric',
+    //         'card_details.expiration_year' => 'required|numeric',
+    //         'card_details.cvc' => 'required|numeric',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->error($validator->errors()->first(), 422, $validator->errors());
+    //     }
+
+    //     $validatedData = $validator->validated();
+    //     $planIds = $validatedData['plan_ids'];
+    //     $user = Auth::user();
+
+    //     $plans = Plan::whereIn('id', $planIds)->get();
+
+    //     $mainPlansCount = $plans->where('type', 'main')->count();
+
+    //     if ($mainPlansCount > 1) {
+    //         return response()->error('You can only select one main subscription plan.', 400);
+    //     }
+    //     // if ($mainPlansCount === 0 && $plans->where('type', 'add_on')->count() > 0) {
+    //     //     return response()->error('You must have a main subscription to add a location.', 400);
+    //     // }
+
+    //     $activePlanIds = $user->subscriptions()
+    //         ->where('status', 'active')
+    //         ->where('ends_at', '>', now())
+    //         ->pluck('plan_id')
+    //         ->toArray();
+
+    //     $requestedPlanIds = $plans->pluck('id')->toArray();
+    //     $alreadySubscribedPlans = array_intersect($requestedPlanIds, $activePlanIds);
+
+    //     if (!empty($alreadySubscribedPlans)) {
+    //         $collidingPlanNames = Plan::whereIn('id', $alreadySubscribedPlans)->pluck('name')->implode(', ');
+    //         return response()->error("You are already subscribed to the following active plan(s): {$collidingPlanNames}.", 400);
+    //     }
+
+
+    //     $totalPrice = $plans->sum('price');
+
+    //     DB::beginTransaction();
+    //     try {
+
+    //         $admin = User::where('role', Role::ADMIN)->firstOrFail();
+
+    //         $user->subscriptions()->where('status', 'active')->update(['status' => 'expired']);
+
+    //         $allNewSubscriptions = [];
+    //         foreach ($plans as $plan) {
+    //             $subscription = $user->subscriptions()->create([
+    //                 'plan_id' => $plan->id,
+    //                 'starts_at' => now(),
+    //                 'ends_at' => now()->addMonth(),
+    //                 'status' => 'pending', // Prothome 'pending' rakha hocche
+    //             ]);
+    //             $allNewSubscriptions[] = $subscription;
+    //         }
+
+    //         // Payment record-ti main subscription-er sathe link kora hocche
+    //         $mainSubscription = collect($allNewSubscriptions)->firstWhere('plan.type', 'main');
+    //         $targetSubscription = $mainSubscription ?? $allNewSubscriptions[0];
+
+    //         // Ekhon shothik Eloquent Model (`$targetSubscription`) pathano hocche
+    //         $paymentResponse = $this->paymentService->processPaymentForPayable($targetSubscription, $validatedData['card_details'], $admin);
+
+    //         if ($paymentResponse['status'] !== 'success') {
+    //             // Payment fail korle transaction rollback hoye jabe
+    //             throw new \Exception('Payment failed: ' . $paymentResponse['message']);
+    //         }
+
+    //         // Payment shofol hole, shobgulo notun subscription 'active' kora hocche
+    //         foreach ($allNewSubscriptions as $sub) {
+    //             $sub->update(['status' => 'active']);
+    //         }
+
+    //         DB::commit();
+
+    //         return response()->success(null, 'Subscription activated successfully!');
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return response()->error('Failed to process subscription: ' . $e->getMessage() . ' in ' . $e->getFile() . ' at line ' . $e->getLine(), 500, [
+    //             'exception' => get_class($e),
+    //             'trace' => $e->getTraceAsString(),
+    //         ]);
+    //     }
+    // }
 }

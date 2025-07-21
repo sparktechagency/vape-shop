@@ -14,8 +14,10 @@ use App\Interfaces\Products\HeartedProductsInterface;
 use App\Interfaces\Products\HomeProductInterface;
 use App\Interfaces\Products\ManageProductsInterface;
 use App\Interfaces\PaymentRepositoryInterface;
+use App\Models\ForumGroup;
 use App\Models\Order;
 use App\Observers\OrderObserver;
+use App\Policies\ForumGroupPolicy;
 use App\Policies\OrderPolicy;
 use App\Repositories\Auth\AuthRepository;
 use App\Repositories\FollowersRepository;
@@ -38,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
 
      protected $policies = [
         Order::class => OrderPolicy::class,
+        ForumGroup::class => ForumGroupPolicy::class,
     ];
     /**
      * Register any application services.

@@ -33,17 +33,17 @@ public function rules(): array
         'email' => 'required|string|email|max:255|unique:users',
         'password' => 'required|string|min:8|confirmed',
         'phone' => 'nullable|regex:/^\+?[0-9\s\-\(\)]{10,20}$/|unique:users',
-        'region_id' => $this->input('role') == Role::STORE ? 'required|string|max:255|exists:regions,id' : 'nullable|string|max:255| exists:regions,id',
-        'address' => $this->input('role') == Role::STORE ? 'required|string|max:255' : 'nullable|string|max:255',
-        'zip_code' => $this->input('role') == Role::STORE ? 'required|string|max:10' : 'nullable|string|max:10',
+        'region_id' => $this->input('role') == Role::STORE->value ? 'required|string|max:255|exists:regions,id' : 'nullable|string|max:255| exists:regions,id',
+        'address' => $this->input('role') == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
+        'zip_code' => $this->input('role') == Role::STORE->value ? 'required|string|max:10' : 'nullable|string|max:10',
         'latitude' => 'nullable|numeric',
         'longitude' => 'nullable|numeric',
         'ein' => 'nullable|string|max:20|unique:users,ein',
     ];
 
-    if ($this->input('role') == Role::STORE) {
+    if ($this->input('role') == Role::STORE->value) {
         $rules = array_merge(['store_name' => 'required|string|max:255'], $rules);
-    } elseif ($this->input('role') == Role::BRAND) {
+    } elseif ($this->input('role') == Role::BRAND->value) {
         $rules = array_merge(['brand_name' => 'required|string|max:255'], $rules);
     } else {
         $rules = array_merge(['first_name' => 'required|string|max:255'], $rules);

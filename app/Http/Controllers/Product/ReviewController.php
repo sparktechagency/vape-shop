@@ -19,7 +19,6 @@ class ReviewController extends Controller
     public function __construct()
     {
         $this->middleware('jwt.auth', ['except' => ['index', 'show','mostRatedReviews']]);
-        $this->middleware('check.subscription')->except(['index', 'show']);
         $this->middleware('banned');
     }
 
@@ -34,7 +33,7 @@ class ReviewController extends Controller
         $productRule = $this->ProductRule($role);
         // Validate the request
         $validator = Validator::make($request->all(), [
-            'role' => 'required|integer|in:' . Role::BRAND . ',' . Role::STORE . ',' . Role::WHOLESALER,
+            'role' => 'required|integer|in:' . Role::BRAND->value . ',' . Role::STORE->value . ',' . Role::WHOLESALER->value,
             'product_id' => $productRule,
         ]);
         //validate errors
@@ -44,7 +43,7 @@ class ReviewController extends Controller
 
 
         $reviews = match ($role) {
-            Role::BRAND => $reviews = Review::where('manage_product_id', $request->input('product_id'))
+            Role::BRAND->value => $reviews = Review::where('manage_product_id', $request->input('product_id'))
                 ->whereNull('store_product_id')
                 ->whereNull('parent_id')
                 ->with(['user:id,first_name,last_name,role,avatar'])
@@ -52,14 +51,14 @@ class ReviewController extends Controller
                 ->with('replies')
                 ->latest()
                 ->paginate(10),
-            Role::STORE => Review::where('store_product_id', $request->input('product_id'))
+            Role::STORE->value => Review::where('store_product_id', $request->input('product_id'))
                 ->whereNull('parent_id')
                 ->with(['user:id,first_name,last_name,email,role'])
                 ->withCount(['likedByUsers as like_count', 'replies'])
                 ->with('replies')
                 ->latest()
                 ->paginate(10),
-            Role::WHOLESALER => Review::where('wholesaler_product_id', $request->input('product_id'))
+            Role::WHOLESALER->value => Review::where('wholesaler_product_id', $request->input('product_id'))
                 ->whereNull('parent_id')
                 ->with(['user:id,first_name,last_name,email,role'])
                 ->withCount(['likedByUsers as like_count', 'replies'])
@@ -77,11 +76,11 @@ class ReviewController extends Controller
     private function ProductRule($role)
     {
         switch ($role) {
-            case Role::BRAND:
+            case Role::BRAND->value:
                 return 'required|exists:manage_products,id';
-            case Role::STORE:
+            case Role::STORE->value:
                 return 'required|exists:store_products,id';
-            case Role::WHOLESALER:
+            case Role::WHOLESALER->value:
                 return 'required|exists:wholesaler_products,id';
             default:
                 return 'required|exists:manage_products,id';
@@ -108,7 +107,7 @@ class ReviewController extends Controller
         // Validate the request
         $validator = Validator::make($request->all(), [
             'product_id' => $productRule,
-            'role' => 'required|integer|in:' . Role::BRAND . ',' . Role::STORE . ',' . Role::WHOLESALER,
+            'role' => 'required|integer|in:' . Role::BRAND->value . ',' . Role::STORE->value . ',' . Role::WHOLESALER->value,
             'rating' => $request->filled('parent_id') ? 'nullable|integer|min:1|max:5' : 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',
             'parent_id' => 'nullable|exists:reviews,id',
@@ -120,7 +119,7 @@ class ReviewController extends Controller
 
         // Create the review
         switch ($role) {
-            case Role::BRAND:
+            case Role::BRAND->value:
                 $review = Review::create([
                     'user_id' => auth()->id(),
                     'manage_product_id' => $request->input('product_id'),
@@ -129,8 +128,8 @@ class ReviewController extends Controller
                     'parent_id' => $request->input('parent_id'),
                 ]);
                 break;
-            case Role::STORE:
-                $data = $this->getProductAndRegionId($request->input('product_id'), Role::STORE);
+            case Role::STORE->value:
+                $data = $this->getProductAndRegionId($request->input('product_id'), Role::STORE->value);
                 $review = Review::create([
                     'user_id' => auth()->id(),
                     'store_product_id' => $request->input('product_id'),
@@ -141,8 +140,8 @@ class ReviewController extends Controller
                     'parent_id' => $request->input('parent_id'),
                 ]);
                 break;
-            case Role::WHOLESALER:
-                $data = $this->getProductAndRegionId($request->input('product_id'), Role::WHOLESALER);
+            case Role::WHOLESALER->value:
+                $data = $this->getProductAndRegionId($request->input('product_id'), Role::WHOLESALER->value);
                 $review = Review::create([
                     'user_id' => auth()->id(),
                     'wholesaler_product_id' => $request->input('product_id'),
@@ -212,9 +211,9 @@ class ReviewController extends Controller
     private function getProductAndRegionId($productId, $role)
     {
         $data = [];
-        if ($role === Role::STORE) {
+        if ($role === Role::STORE->value) {
             $product = StoreProduct::find($productId);
-        }elseif ($role === Role::WHOLESALER) {
+        }elseif ($role === Role::WHOLESALER->value) {
             $product = WholesalerProduct::find($productId);
         }else {
             $product = null;
@@ -326,7 +325,7 @@ class ReviewController extends Controller
 
     //         $role = $user->role;
     //          $reviews = match($role){
-    //             Role::BRAND => $user->reviewsOnManageProducts()
+    //             Role::BRAND->value => $user->reviewsOnManageProducts()
     //                         ->whereNull('parent_id')
     //                         ->whereNull('store_product_id')
     //                         ->with([
@@ -340,7 +339,7 @@ class ReviewController extends Controller
     //                          ->with('replies')
     //                          ->latest()
     //                          ->paginate($perPage),
-    //             Role::STORE => $user->reviewsOnStoreProducts()
+    //             Role::STORE->value => $user->reviewsOnStoreProducts()
     //                         ->whereNull('parent_id')
     //                         //  ->whereNull('wholesaler_product_id')
     //                         ->with([
@@ -354,7 +353,7 @@ class ReviewController extends Controller
     //                          ->with('replies')
     //                          ->latest()
     //                          ->paginate($perPage),
-    //             Role::WHOLESALER => $user->reviewsOnWholesalerProducts()
+    //             Role::WHOLESALER->value => $user->reviewsOnWholesalerProducts()
     //                         ->whereNull('parent_id')
     //                         ->with([
     //                              'wholesalerProducts' => function ($query) {

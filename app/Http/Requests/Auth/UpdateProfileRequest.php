@@ -34,9 +34,9 @@ class UpdateProfileRequest extends FormRequest
             // 'role' => 'required|string|max:255|in:2,3,4,5,6',
             // 'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'nullable|regex:/^\+?[0-9]{10,15}$/|unique:users,phone,'. Auth::id(),
-            'address' => Auth::user()->role == Role::STORE ? 'required|string|max:255' : 'nullable|string|max:255',
-            'zip_code' => Auth::user()->role == Role::STORE ? 'required|string|max:10' : 'nullable|string|max:10',
-            'region_id' => Auth::user()->role == Role::STORE ? 'required|string|max:255' : 'nullable|string|max:255',
+            'address' => Auth::user()->role == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
+            'zip_code' => Auth::user()->role == Role::STORE->value ? 'required|string|max:10' : 'nullable|string|max:10',
+            'region_id' => Auth::user()->role == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'open_from' => 'nullable|date_format:H:i',
@@ -45,9 +45,9 @@ class UpdateProfileRequest extends FormRequest
             'pl' => 'nullable|boolean',
         ];
 
-        if (Auth::user()->role == Role::STORE) {
+        if (Auth::user()->role == Role::STORE->value) {
             $rules = array_merge(['store_name' => 'required|string|max:255'], $rules);
-        } elseif (Auth::user()->role == Role::BRAND) {
+        } elseif (Auth::user()->role == Role::BRAND->value) {
             $rules = array_merge(['brand_name' => 'required|string|max:255'], $rules);
         } else {
             $rules = array_merge(['first_name' => 'required|string|max:255'], $rules);

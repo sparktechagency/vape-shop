@@ -32,4 +32,24 @@ class ForumGroup extends Model
     {
         return $this->threads()->withCount('comments')->get()->sum('comments_count');
     }
+
+    //members of the forum group
+    public function members()
+    {
+        return $this->belongsToMany(User::class, 'forum_group_members')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
+
+    // Approved members
+    public function approvedMembers()
+    {
+        return $this->members()->wherePivot('status', 'approved');
+    }
+
+    // Pending requests
+    public function pendingRequests()
+    {
+        return $this->members()->wherePivot('status', 'pending');
+    }
 }

@@ -54,7 +54,7 @@ class WholesalerProduct extends Model
     }
     public function getRoleLabelAttribute()
     {
-        return $this->user->role ? $this->user->role->label() : null;
+        return $this->user->role ? Role::from($this->user->role)->label() : null;
     }
 
 

@@ -23,7 +23,9 @@ class ForumGroupRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string',
+            'type' => 'required|in:public,private',
+
         ];
     }
 

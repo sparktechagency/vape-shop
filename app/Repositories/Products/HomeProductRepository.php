@@ -16,20 +16,20 @@ class HomeProductRepository implements HomeProductInterface
     {
         $perPage = request()->get('per_page', 10); // Get the number of items per page, default to 10
         switch ($role) {
-            case Role::BRAND:
+            case Role::BRAND->value:
                $products = ManageProduct::with('category', 'user:id,first_name,last_name,avatar' )
                 ->orderBy('created_at', 'desc')
                 ->paginate($perPage);
 
                 $products->getCollection()->makeVisible(['user']);
                 return $products->toArray();
-            case Role::STORE:
+            case Role::STORE->value:
                 $products = StoreProduct::with('category', 'user:id,first_name,last_name,avatar')
                 ->orderBy('created_at', 'desc')
                 ->paginate($perPage);
                 $products->getCollection()->makeVisible(['user']);
                 return $products->toArray();
-            case Role::WHOLESALER:
+            case Role::WHOLESALER->value:
                 $products = WholesalerProduct::with('category', 'user:id,first_name,last_name,avatar')
                 ->orderBy('created_at', 'desc')
                 ->paginate($perPage);
@@ -44,7 +44,7 @@ class HomeProductRepository implements HomeProductInterface
     public function getProductById(int $id, int $role)
     {
         switch ($role) {
-            case Role::BRAND:
+            case Role::BRAND->value:
                 $product = ManageProduct::with(['category', 'user'])->findOrFail($id);
                 // related product filter by top rating
                 $product->makeVisible(['user', 'category']);
@@ -55,7 +55,7 @@ class HomeProductRepository implements HomeProductInterface
                 $product->relatedProducts = $relatedProducts;
                 $product = new ProductDeteails($product);
                 return $product;
-            case Role::STORE:
+            case Role::STORE->value:
                 $product = StoreProduct::with('category','user')
                         ->findOrFail($id)
                         ->makeVisible(['user', 'category']);
@@ -66,7 +66,7 @@ class HomeProductRepository implements HomeProductInterface
                 $product->relatedProducts = $relatedProducts;
                 $product = new ProductDeteails($product);
                 return $product;
-            case Role::WHOLESALER:
+            case Role::WHOLESALER->value:
                 $product = WholesalerProduct::with('category', 'user')
                         ->findOrFail($id)
                         ->makeVisible(['user', 'category']);

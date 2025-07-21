@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\B2bPricingController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\FeedController;
+use App\Http\Controllers\ForumGroupMemberController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\PaymentGatewayController;
 use App\Http\Controllers\Product\TrendingAdProductController;
@@ -90,6 +91,15 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
     Route::put('/update-subscription-plan/{id}', [SubscriptionController::class, 'updatePlan']);
 });
 
+
+//admin, brand, store and wholesaler middleware
+Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . implode(',', [Role::ADMIN->value, Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])]], function () {
+    //update payment gateway credentials
+    Route::post('/update-payment-gateway-credentials', [PaymentGatewayController::class, 'updatePaymentGateway']);
+    //get payment gateway credentials
+    Route::get('/get-payment-gateway-credentials', [PaymentGatewayController::class, 'getPaymentGatewayCredentials']);
+});
+
 //manage product for brand, store and wholesaler
 Route::group([
     'middleware' => [
@@ -101,7 +111,6 @@ Route::group([
     ]
 ], function () {
     Route::apiResource('product-manage', ManageProductController::class)->except(['create', 'edit']);
-
 });
 
 //middleware for brand store and wholesaler
@@ -109,15 +118,10 @@ Route::group([
     'middleware' => [
         'jwt.auth',
         'banned',
-        'check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])],
-        'check.subscription'
-] , function () {
-    //update payment gateway credentials
-    Route::post('/update-payment-gateway-credentials', [PaymentGatewayController::class, 'updatePaymentGateway']);
-    //get payment gateway credentials
-    Route::get('/get-payment-gateway-credentials', [PaymentGatewayController::class, 'getPaymentGatewayCredentials']);
-
-
+        'check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])
+    ],
+    'check.subscription'
+], function () {
 
     //b2b connection
     Route::post('/b2b/request/{provider}', [B2bConnectionController::class, 'sendRequest']);
@@ -195,7 +199,7 @@ Route::get('/most-rated-reviews', [ReviewController::class, 'mostRatedReviews'])
 //user latest reviews
 Route::get('/user-latest-reviews', [ReviewController::class, 'userLatestReviews']);
 
-//forum routes
+//==================forum routes=======================
 //Forum group
 Route::apiResource('forum-group', ForumGroupController::class)->except(['create', 'edit']);
 
@@ -209,6 +213,16 @@ Route::apiResource('forum-comment', ForumCommentController::class)->except(['cre
 //like and unlike forum comments
 Route::post('/forum-comment/{id}/like', [ForumCommentController::class, 'likeUnlikeComment']);
 
+// join request in private groups
+Route::post('/forum-groups/{group}/join', [ForumGroupMemberController::class, 'requestToJoin']);
+
+// List all join requests for a group (only for group owner)
+Route::get('/forum-groups/{group}/requests', [ForumGroupMemberController::class, 'listJoinRequests']);
+
+// Approve a join request (only for group owner)
+Route::post('/forum-groups/{group}/requests/{user}/approve', [ForumGroupMemberController::class, 'approveRequest']);
+
+//==================forum routes=======================
 //post and article routes
 Route::apiResource('post', PostController::class)->except(['create', 'edit']);
 //get post by user id

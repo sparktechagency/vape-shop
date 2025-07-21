@@ -31,21 +31,21 @@ class HeartedProductsRepository implements HeartedProductsInterface
     public function toggleHeartedProduct(int $productId, int $userId, int $role) :bool
     {
         switch ($role) {
-            case Role::BRAND:
+            case Role::BRAND->value:
                 $heart = $this->model->where('manage_product_id', $productId)
                                      ->where('user_id', $userId)
                                      ->whereHas('manageProduct', function ($query) use ($productId) {
                                          $query->where('id', $productId);
                                      })->first();
                 break;
-            case Role::STORE:
+            case Role::STORE->value:
                 $heart = $this->model->where('store_product_id', $productId)
                                      ->where('user_id', $userId)
                                      ->whereHas('storeProduct', function ($query) use ($productId) {
                                          $query->where('id', $productId);
                                      })->first();
                 break;
-            case Role::WHOLESALER:
+            case Role::WHOLESALER->value:
                 $heart = $this->model->where('wholesaler_product_id', $productId)
                                      ->where('user_id', $userId)
                                      ->whereHas('wholesalerProduct', function ($query) use ($productId) {
@@ -63,13 +63,13 @@ class HeartedProductsRepository implements HeartedProductsInterface
              return false;
         }
         switch ($role) {
-            case Role::BRAND:
+            case Role::BRAND->value:
                 $model = $this->model->create([
                     'manage_product_id' => $productId,
                     'user_id' => $userId,
                 ]);
                 break;
-            case Role::STORE:
+            case Role::STORE->value:
                 $data = $this->getProductAndRegionId($productId, $role);
                 $model = $this->model->create([
                     'store_product_id' => $productId,
@@ -78,7 +78,7 @@ class HeartedProductsRepository implements HeartedProductsInterface
                     'region_id' => $data['region_id'] ?? null, // Assuming region_id is needed for store products
                 ]);
                 break;
-            case Role::WHOLESALER:
+            case Role::WHOLESALER->value:
                 $data = $this->getProductAndRegionId($productId, $role);
                 $model = $this->model->create([
                     'wholesaler_product_id' => $productId,
@@ -98,9 +98,9 @@ class HeartedProductsRepository implements HeartedProductsInterface
     private function getProductAndRegionId($productId, $role)
     {
         $data = [];
-        if ($role === Role::STORE) {
+        if ($role === Role::STORE->value) {
             $product = StoreProduct::find($productId);
-        } elseif ($role === Role::WHOLESALER) {
+        } elseif ($role === Role::WHOLESALER->value) {
             $product = WholesalerProduct::find($productId);
         }else {
             $product = null;

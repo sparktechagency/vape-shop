@@ -91,7 +91,7 @@ class TrendingProducts extends Controller
     public function mostFollowersBrand(Request $request)
     {
 
-        $brands = User::where('role', Role::BRAND)
+        $brands = User::where('role', Role::BRAND->value)
             ->whereHas('followers')
             ->withCount('followers')
             ->orderByDesc('followers_count')
