@@ -85,6 +85,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
 
     //transaction history
     Route::get('/transaction-history', [TransactionController::class, 'index']);
+
+    //update subscription plan
+    Route::put('/update-subscription-plan/{id}', [SubscriptionController::class, 'updatePlan']);
 });
 
 //manage product for brand, store and wholesaler

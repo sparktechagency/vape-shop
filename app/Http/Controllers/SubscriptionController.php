@@ -30,6 +30,44 @@ class SubscriptionController extends Controller
         return response()->success($plans);
     }
 
+    //update Plans
+    public function updatePlan(Request $request, $id)
+    {
+        try{
+            $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'type' => 'required|string|in:main,add_on,location',
+            'badge' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->error($validator->errors()->first(), 422, $validator->errors());
+        }
+
+        $validatedData = $validator->validated();
+        $plan = Plan::find($id);
+        if (!$plan) {
+            return response()->error('Plan not found', 404);
+        }
+
+        $plan->name = $validatedData['name'];
+        $plan->slug = generateUniqueSlug(Plan::class, $validatedData['name']);
+        $plan->price = $validatedData['price'];
+        $plan->type = $validatedData['type'];
+        $plan->badge = $validatedData['badge'] ?? null;
+        $plan->description = $validatedData['description'] ?? $plan->description;
+        $plan->save();
+
+
+        return response()->success($plan, 'Plan updated successfully!');
+        } catch (\Exception $e) {
+            return response()->error('An error occurred while updating the plan: ' . $e->getMessage(), 500);
+        }
+    }
+
+
     public function processSubscription(Request $request)
     {
         $validator = Validator::make($request->all(), [
