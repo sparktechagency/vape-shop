@@ -106,7 +106,7 @@ class AuthorizeNetService implements PaymentGatewayInterface
         //     return ['success' => false, 'message' => 'Could not retrieve user credentials.', 'data' => null];
         // }
 
-        $environment = env('AUTHORIZE_NET_ENVIRONMENT', 'sandbox');
+        $environment = $this->isSandbox ? 'sandbox' : 'production';
         $anetEnvironment = ($environment == 'production') ? ANetEnvironment::PRODUCTION : ANetEnvironment::SANDBOX;
 
         try {
