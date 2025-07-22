@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('plan_id')->constrained()->onDelete('cascade');
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at');
-            $table->enum('status', ['pending','active', 'cancelled', 'expired'])->default('active');
+            $table->json('plan_details');
+            $table->decimal('total_cost', 8, 2);
+            $table->enum('invoice_status', ['pending_invoice', 'invoice_sent', 'paid', 'cancelled'])->default('pending_invoice');
+            $table->timestamp('starts_at')->nullable();
+            $table->timestamp('ends_at')->nullable();
             $table->timestamps();
         });
     }

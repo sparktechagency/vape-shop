@@ -370,7 +370,7 @@ class User extends Authenticatable implements JWTSubject
     public function hasActiveSubscription(): bool
     {
         return $this->subscriptions()
-            ->where('status', 'active')
+            ->where('invoice_status', 'paid')
             ->where('ends_at', '>', now())
             ->exists();
     }

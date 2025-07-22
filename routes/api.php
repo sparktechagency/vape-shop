@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Product\ManageProductController;
 use App\Http\Controllers\Product\HeartedProductController;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
+use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\B2bConnectionController;
 use App\Http\Controllers\Api\NotificationController;
@@ -87,8 +88,14 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
     //transaction history
     Route::get('/transaction-history', [TransactionController::class, 'index']);
 
+    // ============= Subscription Management =============
     //update subscription plan
-    Route::put('/update-subscription-plan/{id}', [SubscriptionController::class, 'updatePlan']);
+    Route::get('/plans', [AdminSubscriptionController::class, 'getPlans']);
+    Route::put('/update-subscription-plan/{id}', [AdminSubscriptionController::class, 'updatePlan']);
+
+    Route::get('/subscriptions', [AdminSubscriptionController::class, 'index']);
+    Route::get('/subscriptions/{subscription}', [AdminSubscriptionController::class, 'show']);
+    Route::put('/subscriptions/{subscription}/status', [AdminSubscriptionController::class, 'updateInvoiceStatus']);
 });
 
 
@@ -280,10 +287,9 @@ Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value, '
 
 
 //Subscription routes
-Route::get('/plans', [SubscriptionController::class, 'getPlans']);
-
+Route::get('/subscriptions/plans', [SubscriptionController::class, 'getSubscriptionsPlan']);
 Route::middleware('jwt.auth')->group(function () {
-    Route::post('/subscriptions/create', [SubscriptionController::class, 'processSubscription']);
+    Route::post('/subscriptions/request', [SubscriptionController::class, 'processSubscriptionRequest']);
 });
 
 

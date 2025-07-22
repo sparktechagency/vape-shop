@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('plans', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Plan-er naam, jemon: "Store Monthly"
-            $table->string('slug')->unique(); // Unik naam, jemon: "store-monthly"
+            $table->string('name');
+            $table->string('slug')->unique();
             $table->decimal('price', 8, 2);
-            $table->enum('type', ['main', 'add_on', 'location']); // Plan-er dhoron
-            $table->string('badge')->nullable(); // Optional badge for the plan
+            $table->enum('type', ['member','store','brand','wholesaler', 'advocacy', 'hemp', 'location']);
+            $table->string('badge')->nullable();
             $table->text('description')->nullable();
+            $table->json('features')->nullable();
             $table->timestamps();
         });
     }
@@ -31,3 +32,4 @@ return new class extends Migration
         Schema::dropIfExists('plans');
     }
 };
+

@@ -8,6 +8,12 @@ class Subscription extends Model
 {
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'plan_details' => 'array',
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
+    ];
+
     /**
      * Get the user that owns the subscription.
      */
@@ -19,8 +25,5 @@ class Subscription extends Model
     /**
      * Get the plan associated with the subscription.
      */
-    public function plan()
-    {
-        return $this->belongsTo(Plan::class);
-    }
+
 }

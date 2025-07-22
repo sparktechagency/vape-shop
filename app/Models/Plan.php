@@ -8,15 +8,8 @@ class Plan extends Model
 {
     protected $guarded = ['id'];
 
-    //relationship with Subscription
-    public function subscriptions()
-    {
-        return $this->hasMany(Subscription::class);
-    }
+    protected $casts = [
+        'features' => 'array',
+    ];
 
-    //relationship with Payment
-    public function payments()
-    {
-        return $this->morphMany(Payment::class, 'payable');
-    }
 }

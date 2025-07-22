@@ -16,34 +16,34 @@ class PlanSeeder extends Seeder
         Plan::updateOrCreate(['slug' => 'store-monthly'], [
             'name' => 'Store Monthly Subscription',
             'price' => 30.00,
-            'type' => 'main',
+            'type' => 'store',
             'description' => 'Main monthly subscription for store owners.'
         ]);
 
         Plan::updateOrCreate(['slug' => 'brand-monthly'], [
             'name' => 'Brand Monthly Subscription',
             'price' => 40.00,
-            'type' => 'main',
+            'type' => 'brand',
             'description' => 'Main monthly subscription for brand owners.'
         ]);
         Plan::updateOrCreate(['slug' => 'wholesaler-monthly'], [
             'name' => 'Wholesaler Monthly Subscription',
             'price' => 40.00,
-            'type' => 'main',
+            'type' => 'wholesaler',
             'description' => 'Main monthly subscription for wholesaler owners.'
         ]);
 
         Plan::updateOrCreate(['slug' => 'advocacy-champion'], [
             'name' => 'Advocacy Champion Add-on',
             'price' => 6.00,
-            'type' => 'add_on',
+            'type' => 'advocacy',
             'badge' => 'Advocacy Champion',
             'description' => 'Optional add-on to support industry associations.'
         ]);
         Plan::updateOrCreate(['slug' => 'core-club-membership'], [
             'name' => 'Core Club Membership',
             'price' => 6.00,
-            'type' => 'add_on',
+            'type' => 'member',
             'badge' => 'Core Club',
             'description' => 'Optional add-on to support industry associations.'
         ]);
@@ -51,7 +51,7 @@ class PlanSeeder extends Seeder
         Plan::updateOrCreate(['slug' => 'hemp-alley'], [
             'name' => 'Hemp Alley Add-on',
             'price' => 3.00,
-            'type' => 'add_on',
+            'type' => 'hemp',
             'badge' => 'Hemp Alley',
             'description' => 'Optional add-on to support Hemp Alley association.'
         ]);
