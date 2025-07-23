@@ -18,7 +18,7 @@ use App\Http\Controllers\Post\LikePostController;
 use App\Http\Controllers\Admin\ArticlesController;
 use App\Http\Controllers\Product\ReviewController;
 use App\Http\Controllers\Product\TrendingProducts;
-use App\Http\Controllers\admin\DashboardController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Forum\ForumGroupController;
 use App\Http\Controllers\MostFollowersAdsController;
 use App\Http\Controllers\Post\PostCommentController;
