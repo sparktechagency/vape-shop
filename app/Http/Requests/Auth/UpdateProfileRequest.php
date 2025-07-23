@@ -40,7 +40,7 @@ class UpdateProfileRequest extends FormRequest
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'open_from' => 'nullable|date_format:H:i',
-            'close_at' => 'nullable|date_format:H:i|after:open_from',
+            'close_at' => 'nullable|date_format:H:i|',
             'ein' => 'nullable|string|max:20|unique:users,ein,'. Auth::id(),
             'pl' => 'nullable|boolean',
         ];

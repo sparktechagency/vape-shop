@@ -21,11 +21,10 @@ class ManageProductRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'category_id' => 'required|exists:categories,id',
             'product_id' => 'nullable|exists:manage_products,id|required_without:product_name',
             'product_name' => 'required_without:product_id|string|max:255',
-            'product_image' => 'required_without:product_id|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'product_price' => 'nullable|numeric|min:0',
             'brand_name' => 'required_with:product_name|string|max:255',
             'product_discount' => 'nullable|numeric',
@@ -37,6 +36,16 @@ class ManageProductRequest extends FormRequest
             'product_faqs.*.question' => 'nullable|string|max:255',
             'product_faqs.*.answer' => 'nullable|string|max:1000',
         ];
+
+        if ($this->isMethod('post')) {
+            // Only required on create
+            $rules['product_image'] = 'required_without:product_id|image|mimes:jpeg,png,jpg,gif,webp|max:2048';
+        } else {
+            // Optional on update
+            $rules['product_image'] = 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048';
+        }
+
+        return $rules;
     }
 
     /**
@@ -88,6 +97,4 @@ class ManageProductRequest extends FormRequest
             response()->error($validator->errors()->first(), 422, $validator->errors())
         );
     }
-
-
 }

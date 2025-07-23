@@ -40,6 +40,7 @@ class User extends Authenticatable implements JWTSubject
         'is_banned',
         'unread_conversations_count',
         'is_subscribed',
+        'unread_notifications',
         // 'region',
     ];
 
@@ -386,5 +387,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsToMany(ForumGroup::class, 'forum_group_members')
             ->withPivot('status')
             ->withTimestamps();
+    }
+
+    //unread notifications count attribute
+    public function getUnreadNotificationsAttribute(): int
+    {
+        return $this->unreadNotifications()->count();
     }
 }
