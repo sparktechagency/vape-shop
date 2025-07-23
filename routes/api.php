@@ -41,6 +41,7 @@ use App\Http\Controllers\InboxController;
 use App\Http\Controllers\PaymentGatewayController;
 use App\Http\Controllers\Product\TrendingAdProductController;
 use App\Http\Controllers\SubscriptionController;
+use App\Models\Subscription;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -302,4 +303,15 @@ Route::middleware('jwt.auth')->prefix('notifications')->as('notifications.')->gr
     Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('markAllAsRead');
     Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('markAsRead');
     Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
+});
+
+
+//test route
+Route::get('/test', function () {
+    $subscriptionsWillExpireSoon = Subscription::with('user')
+            ->where('invoice_status', 'paid')
+            ->where('ends_at', '<=', now()->addDays(3)->startOfDay())
+            ->whereNull('reminder_sent_at')
+            ->get();
+    return response()->json($subscriptionsWillExpireSoon);
 });

@@ -7,6 +7,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Notifications\InvoiceSentNotification;
 use App\Notifications\SubscriptionActivatedNotification;
+use App\Notifications\SubscriptionCancelledNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -126,9 +127,20 @@ class SubscriptionController extends Controller
 
         // dd($subscription->user);
 
-        if ($newStatus === 'invoice_sent' && $oldStatus !== 'invoice_sent') {
-            $testMail = $subscription->user->notify(new InvoiceSentNotification($subscription));
-            Log::info($testMail);
+         if ($newStatus === 'invoice_sent' && $oldStatus !== 'invoice_sent') {
+            try {
+                $subscription->user->notify(new InvoiceSentNotification($subscription));
+            } catch (\Exception $e) {
+                Log::error("Failed to send invoice notification for subscription ID {$subscription->id}: " . $e->getMessage());
+            }
+        }
+
+        if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
+            try {
+                $subscription->user->notify(new SubscriptionCancelledNotification($subscription));
+            } catch (\Exception $e) {
+                Log::error("Failed to send subscription cancellation notification for subscription ID {$subscription->id}: " . $e->getMessage());
+            }
         }
 
         return response()->success($subscription, 'Invoice status updated successfully.');

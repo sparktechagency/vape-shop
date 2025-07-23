@@ -6,6 +6,8 @@ use App\Enums\UserRole\Role;
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Models\User;
+use App\Notifications\SubscriptionRequestConfirmation;
+use App\Notifications\SubscriptionRequestReceivedNotification;
 use App\Services\PaymentService;
 use App\Services\SubscriptionPaymentService;
 use Illuminate\Http\Request;
@@ -70,11 +72,11 @@ class SubscriptionController extends Controller
         //send notification to admin
         $admin = User::where('role', Role::ADMIN)->get();
         foreach ($admin as $adminUser) {
-            $adminUser->notify(new \App\Notifications\SubscriptionRequestReceivedNotification($subscription));
+            $adminUser->notify(new SubscriptionRequestReceivedNotification($subscription));
         }
 
         //send notification to user
-        $user->notify(new \App\Notifications\SubscriptionRequestConfirmation($subscription));
+        $user->notify(new SubscriptionRequestConfirmation($subscription));
 
         return response()->success(null, 'Your subscription request has been submitted. You will receive an invoice via email shortly.');
     }

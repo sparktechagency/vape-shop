@@ -25,5 +25,10 @@ class Subscription extends Model
     /**
      * Get the plan associated with the subscription.
      */
+    //pending subscription count helper
+    public static function pendingSubscriptionCount()
+    {
+        return static::where('invoice_status', 'pending_invoice')->count();
+    }
 
 }

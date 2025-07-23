@@ -8,10 +8,9 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class SubscriptionCancelledNotification extends Notification implements ShouldQueue
+class SubscriptionExpiredNotification extends Notification implements ShouldQueue
 {
     use Queueable;
-
     protected $subscription;
 
     public function __construct(Subscription $subscription)
@@ -27,18 +26,17 @@ class SubscriptionCancelledNotification extends Notification implements ShouldQu
     public function toMail($notifiable)
     {
         return (new MailMessage)
-                    ->subject('Your Subscription Has Been Cancelled')
-                    ->markdown('emails.subscription_cancelled', [
-                        'subscription' => $this->subscription,
-                        'user' => $notifiable
-                    ]);
+                    ->subject('Your Subscription Has Expired')
+                    ->line("Hello {$notifiable->full_name},")
+                    ->line('Your subscription has expired. You may lose access to some of our premium features.')
+                    ->action('Renew Subscription', url('/subscription'));
     }
 
     public function toDatabase($notifiable)
     {
         return [
-            'title' => 'Subscription Cancelled',
-            'message' => "Your subscription has been cancelled",
+            'title' => 'Subscription Expired',
+            'message' => 'Your subscription has expired. Please renew to regain access.',
             'link' => '/subscription',
         ];
     }

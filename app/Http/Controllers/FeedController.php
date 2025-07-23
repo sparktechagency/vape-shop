@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,7 +12,12 @@ class FeedController extends Controller
     public function feed(Request $request)
     {
         $perPage = $request->input('per_page', 10);
-        $user = Auth::user();
+        $userID = $request->input('user_id', Auth::id());
+        $user = User::find($userID);
+
+        if (!$user) {
+            return response()->error('User not found', 404);
+        }
 
         $followingsIds = $user->following()->pluck('users.id');
 

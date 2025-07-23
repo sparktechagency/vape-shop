@@ -5,6 +5,7 @@ namespace App\Http\Controllers\admin;
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\Controller;
 use App\Models\MostFollowerAd;
+use App\Models\Subscription;
 use App\Models\TrendingProducts;
 use App\Models\User;
 use Carbon\Carbon;
@@ -25,6 +26,11 @@ class DashboardController extends Controller
             SUM(role = ?) as total_stores,
             SUM(role = ?) as total_wholesalers
         ", [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])->first();
+
+        $pendingSubscriptionCount = Subscription::pendingSubscriptionCount();
+        $totals->pending_subscription_count = $pendingSubscriptionCount;
+
+        // dd($totals);
 
         $currentPeriodStart = Carbon::now()->subDays(7);
         $currentPeriodEnd = Carbon::now();
@@ -55,6 +61,10 @@ class DashboardController extends Controller
         $newWholesalersPreviousPeriod = User::where('role', Role::WHOLESALER->value)
             ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
             ->count();
+
+        $newSubscriptionCurrentPeriod = Subscription::whereBetween('created_at', [$currentPeriodStart, $currentPeriodEnd])->count();
+        $newSubscriptionPreviousPeriod = Subscription::whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])->count();
+
 
 
         $newUsersPercentageChange = 0;
@@ -105,6 +115,11 @@ class DashboardController extends Controller
                     'count' => $pendingApproval,
                     'pendingProducts' => $pendingApprovalProducts,
                     'pendingFollowers' => $pendingApprovalFollowers,
+                ],
+                'newSubscription' => [
+                    'count' =>$totals->pending_subscription_count,
+                    'percentage_change' => round(($newSubscriptionCurrentPeriod - $newSubscriptionPreviousPeriod) / max($newSubscriptionPreviousPeriod, 1) * 100, 2),
+                    'direction' => ($newSubscriptionCurrentPeriod - $newSubscriptionPreviousPeriod) >= 0 ? 'increase' : 'decrease',
                 ],
                 'userGrowth'=> $this->userGrouth($period),
                 'recentActivity' => $this->recentActivity()->original,

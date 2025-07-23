@@ -107,6 +107,9 @@ class MessageController extends Controller
                ->where('receiver_id', $userId)
                ->where('is_read', false) // Only update unread messages
                ->update(['is_read' => true]);
+        if ($read === 0) {
+            return response()->error('No unread messages found from this user.', 404);
+        }
 
         return response()->success(
             $read,
