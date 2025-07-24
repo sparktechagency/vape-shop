@@ -53,8 +53,8 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/reset-password', 'resetPassword')->middleware('jwt.auth', 'banned');
     Route::get('/me', 'me')->middleware('jwt.auth', 'banned');
     Route::get('/profile/{id}', 'profile')->middleware('guest');
-    Route::post('/update-password', 'updatePassword')->middleware('jwt.auth', 'banned');
-    Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth', 'banned');
+    Route::post('/update-password', 'updatePassword')->middleware('jwt.auth', 'banned','is.suspended');
+    Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth', 'banned','is.suspended');
 });
 
 //admin routes
@@ -108,7 +108,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
 
 
 //admin, brand, store and wholesaler middleware
-Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . implode(',', [Role::ADMIN->value, Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])]], function () {
+Route::group(['middleware' => ['jwt.auth', 'banned', 'is.suspended', 'check.role:' . implode(',', [Role::ADMIN->value, Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])]], function () {
     //update payment gateway credentials
     Route::post('/update-payment-gateway-credentials', [PaymentGatewayController::class, 'updatePaymentGateway']);
     //get payment gateway credentials
@@ -122,7 +122,8 @@ Route::group([
         'banned',
         'check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value]), // Correctly implode into a string
         'check.product.owner',
-        'check.subscription'
+        'check.subscription',
+        'is.suspended'
     ]
 ], function () {
     Route::apiResource('product-manage', ManageProductController::class)->except(['create', 'edit']);
@@ -135,7 +136,8 @@ Route::group([
         'banned',
         'check.role:' . implode(',', [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])
     ],
-    'check.subscription'
+    'check.subscription',
+    'is.suspended'
 ], function () {
 
     //b2b connection
@@ -159,13 +161,13 @@ Route::group([
 Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE->value, 'check.subscription']], function () {
     Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index']);
     Route::get('/orders/{order}', [\App\Http\Controllers\OrderController::class, 'show']);
-    Route::put('/orders/{order}/status', [\App\Http\Controllers\OrderController::class, 'updateStatus']);
+    Route::put('/orders/{order}/status', [\App\Http\Controllers\OrderController::class, 'updateStatus'])->middleware('is.suspended');
 });
 
 
 
 //manage follow
-Route::group(['middleware' => ['jwt.auth', 'banned', 'check.subscription']], function () {
+Route::group(['middleware' => ['jwt.auth', 'banned', 'check.subscription', 'is.suspended']], function () {
     Route::post('/follow', [FollowersController::class, 'follow']);
     Route::post('/unfollow', [FollowersController::class, 'unfollow']);
     Route::get('/get-followers-list', [FollowersController::class, 'getAllFollowers']);
@@ -288,7 +290,7 @@ Route::get('/get-all-categories', [HomeProductController::class, 'getAllCategori
 
 
 //Ad trending products routes
-Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value, 'check.subscription']], function () {
+Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value, 'check.subscription','is.suspended']], function () {
     Route::apiResource('trending-ad-product', TrendingAdProductController::class)->except(['create', 'edit']);
     Route::apiResource('most-followers-ad', MostFollowersAdsController::class)->except(['create', 'edit', 'show', 'update',]);
 });
@@ -296,7 +298,7 @@ Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value, '
 
 //Subscription routes
 Route::get('/subscriptions/plans', [SubscriptionController::class, 'getSubscriptionsPlan']);
-Route::middleware('jwt.auth')->group(function () {
+Route::middleware(['jwt.auth','is.suspended'])->group(function () {
     Route::post('/subscriptions/request', [SubscriptionController::class, 'processSubscriptionRequest']);
 });
 

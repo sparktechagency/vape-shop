@@ -14,6 +14,7 @@ class HeartedProductController extends Controller
     protected $heartProduct;
     public function __construct(HeartedProductsService $heartProduct)
     {
+        $this->middleware('is.suspended')->except(['index']);
         $this->heartProduct = $heartProduct;
     }
     /**

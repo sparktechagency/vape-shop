@@ -20,6 +20,7 @@ class ReviewController extends Controller
     {
         $this->middleware('jwt.auth', ['except' => ['index', 'show','mostRatedReviews']]);
         $this->middleware('banned');
+        $this->middleware('is.suspended')->except(['index', 'show', 'mostRatedReviews', 'userLatestReviews']);
     }
 
     /**
