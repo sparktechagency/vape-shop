@@ -39,6 +39,7 @@ class User extends Authenticatable implements JWTSubject
         'total_reviews',
         'is_favourite',
         'is_banned',
+        'is_suspended',
         'unread_conversations_count',
         'is_subscribed',
         'unread_notifications',
@@ -336,6 +337,12 @@ class User extends Authenticatable implements JWTSubject
     public function isSuspended(): bool
     {
         return $this->suspended_until && Carbon::now()->lessThan($this->suspended_until);
+    }
+
+    //is suspended attribute
+    public function getIsSuspendedAttribute(): bool
+    {
+        return $this->suspended_at !== null && $this->isSuspended();
     }
 
     //unread senders count attribute

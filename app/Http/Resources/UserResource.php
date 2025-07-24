@@ -35,6 +35,7 @@ class UserResource extends JsonResource
             'total_reviews' => $this->total_reviews,
             'is_favourite' => $this->is_favourite,
             'is_banned' => $this->is_banned,
+            'is_suspended' => $this->is_suspended,
 
             $this->mergeWhen($this->relationLoaded('favourites'), function () {
 
