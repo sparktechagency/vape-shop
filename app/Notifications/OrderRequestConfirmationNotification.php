@@ -42,6 +42,7 @@ class OrderRequestConfirmationNotification extends Notification implements Shoul
     public function toArray(object $notifiable): array
     {
         return [
+            'title' => 'Order Request Confirmation',
             'checkout_id' => $this->checkout->id,
             'checkout_group_id' => $this->checkout->checkout_group_id,
             'message' => "Your order request #{$this->checkout->checkout_group_id} has been submitted successfully.",

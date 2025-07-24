@@ -36,16 +36,13 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\B2bPricingController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\FeedController;
-use App\Http\Controllers\ForumGroupMemberController;
+use App\Http\Controllers\Forum\ForumGroupMemberController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\PaymentGatewayController;
 use App\Http\Controllers\Product\TrendingAdProductController;
 use App\Http\Controllers\SubscriptionController;
 use App\Models\Subscription;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('/register', 'register');
@@ -68,9 +65,19 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
     Route::get('/manage-users', [UserManagementController::class, 'manageUsers']);
     Route::get('/user/{id}', [UserManagementController::class, 'getUserById']);
     Route::get('/get-all-users', [UserManagementController::class, 'getAllUsers']);
+    //=============Band and unban user============
     Route::put('/ban-user/{id}', [UserManagementController::class, 'banUser']);
     Route::put('/unban-user/{id}', [UserManagementController::class, 'unbanUser']);
     Route::get('/get-banned-users', [UserManagementController::class, 'getBannedUsers']);
+    //============suspend user============
+    Route::get('/users/suspended', [UserManagementController::class, 'suspendedUsers']);
+    Route::post('/users/{user}/suspend', [UserManagementController::class, 'suspend']);
+    Route::post('/users/{user}/unsuspend', [UserManagementController::class, 'unsuspend']);
+
+    //============Send notification to user============
+    Route::post('/users/{user}/notify', [UserManagementController::class, 'sendNotification']);
+
+    //delete user
     Route::delete('/delete-user/{id}', [UserManagementController::class, 'deleteUser']);
 
     //slider
@@ -133,7 +140,7 @@ Route::group([
 
     //b2b connection
     Route::post('/b2b/request/{provider}', [B2bConnectionController::class, 'sendRequest']);
-    Route::patch('/b2b/request/{connection}/update', [B2bConnectionController::class, 'updateRequest']);
+    Route::put('/b2b/request/{connection}/update', [B2bConnectionController::class, 'updateRequest']);
     Route::get('/b2b/requests/incoming', [B2bConnectionController::class, 'listIncoming']);
 
     //b2b pricing
@@ -306,12 +313,3 @@ Route::middleware('jwt.auth')->prefix('notifications')->as('notifications.')->gr
 });
 
 
-//test route
-Route::get('/test', function () {
-    $subscriptionsWillExpireSoon = Subscription::with('user')
-            ->where('invoice_status', 'paid')
-            ->where('ends_at', '<=', now()->addDays(3)->startOfDay())
-            ->whereNull('reminder_sent_at')
-            ->get();
-    return response()->json($subscriptionsWillExpireSoon);
-});

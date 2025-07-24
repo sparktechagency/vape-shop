@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Forum;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
@@ -24,10 +24,10 @@ class ForumGroupMemberController extends Controller
         return response()->success(null, 'Your request to join has been sent.');
     }
 
-    // Group owner-er jonno join request list
+    //
     public function listJoinRequests(ForumGroup $group)
     {
-        $this->authorize('manage', $group); // using policy to check if the user can manage the group
+        $this->authorize('manage', $group);
         $requests = $group->pendingRequests()->paginate(15);
         return UserResource::collection($requests);
     }

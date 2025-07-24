@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest' => App\Http\Middleware\GuestMiddleware::class,
             'banned' => App\Http\Middleware\CheckIfBanned::class,
             'check.subscription' => App\Http\Middleware\CheckActiveSubscription::class,
+            'is.suspended' => \App\Http\Middleware\CheckIfSuspended::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

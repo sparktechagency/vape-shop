@@ -10,7 +10,10 @@ use App\Models\User;
 use Illuminate\Http\Request;
 //use authcontroller
 use App\Interfaces\Auth\AuthRepositoryInterface;
+use App\Notifications\AdminSendNotificationToUser;
+use App\Notifications\UserSuspendedNotification;
 use App\Services\Auth\AuthService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 
 class UserManagementController extends Controller
@@ -19,6 +22,7 @@ class UserManagementController extends Controller
     {
         $role = (int)$request->role;
         $perPage = $request->input('per_page', 10);
+        $search = $request->input('search', '');
 
         $query = match ($role) {
             Role::MEMBER->value => User::where('role', Role::MEMBER->value),
@@ -28,6 +32,14 @@ class UserManagementController extends Controller
             Role::ASSOCIATION->value => User::where('role', Role::ASSOCIATION->value),
             default => User::where('role', '!=', Role::ADMIN->value)
         };
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('ein', 'like', "%{$search}%");
+            });
+        }
 
         $users = $query->with('favourites')->latest()->paginate($perPage);
 
@@ -113,4 +125,108 @@ class UserManagementController extends Controller
             return response()->error('Failed to delete user', 500);
         }
     }
+
+    //suspend user account
+    public function suspend(Request $request, User $user)
+    {
+        $request->validate([
+            'days' => 'required|integer|min:1',
+            'reason' => 'nullable|string|max:1000',
+        ]);
+        // Check if the user is already suspended
+        if ($user->isSuspended()) {
+            return response()->error("User '{$user->full_name}' is already suspended.", 400);
+        }
+        $days = (INT)$request->input('days');
+        $user->suspended_at = now();
+        $user->suspended_until = now()->addDays($days);
+        $user->suspend_reason = $request->input('reason');
+        $user->save();
+
+        $user->notify(new UserSuspendedNotification($user->suspend_reason, $user->suspended_until));
+
+         $data = [
+            'suspended_until' => $user->suspended_until->toDateTimeString(),
+            'reason' => $user->suspend_reason,
+        ];
+        return response()->success($data, "User '{$user->full_name}' has been suspended for {$days} days.");
+    }
+
+
+    //get suspended users
+    public function suspendedUsers()
+    {
+        $suspendedUsers = User::where('suspended_until', '>', now())
+                                ->whereNotNull('suspended_at')
+                                ->get();
+
+        $data = $suspendedUsers->map(function ($user) {
+            $suspendedAt = $user->suspended_at;
+            $suspendedUntil = $user->suspended_until;
+
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'suspension_reason' => $user->suspend_reason,
+                'suspended_at' => $suspendedAt->toDateTimeString(),
+                'suspension_ends_at' => $suspendedUntil->toDateTimeString(),
+                'total_suspension_days' => $suspendedAt->diffInDays($suspendedUntil),
+                'days_remaining' => intval(Carbon::now()->diffInDays($suspendedUntil, false) + 1), // Only integer part, e.g. 14
+            ];
+        });
+
+        if ($data->isEmpty()) {
+            return response()->error('No suspended users found.', 404);
+        }
+        return response()->success($data, 'Suspended users retrieved successfully.');
+    }
+
+    /**
+     * User er suspension tule nebe.
+     */
+    public function unsuspend(User $user){
+
+        // Check if the user is suspended
+        if (!$user->isSuspended()) {
+            return response()->error("User '{$user->full_name}' is not suspended.", 400);
+        }
+        $user->suspended_at = null;
+        $user->suspended_until = null;
+        $user->suspend_reason = null;
+        $user->save();
+
+        return response()->success(null, "Suspension has been lifted for user '{$user->full_name}'.");
+    }
+
+
+    //admin send notification to user
+     public function sendNotification(Request $request, User $user)
+    {
+        // $request->validate([
+        //     'title' => 'required|string|max:255',
+        //     'description' => 'required|string|max:2000',
+        // ]);
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:2000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->error($validator->errors()->first(), 422, $validator->errors());
+        }
+
+        if (!$user) {
+            return response()->error('User not found', 404);
+        }
+
+
+        $user->notify(new AdminSendNotificationToUser(
+            $request->input('title'),
+            $request->input('description')
+        ));
+
+        return response()->success(null, "Notification sent successfully to '{$user->full_name}'.");
+    }
 }
+

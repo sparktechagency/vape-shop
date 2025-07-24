@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Enums\UserRole\Role;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -68,6 +69,8 @@ class User extends Authenticatable implements JWTSubject
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'banned_at' => 'datetime',
+            'suspended_until' => 'datetime',
+            'suspended_at' => 'datetime',
             // 'role' => Role::class
         ];
     }
@@ -328,6 +331,11 @@ class User extends Authenticatable implements JWTSubject
     public function getIsBannedAttribute(): bool
     {
         return $this->banned_at !== null;
+    }
+    //is suspended helper
+    public function isSuspended(): bool
+    {
+        return $this->suspended_until && Carbon::now()->lessThan($this->suspended_until);
     }
 
     //unread senders count attribute

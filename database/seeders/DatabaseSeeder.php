@@ -20,8 +20,8 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         // User::create([
-        //     'first_name' => 'Admin User',
-        //     'email' => 'admin@gmail.com',
+        //     'first_name' => 'Admin',
+        //     'email' => 'vapeshopmaps@gmail.com',
         //     'password' => 'Admin@123',
         //     'role' => Role::ADMIN,
         //     'email_verified_at' => now(),
@@ -66,7 +66,7 @@ class DatabaseSeeder extends Seeder
 
 
 
-        $this->call([
+        // $this->call([
             // Add other seeders here
             // CategorySeeder::class,
             // CountryRegionSeeder::class,
@@ -74,8 +74,8 @@ class DatabaseSeeder extends Seeder
             // ManageProductSeeder::class,
             // StoreProductSeeder::class,
             // HeartSeeder::class,
-            PlanSeeder::class,
-        ]);
+            // PlanSeeder::class,
+        // ]);
 
         // $user = User::create([
         //     'first_name' => 'Super Shop',

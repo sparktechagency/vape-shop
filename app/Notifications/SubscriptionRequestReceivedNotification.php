@@ -32,6 +32,7 @@ class SubscriptionRequestReceivedNotification extends Notification implements Sh
     public function toDatabase($notifiable)
     {
         return [
+            'title' => 'New Subscription Request',
             'subscription_id' => $this->subscription->id,
             'user_name' => $this->subscription->user->full_name,
             'message' => 'New subscription request received.',
