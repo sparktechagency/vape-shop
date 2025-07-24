@@ -178,6 +178,7 @@ class ManageProductsRepository implements ManageProductsInterface
                 Storage::disk('public')->delete($oldImagePath);
             }
         }
+        $data['product_faqs'] = $data['product_faqs'] ?? null;
         $product->update($data);
 
         return $product->toArray();
