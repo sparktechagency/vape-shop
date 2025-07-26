@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Front\HomeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class HomeController extends Controller
 {
@@ -70,6 +71,42 @@ class HomeController extends Controller
         } catch (\Exception $e) {
             return response()->error($e->getMessage(), 500);
         }
+    }
+
+    //store maps view
+     public function getStoresByLocation(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'sw_lat' => 'required|numeric|between:-90,90',
+            'sw_lng' => 'required|numeric|between:-180,180',
+            'ne_lat' => 'required|numeric|between:-90,90',
+            'ne_lng' => 'required|numeric|between:-180,180',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $validatedData = $validator->validated();
+
+
+        $stores = User::query()
+            ->with('address')
+            ->where('role', 5)
+            ->whereHas('address', function ($query) use ($validatedData) {
+                $query->whereNotNull('latitude')
+                      ->whereNotNull('longitude')
+                      ->whereBetween('latitude', [$validatedData['sw_lat'], $validatedData['ne_lat']])
+                      ->whereBetween('longitude', [$validatedData['sw_lng'], $validatedData['ne_lng']]);
+            })
+            ->get();
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Stores retrieved successfully.',
+            'data' => $stores
+        ]);
     }
 
 

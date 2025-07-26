@@ -255,6 +255,7 @@ Route::group(['middleware' => 'guest'], function () {
     Route::controller(HomeController::class)->group(function () {
         Route::get('/get-all-store-brand-wholesaler', 'getAllStoreBrandWholesaler');
         Route::get('/get/{userId}/products', 'getProductsByRoleId');
+        Route::get('/stores-by-location', 'getStoresByLocation');
         Route::get('/search', 'search');
     });
 
