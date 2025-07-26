@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\product;
+namespace App\Http\Controllers\Product;
 
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\Controller;
