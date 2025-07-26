@@ -18,7 +18,7 @@ class ReviewController extends Controller
 
     public function __construct()
     {
-        $this->middleware('jwt.auth', ['except' => ['index', 'show','mostRatedReviews']]);
+        $this->middleware('jwt.auth', ['except' => ['index', 'show', 'mostRatedReviews']]);
         $this->middleware('banned');
         $this->middleware('is.suspended')->except(['index', 'show', 'mostRatedReviews', 'userLatestReviews']);
     }
@@ -135,7 +135,7 @@ class ReviewController extends Controller
                     'user_id' => auth()->id(),
                     'store_product_id' => $request->input('product_id'),
                     'region_id' => $data['region_id'] ?? null,
-                    'manage_product_id' => $data['manage_product_id'] ?? null,
+                    // 'manage_product_id' => $data['manage_product_id'] ?? null,
                     $request->filled('parent_id') ?: 'rating' =>  $request->input('rating'),
                     'comment' => $request->input('comment'),
                     'parent_id' => $request->input('parent_id'),
@@ -147,7 +147,7 @@ class ReviewController extends Controller
                     'user_id' => auth()->id(),
                     'wholesaler_product_id' => $request->input('product_id'),
                     'region_id' => $data['region_id'] ?? null,
-                    'manage_product_id' => $data['manage_product_id'] ?? null,
+                    // 'manage_product_id' => $data['manage_product_id'] ?? null,
                     $request->filled('parent_id') ?: 'rating' =>  $request->input('rating'),
                     'comment' => $request->input('comment'),
                     'parent_id' => $request->input('parent_id'),
@@ -214,23 +214,23 @@ class ReviewController extends Controller
         $data = [];
         if ($role === Role::STORE->value) {
             $product = StoreProduct::find($productId);
-        }elseif ($role === Role::WHOLESALER->value) {
+        } elseif ($role === Role::WHOLESALER->value) {
             $product = WholesalerProduct::find($productId);
-        }else {
+        } else {
             $product = null;
         }
-            if ($product) {
-                if ($product->user_id && User::find($product->user_id)->address) {
-                    $data['region_id'] = User::find($product->user_id)->address->region_id;
-                }
-                // dd($product->manageProducts);
-                if ($product->product_id && $product->manageProducts) {
-                    $data['manage_product_id'] = $product->product_id;
-                } else {
-                    $data['manage_product_id'] = null;
-                }
-                return $data;
+        if ($product) {
+            if ($product->user_id && User::find($product->user_id)->address) {
+                $data['region_id'] = User::find($product->user_id)->address->region_id;
             }
+            // dd($product->manageProducts);
+            if ($product->product_id && $product->manageProducts) {
+                $data['manage_product_id'] = $product->product_id;
+            } else {
+                $data['manage_product_id'] = null;
+            }
+            return $data;
+        }
         return null;
     }
 
@@ -270,13 +270,14 @@ class ReviewController extends Controller
         $mostRatedReviews = Review::whereNotNull('rating')
             ->whereNull('store_product_id')
             ->whereNull('parent_id')
-            ->with(['manageProducts' => function ($query){
-                $query->select('id', 'user_id','category_id', 'product_name', 'product_image', 'product_price', 'slug')
-                ->with('category:id,name');
+            ->with([
+                'manageProducts' => function ($query) {
+                    $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
+                        ->with('category:id,name');
+                },
 
-            },
-
-            'user:id,first_name,last_name,role,avatar'])
+                'user:id,first_name,last_name,role,avatar'
+            ])
             ->withCount(['likedByUsers as like_count', 'replies'])
             ->with('replies')
             ->having('like_count', '>', 0)
@@ -291,14 +292,27 @@ class ReviewController extends Controller
     }
 
     //auth user letest reviews
-    public function userLatestReviews(Request $request){
+    public function userLatestReviews(Request $request)
+    {
         try {
 
             $userId = $request->get('user_id');
             $user = $userId ? User::find($userId) : Auth::user();
             // dd($user);
-            $userReview = $user ? $user->allReviews()->latest()->take(10)->get() : null;
-
+            $userReview = $user ? $user->allReviews()
+                ->with([
+                    'manageProducts:id,user_id,product_name,product_image',
+                    'storeProducts:id,user_id,product_name,product_image',
+                    'wholesalerProducts:id,user_id,product_name,product_image'
+                ])
+                ->latest()
+                ->take(10)
+                ->get() : null;
+            $userReview->transform(function ($review) {
+                $review->product = $review->manageProducts ?: $review->storeProducts ?: $review->wholesalerProducts;
+                return $review;
+            });
+            $userReview->makeHidden(['manageProducts', 'storeProducts', 'wholesalerProducts']);
             // dd($userReview);
             if (!$user) {
                 return response()->error('User not authenticated.', 401);
