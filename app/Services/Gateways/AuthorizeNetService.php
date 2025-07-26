@@ -20,7 +20,7 @@ class AuthorizeNetService implements PaymentGatewayInterface
         // $this->merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
         // $this->merchantAuthentication->setName(config('authorizenet.login_id'));
         // $this->merchantAuthentication->setTransactionKey(config('authorizenet.transaction_key'));
-        $this->isSandbox = config('authorizenet.sandbox', false);
+        $this->isSandbox = config('authorizenet.sandbox', false); //test if sandbox mode is enabled
     }
 
     public function charge(User $seller, float $amount, array $paymentData): array
