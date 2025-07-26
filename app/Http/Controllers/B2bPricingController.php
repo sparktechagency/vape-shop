@@ -69,14 +69,52 @@ class B2bPricingController extends Controller
     }
 
 
+    //auth user b2b products
+    public function getB2bProducts(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $b2bProducts = collect();
+            $b2bProducts = $b2bProducts->merge($user->manageProducts()->with('b2bPricing')->get());
+            $b2bProducts = $b2bProducts->merge($user->wholesalerProducts()->with('b2bPricing')->get());
+            $b2bProducts = $b2bProducts->merge($user->storeProducts()->with('b2bPricing')->get());
+            $b2bProducts = $b2bProducts->filter(function ($product) {
+                return !is_null($product->b2bPricing);
+            });
+
+            if ($b2bProducts->isEmpty()) {
+                return response()->error('No B2B products found for this user.', 404);
+            }
+            $perPage = $request->input('per_page', 15);
+            $currentPage = Paginator::resolveCurrentPage('page');
+            $paginatedProducts = new LengthAwarePaginator(
+                $b2bProducts->forPage($currentPage, $perPage)->values(),
+                $b2bProducts->count(),
+                $perPage,
+                $currentPage,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+            return B2bProductResource::collection($paginatedProducts)->additional([
+                'ok' => true,
+                'message' => 'B2B products retrieved successfully.',
+                'status' => 200,
+            ]);
+        } catch (\Exception $e) {
+            return response()->error('Failed to retrieve B2B products', 500, $e->getMessage());
+        }
+    }
+
+
+
     public function listProductsOfSeller(Request $request, User $seller)
     {
-        $buyer = Auth::user();
+        try{
+            $buyer = Auth::user();
 
         $isApproved = $buyer->b2bProviders()
-                            ->where('provider_id', $seller->id)
-                            ->where('status', 'approved')
-                            ->exists();
+            ->where('provider_id', $seller->id)
+            ->where('status', 'approved')
+            ->exists();
 
         if (!$isApproved) {
             return response()->error('You do not have an approved B2B connection to view these products.', 403);
@@ -89,7 +127,7 @@ class B2bPricingController extends Controller
         $allProducts = $allProducts->merge($seller->storeProducts()->with('b2bPricing')->get());
 
         $b2bProducts = $allProducts->filter(function ($product) {
-               return !is_null($product->b2bPricing);
+            return !is_null($product->b2bPricing);
         });
 
 
@@ -105,8 +143,13 @@ class B2bPricingController extends Controller
         );
 
 
-        return B2bProductResource::collection($paginatedProducts);
+        return B2bProductResource::collection($paginatedProducts)->additional([
+            'ok' => true,
+            'message' => 'Products retrieved successfully.',
+            'status' => 200,
+        ]);
+        } catch (\Exception $e) {
+            return response()->error('Failed to retrieve products', 500, $e->getMessage());
+        }
     }
-
-
 }

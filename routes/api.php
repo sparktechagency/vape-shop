@@ -147,7 +147,8 @@ Route::group([
 
     //b2b pricing
     Route::post('/b2b/product-pricing', [B2bPricingController::class, 'storeOrUpdate']);
-    Route::get('/b2b/product-list/{seller}', [B2bPricingController::class, 'listProductsOfSeller']);
+    Route::get('/b2b/get-product-list', [B2bPricingController::class, 'getB2bProducts']);
+    Route::get('/b2b/seller-product-list/{seller}', [B2bPricingController::class, 'listProductsOfSeller']);
 
     //b2b checkout
     Route::post('/b2b/checkout', [CheckoutController::class, 'placeOrder']);
