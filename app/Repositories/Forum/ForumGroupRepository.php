@@ -18,33 +18,74 @@ class ForumGroupRepository implements ForumGroupInterface
     /**
      * @return array
      */
+    // public function getAllGroups(): array
+    // {
+    //     $userId = Auth::id();
+    //     $isTrending = request()->boolean('is_trending');
+    //     $isGlobal = request()->boolean('show_front');
+    //     $perPage = (int) request()->get('per_page', 10);
+    //     $user_id = request()->get('user_id');
+    //     $isLatest = request()->boolean('is_latest', false);
+
+    //     $query = $this->model->withCount('threads');
+
+    //     if ($isTrending) {
+    //         $query->orderByDesc('threads_count');
+    //     } elseif ($isLatest) {
+    //         $query->orderByDesc('created_at');
+    //     }
+    //     else {
+    //         $query->inRandomOrder();
+    //     }
+
+
+    //     if (!$isGlobal && $userId) {
+    //         $query->where('user_id', $userId);
+    //     }
+
+    //     if ($user_id) {
+    //         $query->where('user_id', $user_id);
+    //     }
+
+    //     return $query->paginate($perPage)->toArray();
+    // }
+
     public function getAllGroups(): array
     {
         $userId = Auth::id();
         $isTrending = request()->boolean('is_trending');
         $isGlobal = request()->boolean('show_front');
         $perPage = (int) request()->get('per_page', 10);
-        $user_id = request()->get('user_id');
+        $user_id_filter = request()->get('user_id');
         $isLatest = request()->boolean('is_latest', false);
 
         $query = $this->model->withCount('threads');
 
+
+        $query->where(function ($q) use ($userId) {
+
+            $q->where('type', 'public');
+            if ($userId) {
+                $q->orWhere('user_id', $userId);
+                $q->orWhereHas('approvedMembers', function ($memberQuery) use ($userId) {
+                    $memberQuery->where('user_id', $userId);
+                });
+            }
+        });
         if ($isTrending) {
             $query->orderByDesc('threads_count');
         } elseif ($isLatest) {
             $query->orderByDesc('created_at');
-        }
-        else {
+        } else {
             $query->inRandomOrder();
         }
-
 
         if (!$isGlobal && $userId) {
             $query->where('user_id', $userId);
         }
 
-        if ($user_id) {
-            $query->where('user_id', $user_id);
+        if ($user_id_filter) {
+            $query->where('user_id', $user_id_filter);
         }
 
         return $query->paginate($perPage)->toArray();
@@ -58,13 +99,21 @@ class ForumGroupRepository implements ForumGroupInterface
     public function getGroupById(int $groupId): array
     {
         $userId = Auth::id();
-        $isGlobal = request()->boolean('show_front');
-        $query = $this->model->where('id', $groupId);
-        if (!$isGlobal && $userId) {
-            $query->where('user_id', $userId);
+        $group = $this->model->find($groupId);
+
+        if (!$group) {
+            return [];
         }
-        $group = $query->first();
-        return $group ? $group->toArray() : [];
+        if ($group->type === 'public') {
+            return $group->toArray();
+        }
+
+        if ($group->type === 'private') {
+            if ($userId && ($group->user_id === $userId || $group->approvedMembers()->where('user_id', $userId)->exists())) {
+                return $group->toArray();
+            }
+        }
+        return [];
     }
 
     //create group
@@ -87,13 +136,15 @@ class ForumGroupRepository implements ForumGroupInterface
      */
     public function updateGroup(int $groupId, array $data): bool
     {
-        $userId = Auth::id();
-        $group = $this->model->where('user_id', $userId)->find($groupId);
+        $group = $this->model->find($groupId);
+
         if ($group) {
             return $group->update($data);
         }
+
         return false;
     }
+
     //delete group
     /**
      * @param int $groupId
@@ -103,11 +154,10 @@ class ForumGroupRepository implements ForumGroupInterface
     {
         $userId = Auth::id();
         $group = $this->model->where('user_id', $userId)
-                             ->find($groupId);
+            ->find($groupId);
         if ($group) {
             return $group->delete();
         }
         return false;
     }
-
 }

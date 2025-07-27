@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Forum;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Forum\ForumThreadRequest;
+use App\Models\ForumGroup;
+use App\Models\ForumThread;
 use App\Models\FourmLike;
 use App\Services\Forum\ForumThreadService;
 use Illuminate\Http\Request;
@@ -25,6 +27,26 @@ class ForumThreadController extends Controller
     /**
      * Display a listing of the resource.
      */
+    // public function index()
+    // {
+    //     try {
+    //         $groupId = request()->query('group_id');
+    //         if (!$groupId) {
+    //             return response()->error('Group ID is required', 400);
+    //         }
+    //         $threads = $this->forumThreadService->getAllThreads($groupId);
+    //         if (!empty($threads) && isset($threads['data']) && !empty($threads['data'])) {
+    //             return response()->success($threads, 'Threads retrieved successfully', 200);
+
+    //         }else {
+    //             return response()->error('No threads found for this group', 404);
+    //         }
+
+    //     } catch (\Exception $e) {
+    //         return response()->error('Failed to retrieve threads', 500, $e->getMessage());
+    //     }
+    // }
+
     public function index()
     {
         try {
@@ -32,14 +54,21 @@ class ForumThreadController extends Controller
             if (!$groupId) {
                 return response()->error('Group ID is required', 400);
             }
-            $threads = $this->forumThreadService->getAllThreads($groupId);
-            if (!empty($threads) && isset($threads['data']) && !empty($threads['data'])) {
-                return response()->success($threads, 'Threads retrieved successfully', 200);
 
-            }else {
+            // Fetch the group to ensure it exists and the user has permission to view threads
+            $group = ForumGroup::findOrFail($groupId);
+
+            // POLICY CHECK: Check if the user can view threads in this group
+            $this->authorize('viewAny', [ForumThread::class, $group]);
+
+            $threads = $this->forumThreadService->getAllThreads($groupId);
+            if (!empty($threads['data'])) {
+                return response()->success($threads, 'Threads retrieved successfully');
+            } else {
                 return response()->error('No threads found for this group', 404);
             }
-
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->error('You do not have permission to view threads in this group.', 403);
         } catch (\Exception $e) {
             return response()->error('Failed to retrieve threads', 500, $e->getMessage());
         }
@@ -56,12 +85,31 @@ class ForumThreadController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // public function store(ForumThreadRequest $request)
+    // {
+    //     try {
+    //         $data = $request->validated();
+    //         $thread = $this->forumThreadService->createThread($data);
+    //         return response()->success($thread, 'Thread created successfully', 201 );
+    //     } catch (\Exception $e) {
+    //         return response()->error('Failed to create thread', 500, $e->getMessage());
+    //     }
+    // }
+
+
     public function store(ForumThreadRequest $request)
     {
         try {
             $data = $request->validated();
+            $group = ForumGroup::findOrFail($data['group_id']);
+
+            // POLICY CHECK: Check if the user can create threads in this group
+            $this->authorize('create', [ForumThread::class, $group]);
+
             $thread = $this->forumThreadService->createThread($data);
-            return response()->success($thread, 'Thread created successfully', 201 );
+            return response()->success($thread, 'Thread created successfully', 201);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->error('You do not have permission to post in this group.', 403);
         } catch (\Exception $e) {
             return response()->error('Failed to create thread', 500, $e->getMessage());
         }
@@ -70,16 +118,36 @@ class ForumThreadController extends Controller
     /**
      * Display the specified resource.
      */
+    // public function show(string $id)
+    // {
+    //     try {
+
+    //         $this->forumThreadService->incrementViewCount((int) $id);
+    //         $thread = $this->forumThreadService->getThreadById($id);
+    //         if (!$thread) {
+    //             return response()->error('Thread not found', 404);
+    //         }
+    //         return response()->success($thread, 'Thread retrieved successfully');
+    //     } catch (\Exception $e) {
+    //         return response()->error('Failed to retrieve thread', 500, $e->getMessage());
+    //     }
+    // }
+
     public function show(string $id)
     {
         try {
-
-            $this->forumThreadService->incrementViewCount((int) $id);
             $thread = $this->forumThreadService->getThreadById($id);
             if (!$thread) {
                 return response()->error('Thread not found', 404);
             }
-            return response()->success($thread, 'Thread retrieved successfully');
+
+            // POLICY CHECK: Check if the user can view this thread
+            $this->authorize('view', $thread);
+
+            $this->forumThreadService->incrementViewCount((int) $id);
+            return response()->success($thread->toArray(), 'Thread retrieved successfully');
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->error('You do not have permission to view this thread.', 403);
         } catch (\Exception $e) {
             return response()->error('Failed to retrieve thread', 500, $e->getMessage());
         }
@@ -99,12 +167,16 @@ class ForumThreadController extends Controller
     public function update(ForumThreadRequest $request, string $id)
     {
         try {
+            $thread = ForumThread::findOrFail($id);
+
+            // POLICY CHECK: Check if the user can update this thread
+            $this->authorize('update', $thread);
+
             $data = $request->validated();
-            $thread = $this->forumThreadService->updateThread($data, (int)$id);
-            if (!$thread) {
-                return response()->error('Thread not found or update failed', 404);
-            }
-            return response()->success($thread, 'Thread updated successfully');
+            $updatedThread = $this->forumThreadService->updateThread($data, (int)$id);
+            return response()->success($updatedThread, 'Thread updated successfully');
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->error('You do not have permission to update this thread.', 403);
         } catch (\Exception $e) {
             return response()->error('Failed to update thread', 500, $e->getMessage());
         }
@@ -116,12 +188,15 @@ class ForumThreadController extends Controller
     public function destroy(string $id)
     {
         try {
-            $result = $this->forumThreadService->deleteThread($id);
-            if ($result) {
-                return response()->success(null, 'Thread deleted successfully');
-            } else {
-                return response()->error('Thread not found or delete failed', 404);
-            }
+            $thread = ForumThread::findOrFail($id);
+
+            // POLICY CHECK: Check if the user can delete this thread
+            $this->authorize('delete', $thread);
+
+            $this->forumThreadService->deleteThread($id);
+            return response()->success(null, 'Thread deleted successfully');
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->error('You do not have permission to delete this thread.', 403);
         } catch (\Exception $e) {
             return response()->error('Failed to delete thread', 500, $e->getMessage());
         }
@@ -130,7 +205,7 @@ class ForumThreadController extends Controller
     //like a thread
     public function likeUnlikeThread(Request $request, string $id)
     {
-        try{
+        try {
             $user = Auth::user();
 
             //check if the user has already liked the thread
@@ -145,7 +220,7 @@ class ForumThreadController extends Controller
                     ->where('likeable_id', $id)
                     ->delete();
                 return response()->success(null, 'Thread unliked successfully', 200);
-            }else{
+            } else {
                 //if not exists, create a new like
                 $like = new FourmLike();
                 $like->user_id = $user->id;
@@ -154,10 +229,8 @@ class ForumThreadController extends Controller
                 $like->save();
                 return response()->success(null, 'Thread liked successfully', 200);
             }
-
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->error('Failed to like thread', 500, $e->getMessage());
         }
     }
-
 }

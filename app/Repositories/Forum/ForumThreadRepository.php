@@ -19,26 +19,44 @@ class ForumThreadRepository implements ForumThreadInterface
      * @param $groupId
      * @return array
      */
+    // public function getAllThreads($groupId): array
+    // {
+    //     $perPage = request()->query('per_page', 10);
+    //     $is_most_viewed = request()->get('is_most_viewed', false);
+    //     // dd($is_most_viewed);
+    //     $query = $this->model->where('group_id', $groupId)
+    //                        ->with(['user:id,first_name,last_name,role', 'group:id,title']);
+    //     if ($is_most_viewed) {
+    //         $query->orderBy('views', 'desc');
+    //     } else {
+    //         $query->orderBy('created_at', 'desc');
+    //     }
+    //     return $query->paginate($perPage)->toArray();
+    // }
+
     public function getAllThreads($groupId): array
     {
         $perPage = request()->query('per_page', 10);
         $is_most_viewed = request()->get('is_most_viewed', false);
-        // dd($is_most_viewed);
+
         $query = $this->model->where('group_id', $groupId)
-                           ->with(['user:id,first_name,last_name,role', 'group:id,title']);
+                            ->with(['user:id,first_name,last_name,role', 'group:id,title']);
+
         if ($is_most_viewed) {
             $query->orderBy('views', 'desc');
         } else {
             $query->orderBy('created_at', 'desc');
         }
+
         return $query->paginate($perPage)->toArray();
     }
 
-    public function getThreadById($threadId): array
-    {
-        $thread = $this->model->with(['user:id,first_name,last_name,role', 'group:id,title', 'comments'])
-                              ->find($threadId);
-        return $thread ? $thread->toArray() : [];
+
+
+   public function getThreadById($threadId): ?ForumThread {
+
+        return $this->model->with(['user:id,first_name,last_name,role', 'group:id,title', 'comments'])
+                           ->find($threadId);
     }
 
     public function createThread($data) : array

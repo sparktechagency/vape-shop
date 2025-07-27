@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Forum;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Forum\ForumGroupRequest;
+use App\Models\ForumGroup;
 use App\Services\Forum\ForumGroupService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -115,11 +116,12 @@ class ForumGroupController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(ForumGroupRequest $request, string $id)
+    public function update(ForumGroupRequest $request, ForumGroup $group)
     {
         try{
+            $this->authorize('manage', $group);
             $data = $request->validated();
-            $result = $this->forumGroupService->updateGroup((int)$id, $data);
+            $result = $this->forumGroupService->updateGroup($group->id, $data);
 
             if ($result) {
                 return response()->success(

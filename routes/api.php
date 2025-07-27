@@ -53,8 +53,8 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/reset-password', 'resetPassword')->middleware('jwt.auth', 'banned');
     Route::get('/me', 'me')->middleware('jwt.auth', 'banned');
     Route::get('/profile/{id}', 'profile')->middleware('guest');
-    Route::post('/update-password', 'updatePassword')->middleware('jwt.auth', 'banned','is.suspended');
-    Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth', 'banned','is.suspended');
+    Route::post('/update-password', 'updatePassword')->middleware('jwt.auth', 'banned', 'is.suspended');
+    Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth', 'banned', 'is.suspended');
 });
 
 //admin routes
@@ -219,7 +219,7 @@ Route::get('/user-latest-reviews', [ReviewController::class, 'userLatestReviews'
 
 //==================forum routes=======================
 //Forum group
-Route::apiResource('forum-group', ForumGroupController::class)->except(['create', 'edit']);
+Route::apiResource('forum-group', ForumGroupController::class)->except(['create', 'edit'])->parameter('forum-group', 'group');
 
 //Forum threads
 Route::apiResource('forum-thread', ForumThreadController::class)->except(['create', 'edit']);
@@ -231,14 +231,20 @@ Route::apiResource('forum-comment', ForumCommentController::class)->except(['cre
 //like and unlike forum comments
 Route::post('/forum-comment/{id}/like', [ForumCommentController::class, 'likeUnlikeComment']);
 
-// join request in private groups
-Route::post('/forum-groups/{group}/join', [ForumGroupMemberController::class, 'requestToJoin']);
 
-// List all join requests for a group (only for group owner)
-Route::get('/forum-groups/{group}/requests', [ForumGroupMemberController::class, 'listJoinRequests']);
+Route::prefix('forum-groups/{group}')->group(function () {
+    // Member Actions
+    Route::post('/request-to-join', [ForumGroupMemberController::class, 'requestToJoin']);
+    Route::post('/leave', [ForumGroupMemberController::class, 'leaveGroup']);
 
-// Approve a join request (only for group owner)
-Route::post('/forum-groups/{group}/requests/{user}/approve', [ForumGroupMemberController::class, 'approveRequest']);
+    // Owner/Admin Actions
+    Route::get('/join-requests', [ForumGroupMemberController::class, 'listJoinRequests']);
+    Route::post('/requests/{user}/approve', [ForumGroupMemberController::class, 'approveRequest']);
+    Route::post('/requests/{user}/reject', [ForumGroupMemberController::class, 'rejectRequest']);
+    Route::post('/members/{user}/remove', [ForumGroupMemberController::class, 'removeMember']);
+     Route::get('/members', [ForumGroupMemberController::class, 'listApprovedMembers']);
+});
+
 
 //==================forum routes=======================
 //post and article routes
@@ -292,7 +298,7 @@ Route::get('/get-all-categories', [HomeProductController::class, 'getAllCategori
 
 
 //Ad trending products routes
-Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value, 'check.subscription','is.suspended']], function () {
+Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value, 'check.subscription', 'is.suspended']], function () {
     Route::apiResource('trending-ad-product', TrendingAdProductController::class)->except(['create', 'edit']);
     Route::apiResource('most-followers-ad', MostFollowersAdsController::class)->except(['create', 'edit', 'show', 'update',]);
 });
@@ -300,7 +306,7 @@ Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value, '
 
 //Subscription routes
 Route::get('/subscriptions/plans', [SubscriptionController::class, 'getSubscriptionsPlan']);
-Route::middleware(['jwt.auth','is.suspended'])->group(function () {
+Route::middleware(['jwt.auth', 'is.suspended'])->group(function () {
     Route::post('/subscriptions/request', [SubscriptionController::class, 'processSubscriptionRequest']);
 });
 
@@ -315,5 +321,3 @@ Route::middleware('jwt.auth')->prefix('notifications')->as('notifications.')->gr
     Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('markAsRead');
     Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
 });
-
-
