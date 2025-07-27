@@ -56,7 +56,7 @@ class TrendingRequestConfirmation extends Notification implements ShouldQueue
             'product_name' => $this->trendingRequest->product->product_name,
             'amount' => $this->trendingRequest->amount,
             'status' => $this->trendingRequest->status,
-            'message' => 'Your trending request for ' . $this->trendingRequest->product->name . ' has been confirmed.',
+            'message' => 'Your trending request for ' . $this->trendingRequest->product->name . ' has been submitted.',
             'time' => now(),
         ];
     }

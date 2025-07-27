@@ -53,15 +53,15 @@ class NewTrendingAdRequestNotification extends Notification implements ShouldQue
     public function toArray(object $notifiable): array
     {
         $this->trendingRequest->loadMissing('product', 'payments');
-        $productName = $this->trendingRequest->product->product_image;
+        $productName = $this->trendingRequest->product->product_name ;
         return [
             'trending_request_id' => $this->trendingRequest->id,
             'product_id' => $this->trendingRequest->product_id,
+            'product_image' => $this->trendingRequest->product->product_image,
             'product_name' => $productName,
-            'amount' => $this->trendingRequest->amount,
             'status' => $this->trendingRequest->status,
             'requested_at' => $this->trendingRequest->requested_at,
-            'message' => 'A new trending ad request has been made for product ID: ' . $this->trendingRequest->product_id,
+            'message' => "A new trending ad request has been made for the product: {$productName}.",
             'time' => now(),
         ];
     }

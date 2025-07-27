@@ -74,16 +74,12 @@ class MostFollowersAdsController extends Controller
                 'requested_at' => now(),
             ]);
 
-            $mostFollowersAdRequest->amount = $validatedData['amount'];
 
-            $admin = User::where('role', Role::ADMIN->value)->first();
-            $response = $this->paymentService->processPaymentForPayable($mostFollowersAdRequest, $validatedData, $admin);
             // Return a success response
-            if ($response['status'] === 'success') {
                 //send notification to admin
                 $admins = User::where('role', Role::ADMIN->value)->get();
-                if ($admins->isNotEmpty()) {
-                    Notification::send($admins, new NewMostFollowersAdRequestNotification($mostFollowersAdRequest));
+                foreach ($admins as $admin) {
+                    Notification::send($admin, new NewMostFollowersAdRequestNotification($mostFollowersAdRequest));
                 }
 
                 // Optionally, you can notify the user as well
@@ -94,12 +90,6 @@ class MostFollowersAdsController extends Controller
                     $response['message'] ?? 'Most follower ad request submitted successfully.',
                     201
                 );
-            }
-            DB::rollBack();
-            return response()->error(
-                $response['message'] ?? 'Failed to create most follower ad request.',
-                422
-            );
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->error(
