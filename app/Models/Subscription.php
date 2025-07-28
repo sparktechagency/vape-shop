@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Subscription extends Model
 {
@@ -14,12 +15,22 @@ class Subscription extends Model
         'ends_at' => 'datetime',
     ];
 
+     protected $appends = ['user'];
+
+    protected $hidden = ['subscribable'];
+
     /**
      * Get the user that owns the subscription.
      */
-    public function user()
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class);
+    // }
+
+    //polymorphic relationship
+    public function subscribable()
     {
-        return $this->belongsTo(User::class);
+        return $this->morphTo();
     }
 
     /**
@@ -29,6 +40,21 @@ class Subscription extends Model
     public static function pendingSubscriptionCount()
     {
         return static::where('invoice_status', 'pending_invoice')->count();
+    }
+
+    protected function user(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if ($this->subscribable instanceof User) {
+                    return $this->subscribable;
+                }
+                if ($this->subscribable instanceof Branch) {
+                    return $this->subscribable->owner;
+                }
+                return null;
+            }
+        );
     }
 
 }

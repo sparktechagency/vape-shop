@@ -181,9 +181,13 @@ class User extends Authenticatable implements JWTSubject
     }
 
     //address
-    public function address()
+    // public function address()
+    // {
+    //     return $this->hasOne(Address::class);
+    // }
+     public function address()
     {
-        return $this->hasOne(Address::class);
+        return $this->morphOne(Address::class, 'addressable');
     }
 
     public function manageProducts()
@@ -378,9 +382,14 @@ class User extends Authenticatable implements JWTSubject
     }
 
     //subscription relationship
+    // public function subscriptions()
+    // {
+    //     return $this->hasMany(Subscription::class);
+    // }
+
     public function subscriptions()
     {
-        return $this->hasMany(Subscription::class);
+        return $this->morphMany(Subscription::class, 'subscribable');
     }
 
     public function hasActiveSubscription(): bool
@@ -408,5 +417,11 @@ class User extends Authenticatable implements JWTSubject
     public function getUnreadNotificationsAttribute(): int
     {
         return $this->unreadNotifications()->count();
+    }
+
+    //branches relationship
+    public function branches()
+    {
+        return $this->hasMany(Branch::class);
     }
 }

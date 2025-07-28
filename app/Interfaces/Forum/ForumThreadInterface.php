@@ -2,12 +2,14 @@
 
 namespace App\Interfaces\Forum;
 
+use App\Models\ForumThread;
+
 interface ForumThreadInterface
 {
 
     public function getAllThreads($groupId): array;
 
-    public function getThreadById($threadId): array;
+    public function getThreadById($threadId): ?ForumThread;
 
     public function createThread($data) : array;
 
@@ -16,6 +18,6 @@ interface ForumThreadInterface
     public function deleteThread($threadId): bool;
 
     public function getThreadComments($threadId);
-    
+
     public function incrementViewCount(int $threadId): void;
 }

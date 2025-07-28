@@ -14,6 +14,7 @@ use App\Models\OrderItem;
 use App\Models\StoreProduct;
 use App\Models\WholesalerProduct;
 use App\Notifications\NewOrderRequestNotification;
+use App\Notifications\OrderCancelledForStoreNotification;
 use App\Notifications\OrderRequestConfirmationNotification;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
@@ -39,7 +40,7 @@ class CheckoutController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     // public function orderRequest(Request $request)
-
+    //order request user to multiple stores
     public function orderRequest(CheckoutRequest $request)
     {
 
@@ -150,6 +151,88 @@ class CheckoutController extends Controller
             ], 500);
         }
     }
+
+    //cancel order request
+    public function cancelOrderRequest(string $checkoutGroupId)
+    {
+        DB::beginTransaction();
+
+        try {
+            $checkout = Checkout::where('checkout_group_id', $checkoutGroupId)
+                                ->where('user_id', Auth::id())
+                                ->with('orders.store')
+                                ->first();
+
+
+            if (!$checkout) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Order not found or you do not have permission to cancel it.',
+                ], 404);
+            }
+
+            //  Check if the user is authorized to cancel this order
+            if ($checkout->status === 'cancelled') {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'This order has already been cancelled.',
+                ], 400);
+            }
+            // Check if the order is still pending
+            if ($checkout->status !== 'pending') {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'This order cannot be cancelled as it is already being processed.',
+                ], 400);
+            }
+
+            //  Check if any of the orders in the checkout are not pending
+            foreach ($checkout->orders as $order) {
+                if ($order->status !== 'pending') {
+                    return response()->json([
+                        'ok' => false,
+                        'message' => 'This order cannot be cancelled as one of the stores has already started processing it.',
+                    ], 400);
+                }
+            }
+
+            // update the checkout status to cancelled
+            $checkout->status = 'cancelled';
+            $checkout->save();
+
+            foreach ($checkout->orders as $order) {
+                $order->status = 'cancelled';
+                $order->save();
+
+                // 4. Store owner-ke notification pathano hocche
+                $storeOwner = $order->store;
+                if ($storeOwner) {
+
+                    $storeOwner->notify(new OrderCancelledForStoreNotification($order));
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Your order has been successfully cancelled.',
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'An error occurred while cancelling your order. Please try again.',
+                'error' => [
+                    'message' => $e->getMessage(),
+                    'line' => $e->getLine()
+                ]
+            ], 500);
+        }
+    }
+
 
 
     public function index()

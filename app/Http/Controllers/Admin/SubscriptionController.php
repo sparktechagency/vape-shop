@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\User;
 use App\Notifications\InvoiceSentNotification;
 use App\Notifications\SubscriptionActivatedNotification;
 use App\Notifications\SubscriptionCancelledNotification;
@@ -61,7 +63,27 @@ class SubscriptionController extends Controller
     {
         try {
             $perPage = $request->query('per_page', 20);
-            $query = Subscription::with('user:id,first_name,last_name,avatar,role,email');
+
+            $query = Subscription::query();
+
+
+            $query->where(function ($q) {
+
+                $q->whereHasMorph('subscribable', User::class)
+
+                    ->orWhereHasMorph('subscribable', Branch::class, function ($branchQuery) {
+                        $branchQuery->whereHas('owner');
+                    });
+            });
+
+            $query->with([
+                'subscribable' => function ($morphTo) {
+                    $morphTo->morphWith([
+                        User::class => [],
+                        Branch::class => ['owner:id,first_name,last_name,avatar,role,email'],
+                    ]);
+                }
+            ]);
 
             if ($request->has('status')) {
                 $query->where('invoice_status', $request->status);
@@ -69,15 +91,24 @@ class SubscriptionController extends Controller
 
             $subscriptions = $query->latest()->paginate($perPage);
 
+
             if ($subscriptions->isEmpty()) {
                 return response()->error('No subscriptions found', 404);
             }
+
+            //user_id
+            $subscriptions->getCollection()->transform(function ($subscription) {
+                $subscription->user_id = $subscription->subscribable->id;
+                return $subscription;
+            });
 
             return response()->success($subscriptions);
         } catch (\Exception $e) {
             return response()->error('An error occurred while fetching subscriptions: ' . $e->getMessage(), 500);
         }
     }
+
+
 
 
     public function show(Subscription $subscription)
@@ -105,42 +136,58 @@ class SubscriptionController extends Controller
             return response()->error($validator->errors()->first(), 422);
         }
 
+
+        $subscription->load('subscribable.owner');
+
         $newStatus = $validator->validated()['status'];
         $oldStatus = $subscription->invoice_status;
-        // dd($oldStatus, $newStatus);
+
+
+        if ($newStatus === $oldStatus) {
+            return response()->success($subscription, 'Status is already set to ' . $newStatus);
+        }
+
         $subscription->invoice_status = $newStatus;
 
-        if ($newStatus === 'paid' && $oldStatus !== 'paid') {
+
+        if ($newStatus === 'paid') {
 
             if (is_null($subscription->starts_at)) {
                 $subscription->starts_at = now();
                 $subscription->ends_at = now()->addMonth();
             }
-            try {
-                $subscription->user->notify(new SubscriptionActivatedNotification($subscription));
-            } catch (\Exception $e) {
-                Log::error("Failed to send subscription activation notification for subscription ID {$subscription->id}: " . $e->getMessage());
+
+            if ($subscription->subscribable_type === Branch::class) {
+                $subscription->subscribable->update(['is_active' => true]);
             }
         }
+
+        if ($newStatus === 'cancelled') {
+
+            if ($subscription->subscribable_type === Branch::class) {
+                $subscription->subscribable->update(['is_active' => false]);
+            }
+        }
+
 
         $subscription->save();
 
-        // dd($subscription->user);
+        $userToSendNotification = $subscription->user;
 
-         if ($newStatus === 'invoice_sent' && $oldStatus !== 'invoice_sent') {
+        if ($userToSendNotification) {
             try {
-                $subscription->user->notify(new InvoiceSentNotification($subscription));
+                if ($newStatus === 'paid') {
+                    $userToSendNotification->notify(new SubscriptionActivatedNotification($subscription));
+                } elseif ($newStatus === 'invoice_sent') {
+                    $userToSendNotification->notify(new InvoiceSentNotification($subscription));
+                } elseif ($newStatus === 'cancelled') {
+                    $userToSendNotification->notify(new SubscriptionCancelledNotification($subscription));
+                }
             } catch (\Exception $e) {
-                Log::error("Failed to send invoice notification for subscription ID {$subscription->id}: " . $e->getMessage());
+                Log::error("Failed to send notification for subscription ID {$subscription->id} for status '{$newStatus}': " . $e->getMessage());
             }
-        }
-
-        if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
-            try {
-                $subscription->user->notify(new SubscriptionCancelledNotification($subscription));
-            } catch (\Exception $e) {
-                Log::error("Failed to send subscription cancellation notification for subscription ID {$subscription->id}: " . $e->getMessage());
-            }
+        } else {
+            Log::error("Could not find user for subscription ID {$subscription->id} to send notification.");
         }
 
         return response()->success($subscription, 'Invoice status updated successfully.');

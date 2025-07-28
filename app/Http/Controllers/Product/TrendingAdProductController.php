@@ -33,7 +33,7 @@ class TrendingAdProductController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $trendingAdProducts = TrendingProducts::with(['product','payments'])
+        $trendingAdProducts = TrendingProducts::with(['product', 'payments'])
             ->where('user_id', $user->id)
             ->latest()
             ->paginate(10);
@@ -75,35 +75,25 @@ class TrendingAdProductController extends Controller
             $trendingAdProduct = TrendingProducts::create([
                 'user_id' => $user->id,
                 'product_id' => $validatedData['product_id'],
-                // 'amount' => $validatedData['amount'],
                 'status' => 'pending',
                 'preferred_duration' => $validatedData['preferred_duration'],
                 'requested_at' => now(),
             ]);
 
-            $trendingAdProduct->amount = $validatedData['amount'];
-            // dd($trendingAdProduct);
-
-            $adminId = User::where('role', Role::ADMIN->value)->first();
-            // dd($adminId);
-            $response = $this->paymentService->processPaymentForPayable($trendingAdProduct, $validatedData, $adminId);
-            // Return a success response
-            if ($response['status'] === 'success') {
-                //send notification to admin
-                $admins = User::where('role', Role::ADMIN->value)->get();
-                if ($admins->isNotEmpty()) {
-                    Notification::send($admins, new NewTrendingAdRequestNotification($trendingAdProduct));
-                }
-
-                // Optionally, you can notify the user as well
-                $user->notify(new TrendingRequestConfirmation($trendingAdProduct));
-                DB::commit();
-                return response()->success(
-                    $trendingAdProduct,
-                    $response['message'] ?? 'Trending ad product created successfully.',
-                    201
-                );
+            //send notification to admin
+            $admins = User::where('role', Role::ADMIN->value)->get();
+            foreach ($admins as $admin) {
+                Notification::send($admin, new NewTrendingAdRequestNotification($trendingAdProduct));
             }
+
+            // Optionally, you can notify the user as well
+            $user->notify(new TrendingRequestConfirmation($trendingAdProduct));
+            DB::commit();
+            return response()->success(
+                $trendingAdProduct,
+                $response['message'] ?? 'Trending ad product created successfully.',
+                201
+            );
             DB::rollBack();
             return response()->error(
                 $response['message'] ?? 'Failed to create trending ad product.',
@@ -123,7 +113,7 @@ class TrendingAdProductController extends Controller
      */
     public function show(string $id)
     {
-        $trendingAdProduct = TrendingProducts::with(['product','payments'])
+        $trendingAdProduct = TrendingProducts::with(['product', 'payments'])
             ->where('id', $id)
             ->first();
 

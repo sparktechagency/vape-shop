@@ -43,8 +43,8 @@ class NewOrderRequestNotification extends Notification implements ShouldQueue
     {
 
         $storeOwnerName = $notifiable->full_name;
-        $customerName = $this->customer->full_name;
-        $orderUrl = url('/store/orders/' . $this->order->id); 
+        $customerName =  $this->customer->full_name;
+        $orderUrl = url('/store/orders/' . $this->order->id);
 
         return (new MailMessage)
                     ->subject("You Have a New Order Request! (Order #" . $this->order->id . ")")

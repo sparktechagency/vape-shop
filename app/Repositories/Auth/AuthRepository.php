@@ -179,7 +179,7 @@ class AuthRepository implements AuthRepositoryInterface
             ];
         }
 
-         if ($avatar) {
+        if ($avatar) {
             $oldImagePath = getStorageFilePath($user->avatar);
             if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
                 Storage::disk('public')->delete($oldImagePath);
@@ -205,21 +205,20 @@ class AuthRepository implements AuthRepositoryInterface
         $user->dob = $data['dob'] ?? $user->dob;
         $user->ein = $data['ein'] ?? $user->ein;
         $user->pl = $data['pl'] ?? $user->pl;
-        if($user->role == Role::STORE->value) {
+        if ($user->role == Role::STORE->value) {
             $user->open_from = $data['open_from'];
             $user->close_at = $data['close_at'];
         }
         $user->save();
 
         // Update or create address for the same user id
-        $address = Address::firstOrNew(['user_id' => $user->id]);
+        $address = $user->address()->firstOrNew([]); // address property is polymorphic now
         $address->region_id = $data['region_id'] ?? $address->region_id;
         $address->address = $data['address'] ?? $address->address;
         $address->zip_code = $data['zip_code'] ?? $address->zip_code;
         $address->latitude = $data['latitude'] ?? $address->latitude;
         $address->longitude = $data['longitude'] ?? $address->longitude;
         $address->save();
-        $user->load('address');
 
         return [
             'success' => true,
