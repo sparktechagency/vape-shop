@@ -35,6 +35,7 @@ use App\Http\Controllers\B2bConnectionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\B2bPricingController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ConnectedLocationController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\Forum\ForumGroupMemberController;
 use App\Http\Controllers\InboxController;
@@ -163,6 +164,12 @@ Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE
     Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index']);
     Route::get('/orders/{order}', [\App\Http\Controllers\OrderController::class, 'show']);
     Route::put('/orders/{order}/status', [\App\Http\Controllers\OrderController::class, 'updateStatus'])->middleware('is.suspended');
+
+    //connected Location
+    Route::get('/branches', [ConnectedLocationController::class, 'getMyBranches']);
+    Route::get('/users/{user}/active-branches', [ConnectedLocationController::class, 'getActiveBranchesForUser']);
+    Route::post('connected-location', [ConnectedLocationController::class, 'storeBranchRequest']);
+    Route::delete('/branches/{branch}/cancel', [ConnectedLocationController::class, 'cancelBranchRequest']);
 });
 
 
