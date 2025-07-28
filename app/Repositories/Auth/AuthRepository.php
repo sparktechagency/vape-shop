@@ -206,8 +206,8 @@ class AuthRepository implements AuthRepositoryInterface
         $user->ein = $data['ein'] ?? $user->ein;
         $user->pl = $data['pl'] ?? $user->pl;
         if ($user->role == Role::STORE->value) {
-            $user->open_from = $data['open_from'];
-            $user->close_at = $data['close_at'];
+            $user->open_from = $data['open_from'] ?? null;
+            $user->close_at = $data['close_at'] ?? null;
         }
         $user->save();
 
