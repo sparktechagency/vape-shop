@@ -137,7 +137,9 @@ class SubscriptionController extends Controller
         }
 
 
-        $subscription->load('subscribable.owner');
+        $subscription->loadMorph('subscribable', [
+            Branch::class => ['owner'],
+        ]);
 
         $newStatus = $validator->validated()['status'];
         $oldStatus = $subscription->invoice_status;
