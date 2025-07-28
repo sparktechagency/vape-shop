@@ -24,8 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
+    })
+    ->withSchedule(function ($schedule) {
+        $schedule->command('subscriptions:expire')->everyMinute();
     })->create();
-
-    // ->withSchedule(function ($schedule) {
-    //     $schedule->command('subscriptions:expire')->everyFiveSeconds();
-    // })
