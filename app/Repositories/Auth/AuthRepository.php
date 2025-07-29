@@ -39,15 +39,14 @@ class AuthRepository implements AuthRepositoryInterface
         $user->ein = $data['ein'] ?? null;
         $user->save();
 
-        $address = new Address();
-        $address->user_id = $user->id;
-        $address->region_id = $data['region_id'] ?? null;
-        $address->address = $data['address'] ?? null;
-        $address->zip_code = $data['zip_code'] ?? null;
-        $address->latitude = $data['latitude'] ?? null;
-        $address->longitude = $data['longitude'] ?? null;
-        $address->save();
-
+        $address = Address::create([
+            'user_id' => $user->id,
+            'region_id' => $data['region_id'] ?? null,
+            'address' => $data['address'] ?? null,
+            'zip_code' => $data['zip_code'] ?? null,
+            'latitude' => $data['latitude'] ?? null,
+            'longitude' => $data['longitude'] ?? null,
+        ]);
         $user->load('address');
         return $user;
     }
