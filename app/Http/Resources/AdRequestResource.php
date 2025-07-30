@@ -28,7 +28,7 @@ class AdRequestResource extends JsonResource
             'user_id' => $this->user_id ?? null,
             'requested_by' => $this->user->full_name ?? null,
             'requested_at' => $this->requested_at,
-            'amount' => $this->payments->first()?->amount ?? null,
+            'amount' => $this->amount ?? null,
             'approved_by' => $this->approvedBy->full_name ?? null,
             'rejected_by' => $this->rejectedBy->full_name ?? null,
             'rejection_reason' => $this->rejection_reason,

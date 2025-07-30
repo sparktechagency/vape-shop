@@ -26,9 +26,10 @@ class TrendingAdProductRequest extends FormRequest
             // 'expiration_month' => 'required|numeric|between:1,12',
             // 'expiration_year' => 'required|numeric|digits:4|date_format:Y|after_or_equal:today',
             // 'cvc' => 'required|string|min:3|max:4',
-            // 'amount' => 'required|numeric',
             'product_id' => 'required|exists:manage_products,id',
             'preferred_duration' => 'required|in:1_week,2_weeks,1_month,3_months,6_months', // Duration options: 1 week, 2 weeks, 1 month, 3 months, 6 months
+            'amount' => 'required|numeric',
+            'slot' => 'nullable|integer',
         ];
     }
 

@@ -27,6 +27,7 @@ class HomeRepository implements HomeInterface
             'wholesaler' => $this->getAllWholesaler($perPage, $searchTerm, $regionId),
             'products' => $this->searchProducts($searchTerm, $perPage),
             'accounts' => $this->getAllAccounts($perPage, $searchTerm, $regionId),
+            'association' => $this->getAssociation($perPage, $searchTerm, $regionId),
             default => $this->searchProducts($searchTerm, $perPage),
         };
         return $searchTerm;
@@ -93,7 +94,30 @@ class HomeRepository implements HomeInterface
     //get all store
     private function getAllStore($perPage, $searchTerm = null, $regionId = null)
     {
-        $query = User::where('role', Role::STORE); // অথবা Store::query()
+        $query = User::where('role', Role::STORE);
+
+        $query->when($searchTerm, function ($query, $searchTerm) {
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('first_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%');
+            });
+        });
+        $query->when($regionId, function ($query, $regionId) {
+            $query->whereHas('address', function ($q) use ($regionId) {
+                $q->where('region_id', $regionId);
+            });
+        });
+
+
+        $stores = $query->with('address')->paginate($perPage);
+
+        return $stores;
+    }
+
+    private function getAssociation($perPage, $searchTerm = null, $regionId = null)
+    {
+        $query = User::where('role', Role::ASSOCIATION);
 
         $query->when($searchTerm, function ($query, $searchTerm) {
             $query->where(function ($q) use ($searchTerm) {

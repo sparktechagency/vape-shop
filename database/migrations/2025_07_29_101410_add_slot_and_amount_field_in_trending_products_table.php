@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('ein', 20)->nullable()->after('ban_reason')->comment('Employer Identification Number');
-            $table->boolean('pl')->default(false)->after('ein');
+        Schema::table('trending_products', function (Blueprint $table) {
+            $table->integer('slot')->nullable()->after('preferred_duration');
+            $table->decimal('amount', 10, 2)->nullable()->after('slot');
         });
     }
 
@@ -22,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['ein', 'pl']);
+        Schema::table('trending_products', function (Blueprint $table) {
+            $table->dropColumn(['slot', 'amount']);
         });
     }
 };

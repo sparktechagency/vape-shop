@@ -28,6 +28,7 @@ class UserResource extends JsonResource
             'updated_at' => $this->updated_at,
             'role_label' => $this->role_label,
             'full_name' => $this->full_name,
+            'ein' => $this->ein,
             'total_followers' => $this->total_followers,
             'total_following' => $this->total_following,
             'is_following' => $this->is_following,
@@ -36,6 +37,16 @@ class UserResource extends JsonResource
             'is_favourite' => $this->is_favourite,
             'is_banned' => $this->is_banned,
             'is_suspended' => $this->is_suspended,
+            'address' => $this->whenLoaded('address', function () {
+                return [
+                    'address_id' => $this->address->id ?? null,
+                    'address' => $this->address->address ?? null,
+                    'zip' => $this->address->zip ?? null,
+                    'region_id' => $this->address->region->id ?? null,
+                    'region' => $this->address->region->name ?? null,
+                    'country' => $this->address->region->country->name ?? null,
+                ];
+            }),
 
             $this->mergeWhen($this->relationLoaded('favourites'), function () {
 

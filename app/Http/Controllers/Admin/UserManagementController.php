@@ -25,12 +25,12 @@ class UserManagementController extends Controller
         $search = $request->input('search', '');
 
         $query = match ($role) {
-            Role::MEMBER->value => User::where('role', Role::MEMBER->value),
-            Role::STORE->value => User::where('role', Role::STORE->value),
-            Role::BRAND->value => User::where('role', Role::BRAND->value),
-            Role::WHOLESALER->value => User::where('role', Role::WHOLESALER->value),
-            Role::ASSOCIATION->value => User::where('role', Role::ASSOCIATION->value),
-            default => User::where('role', '!=', Role::ADMIN->value)
+            Role::MEMBER->value => User::with('address.region.country')->where('role', Role::MEMBER->value),
+            Role::STORE->value => User::with('address.region.country')->where('role', Role::STORE->value),
+            Role::BRAND->value => User::with('address.region.country')->where('role', Role::BRAND->value),
+            Role::WHOLESALER->value => User::with('address.region.country')->where('role', Role::WHOLESALER->value),
+            Role::ASSOCIATION->value => User::with('address.region.country')->where('role', Role::ASSOCIATION->value),
+            default => User::with('address.region.country')->where('role', '!=', Role::ADMIN->value)
         };
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -46,7 +46,6 @@ class UserManagementController extends Controller
         if ($users->isEmpty()) {
             return response()->error('No users found for the specified role.', 404);
         }
-
 
         return UserResource::collection($users);
     }

@@ -77,6 +77,8 @@ class TrendingAdProductController extends Controller
                 'product_id' => $validatedData['product_id'],
                 'status' => 'pending',
                 'preferred_duration' => $validatedData['preferred_duration'],
+                'amount' => $validatedData['amount'],
+                'slot' => $validatedData['slot'] ?? null,
                 'requested_at' => now(),
             ]);
 
@@ -113,7 +115,7 @@ class TrendingAdProductController extends Controller
      */
     public function show(string $id)
     {
-        $trendingAdProduct = TrendingProducts::with(['product', 'payments'])
+        $trendingAdProduct = TrendingProducts::with(['product'])
             ->where('id', $id)
             ->first();
 
