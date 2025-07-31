@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Product;
 use App\Enums\UserRole\Role;
 use App\Models\TrendingProducts;
 use App\Http\Requests\Product\TrendingAdProductRequest;
-use App\Models\Payment;
-use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TrendingAdProductResource;
@@ -19,12 +17,10 @@ use Illuminate\Support\Facades\Notification;
 
 class TrendingAdProductController extends Controller
 {
-    protected $paymentService;
 
-    public function __construct(PaymentService $paymentService)
+    public function __construct()
     {
         $this->middleware(['jwt.auth', 'check.role:' . Role::BRAND->value])->except(['index', 'show']);
-        $this->paymentService = $paymentService;
     }
 
     /**
@@ -32,11 +28,12 @@ class TrendingAdProductController extends Controller
      */
     public function index()
     {
+        $perPage = request()->get('per_page', 10); // Default to 10 items per page
         $user = Auth::user();
-        $trendingAdProducts = TrendingProducts::with(['product', 'payments'])
+        $trendingAdProducts = TrendingProducts::with(['product', 'user:id,first_name,last_name,avatar,role','category', 'region.country'])
             ->where('user_id', $user->id)
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage);
 
         if ($trendingAdProducts->isEmpty()) {
             return response()->error(
@@ -75,6 +72,8 @@ class TrendingAdProductController extends Controller
             $trendingAdProduct = TrendingProducts::create([
                 'user_id' => $user->id,
                 'product_id' => $validatedData['product_id'],
+                'category_id' => $validatedData['category_id'],
+                'region_id' => $validatedData['region_id'],
                 'status' => 'pending',
                 'preferred_duration' => $validatedData['preferred_duration'],
                 'amount' => $validatedData['amount'],
@@ -84,11 +83,13 @@ class TrendingAdProductController extends Controller
 
             //send notification to admin
             $admins = User::where('role', Role::ADMIN->value)->get();
-            foreach ($admins as $admin) {
-                Notification::send($admin, new NewTrendingAdRequestNotification($trendingAdProduct));
+            if ($admins->isNotEmpty()) {
+                Notification::send($admins, new NewTrendingAdRequestNotification($trendingAdProduct));
             }
 
-            // Optionally, you can notify the user as well
+
+
+            // Send confirmation notification to the user
             $user->notify(new TrendingRequestConfirmation($trendingAdProduct));
             DB::commit();
             return response()->success(
@@ -115,7 +116,7 @@ class TrendingAdProductController extends Controller
      */
     public function show(string $id)
     {
-        $trendingAdProduct = TrendingProducts::with(['product'])
+        $trendingAdProduct = TrendingProducts::with(['product', 'user:id,first_name,last_name,avatar,role','category', 'region'])
             ->where('id', $id)
             ->first();
 

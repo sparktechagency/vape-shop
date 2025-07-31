@@ -44,8 +44,8 @@ class SliderController extends Controller
 
         //maximum 8 slider allowed
         $sliderCount = Slider::count();
-        if($sliderCount >= 8){
-            return response()->error('Maximum 8 sliders are allowed.', 422);
+        if($sliderCount >= 20){
+            return response()->error('Maximum 20 sliders are allowed.', 422);
         }
 
         $image = $request->file('image');

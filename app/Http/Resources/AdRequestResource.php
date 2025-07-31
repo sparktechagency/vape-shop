@@ -27,6 +27,7 @@ class AdRequestResource extends JsonResource
             'product_image' => $this->when($this->product_id, $this->product->product_image ?? null),
             'user_id' => $this->user_id ?? null,
             'requested_by' => $this->user->full_name ?? null,
+            'requester_avatar' => $this->user->avatar ?? null,
             'requested_at' => $this->requested_at,
             'amount' => $this->amount ?? null,
             'approved_by' => $this->approvedBy->full_name ?? null,
@@ -43,6 +44,31 @@ class AdRequestResource extends JsonResource
             'remaining_days' => $this->when($remainingDays !== null, $remainingDays),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'category' => $this->whenLoaded('category', function () {
+                return [
+                    'id' => $this->category->id,
+                    'name' => $this->category->name,
+                ];
+            }),
+            'region' => $this->whenLoaded('region', function () {
+                return [
+                    'id' => $this->region->id,
+                    'name' => $this->region->name,
+                    'code' => $this->region->code,
+                    'country' => $this->region->country ? [
+                        'id' => $this->region->country->id,
+                        'name' => $this->region->country->name,
+                    ] : null,
+                ];
+            }),
+            'featured_article' => $this->whenLoaded('FeaturedArticle', function () {
+                return [
+                    'id' => $this->FeaturedArticle->id,
+                    'title' => $this->FeaturedArticle->title,
+                    'article_image' => $this->FeaturedArticle->article_image,
+                    'content' => $this->FeaturedArticle->content,
+                ];
+            }),
         ];
     }
 }

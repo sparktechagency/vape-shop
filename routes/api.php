@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\B2bPricingController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ConnectedLocationController;
+use App\Http\Controllers\FeaturedAdRequestController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\Forum\ForumGroupMemberController;
 use App\Http\Controllers\InboxController;
@@ -310,6 +311,7 @@ Route::get('/get-all-categories', [HomeProductController::class, 'getAllCategori
 Route::group(['middleware' => ['jwt.auth', 'check.role:' . Role::BRAND->value, 'check.subscription', 'is.suspended']], function () {
     Route::apiResource('trending-ad-product', TrendingAdProductController::class)->except(['create', 'edit']);
     Route::apiResource('most-followers-ad', MostFollowersAdsController::class)->except(['create', 'edit', 'show', 'update',]);
+    Route::apiResource('featured-ad-request',FeaturedAdRequestController::class)->except(['create', 'edit']);
 });
 
 

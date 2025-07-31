@@ -3,8 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class MostFollowersAdRequest extends FormRequest
+class FeaturedAdRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,12 +23,19 @@ class MostFollowersAdRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'featured_article_id' => [
+                'required',
+                Rule::exists('posts', 'id')->where(function ($query) {
+                    return $query->where('content_type', 'article');
+                }),
+            ],
             'region_id' => 'required|exists:regions,id',
+            'preferred_duration' => 'required|in:1_week,2_weeks,1_month,3_months,6_months', // Duration options: 1 week, 2 weeks, 1 month, 3 months, 6 months
             'amount' => 'required|numeric',
-            'slot' => 'required|numeric|min:1|max:6',
-            'preferred_duration' => 'required|in:1_week,2_weeks,1_month,3_months,6_months',
+            'slot' => 'nullable|integer|min:1|max:6', // Assuming slot is an integer and can be between 1 and 6
         ];
     }
+
 
     /**
      * Get custom messages for validator errors.
@@ -37,16 +45,18 @@ class MostFollowersAdRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'featured_article_id.required' => 'The featured article is required.',
+            'featured_article_id.exists' => 'The selected featured article does not exist.',
             'region_id.required' => 'The region is required.',
             'region_id.exists' => 'The selected region does not exist.',
-            'amount.required' => 'The amount is required.',
-            'amount.numeric' => 'The amount must be a number.',
-            'slot.required' => 'The slot is required.',
-            'slot.numeric' => 'The slot must be a number.',
-            'slot.min' => 'The slot must be at least 1.',
-            'slot.max' => 'The slot must not exceed 6.',
             'preferred_duration.required' => 'The preferred duration is required.',
             'preferred_duration.in' => 'The preferred duration must be one of the following: 1_week, 2_weeks, 1_month, 3_months, 6_months.',
+            'amount.required' => 'The amount is required.',
+            'amount.numeric' => 'The amount must be a number.',
+            'slot.integer' => 'The slot must be an integer.',
+            'slot.min' => 'The slot must be at least 1.',
+            'slot.max' => 'The slot must not exceed 6.',
+
         ];
     }
 
@@ -56,5 +66,4 @@ class MostFollowersAdRequest extends FormRequest
             response()->error($validator->errors()->first(), 422, $validator->errors())
         );
     }
-
 }

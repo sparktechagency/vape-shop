@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AdRequestResource;
+use App\Models\FeaturedAd;
 use App\Models\MostFollowerAd;
 use App\Models\TrendingProducts;
 use Illuminate\Http\Request;
@@ -18,16 +19,25 @@ class AdApprovalsManageController extends Controller
         $search = $request->input('search', '');
         $filter = $request->input('filter', 'all');
         $type = $request->input('type', 'products'); // or followers
+        $category_id = $request->input('category_id', null);
+        $region_id = $request->input('region_id', null);
 
         //query based on type
         $adRequests = match ($type) {
-            'products' => TrendingProducts::with(['product:id,product_name,product_image,user_id', 'payments'])
+            'products' => TrendingProducts::with(['product:id,product_name,product_image,user_id', 'user:id,first_name,last_name,avatar,role', 'category', 'region.country'])
                 ->when($search, function ($query, $search) {
                     return $query->whereHas('product', function ($q) use ($search) {
                         $q->where('product_name', 'like', '%' . $search . '%');
                     });
                 }),
-            'followers' => MostFollowerAd::with(['user:id,first_name,last_name', 'payments'])
+            'followers' => MostFollowerAd::with(['user:id,first_name,last_name', 'region.country'])
+                ->when($search, function ($query, $search) {
+                    return $query->whereHas('user', function ($q) use ($search) {
+                        $q->where('first_name', 'like', '%' . $search . '%')
+                            ->orWhere('last_name', 'like', '%' . $search . '%');
+                    });
+                }),
+            'featured' => FeaturedAd::with(['user:id,first_name,last_name,avatar', 'region.country', 'FeaturedArticle:id,title,article_image,content'])
                 ->when($search, function ($query, $search) {
                     return $query->whereHas('user', function ($q) use ($search) {
                         $q->where('first_name', 'like', '%' . $search . '%')
@@ -52,6 +62,15 @@ class AdApprovalsManageController extends Controller
             'expired' => $adRequests->where('status', 'expired'),
             default => $adRequests,
         };
+
+        //filter by category and region if provided
+        if ($category_id && $type === 'products') {
+            $adRequests = $adRequests->where('category_id', $category_id);
+        }
+        if ($region_id) {
+            $adRequests = $adRequests->where('region_id', $region_id);
+        }
+
         $adRequests = $adRequests->orderBy('created_at', 'desc')->paginate($perPage);
 
 
@@ -69,8 +88,9 @@ class AdApprovalsManageController extends Controller
     {
         $type = request()->input('type', 'products'); // or followers
         $adRequest = match ($type) {
-            'products' => TrendingProducts::with(['product:id,product_name,product_image,user_id', 'payments'])->find($id),
+            'products' => TrendingProducts::with(['product:id,product_name,product_image,user_id', 'user', 'category', 'region'])->find($id),
             'followers' => MostFollowerAd::with(['user:id,first_name,last_name', 'payments'])->find($id),
+            'featured' => FeaturedAd::with(['user:id,first_name,last_name,avatar', 'region.country', 'FeaturedArticle'])->find($id),
             default => TrendingProducts::with(['product:id,product_name,product_image,user_id', 'payments'])->find($id),
         };
 
@@ -101,6 +121,7 @@ class AdApprovalsManageController extends Controller
             $adRequest = match ($type) {
                 'products' => TrendingProducts::find($id),
                 'followers' => MostFollowerAd::find($id),
+                'featured' => FeaturedAd::find($id),
                 default => TrendingProducts::find($id),
             };
             if (!$adRequest) {

@@ -26,10 +26,12 @@ class TrendingAdProductRequest extends FormRequest
             // 'expiration_month' => 'required|numeric|between:1,12',
             // 'expiration_year' => 'required|numeric|digits:4|date_format:Y|after_or_equal:today',
             // 'cvc' => 'required|string|min:3|max:4',
+            'category_id' => 'required|exists:categories,id',
+            'region_id' => 'required|exists:regions,id',
             'product_id' => 'required|exists:manage_products,id',
             'preferred_duration' => 'required|in:1_week,2_weeks,1_month,3_months,6_months', // Duration options: 1 week, 2 weeks, 1 month, 3 months, 6 months
             'amount' => 'required|numeric',
-            'slot' => 'nullable|integer',
+            'slot' => 'nullable|integer|min:1|max:6', // Assuming slot is an integer and can be between 1 and 6
         ];
     }
 
@@ -59,6 +61,15 @@ class TrendingAdProductRequest extends FormRequest
             // 'cvc.max' => 'The CVC may not be greater than 4 characters.',
             // 'amount.required' => 'The amount is required.',
             // 'amount.numeric' => 'The amount must be a number.',
+            'category_id.required' => 'The category is required.',
+            'category_id.exists' => 'The selected category does not exist.',
+            'region_id.required' => 'The region is required.',
+            'region_id.exists' => 'The selected region does not exist.',
+            'product_id.required' => 'The product is required.',
+            'product_id.exists' => 'The selected product does not exist.',
+            'slot.integer' => 'The slot must be an integer.',
+            'amount.required' => 'The amount is required.',
+            'amount.numeric' => 'The amount must be a number.',
             'preferred_duration.required' => 'The preferred duration is required.',
             'preferred_duration.in' => 'The preferred duration must be one of the following: 1_week, 2_weeks, 1_month, 3_months, 6_months.',
         ];

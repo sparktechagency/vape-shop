@@ -18,4 +18,10 @@ class Category extends Model
         return $this->hasMany(StoreProduct::class, 'category_id');
     }
 
+    //trending products relationship
+    public function trending_products()
+    {
+        return $this->hasMany(TrendingProducts::class, 'category_id');
+    }
+
 }

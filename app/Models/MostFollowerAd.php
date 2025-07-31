@@ -17,14 +17,13 @@ class MostFollowerAd extends Model
         'is_active' => 'boolean',
     ];
 
-    
-    /**
-     * Get all of the trading request's payments.
-     */
-    public function payments()
+
+   //region relationship
+    public function region()
     {
-        return $this->morphMany(Payment::class, 'payable');
+        return $this->belongsTo(Region::class, 'region_id');
     }
+
 
 
     public function user()

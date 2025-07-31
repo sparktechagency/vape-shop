@@ -36,6 +36,18 @@ class TrendingProducts extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    //category relationship
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    //region relationship
+    public function region()
+    {
+        return $this->belongsTo(Region::class, 'region_id');
+    }
+
     //relationship approveby
     public function approvedBy()
     {

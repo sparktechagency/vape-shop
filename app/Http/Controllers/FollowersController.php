@@ -105,4 +105,5 @@ class FollowersController extends Controller
             return response()->error('Error unfollowing user', 500, $e->getMessage());
         }
     }
+
 }
