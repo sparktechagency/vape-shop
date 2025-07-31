@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole\Role;
 use App\Models\ForumGroup;
 use App\Models\ForumThread;
 use App\Models\User;
@@ -61,6 +62,9 @@ class ForumThreadPolicy
     public function delete(User $user, ForumThread $thread): bool
     {
         // only the thread owner or group owner can delete the thread.
-        return $user->id === $thread->user_id || $user->id === $thread->group->user_id;
+        // only the thread owner, group owner, or admin can delete the thread.
+        return $user->id === $thread->user_id
+            || $user->id === $thread->group->user_id
+            || $user->role === Role::ADMIN->value;
     }
 }
