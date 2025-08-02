@@ -59,9 +59,11 @@ class PostRepository implements PostInterface
     {
         $post = $this->getPostById($postId);
         //remove old image if exists
-        $oldImagePath = getStorageFilePath($post->article_image);
-        if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
-            Storage::disk('public')->delete($oldImagePath);
+        if ($post && $post->article_image) {
+            $oldImagePath = getStorageFilePath($post->article_image);
+            if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
+                Storage::disk('public')->delete($oldImagePath);
+            }
         }
         //delete post
         if ($post) {
@@ -86,16 +88,15 @@ class PostRepository implements PostInterface
         $isGlobal = request()->boolean('is_global');
         $userId = Auth::id();
         // dd($content_type, $isGlobal, $userId);
-        if( $content_type === 'article') {
+        if ($content_type === 'article') {
             $query = $this->post->where('content_type', 'article');
         } else {
             $query = $this->post->where('content_type', 'post');
         }
-        if(!$isGlobal && $userId) {
+        if (!$isGlobal && $userId) {
             $query->where('user_id', $userId);
         }
         return $query->paginate($perPage);
-
     }
     public function likePost(int $postId, int $userId)
     {

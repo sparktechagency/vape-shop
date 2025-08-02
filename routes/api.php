@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Product\ManageProductController;
 use App\Http\Controllers\Product\HeartedProductController;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
+use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\B2bConnectionController;
@@ -106,6 +107,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
     Route::get('/subscriptions', [AdminSubscriptionController::class, 'index']);
     Route::get('/subscriptions/{subscription}', [AdminSubscriptionController::class, 'show']);
     Route::put('/subscriptions/{subscription}/status', [AdminSubscriptionController::class, 'updateInvoiceStatus']);
+
+    //page create
+    Route::get('/pages/{type}', [PageController::class, 'getPageContent']);
+    Route::post('/pages/update', [PageController::class, 'updateOrCreatePage'])->withoutMiddleware(['jwt.auth', 'banned', 'check.role:' . Role::BRAND->value, 'check.role:' . Role::STORE->value, 'check.role:' . Role::WHOLESALER->value])->middleware('guest');
 });
 
 
