@@ -109,8 +109,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
     Route::put('/subscriptions/{subscription}/status', [AdminSubscriptionController::class, 'updateInvoiceStatus']);
 
     //page create
-    Route::get('/pages/{type}', [PageController::class, 'getPageContent']);
-    Route::post('/pages/update', [PageController::class, 'updateOrCreatePage'])->withoutMiddleware(['jwt.auth', 'banned', 'check.role:' . Role::BRAND->value, 'check.role:' . Role::STORE->value, 'check.role:' . Role::WHOLESALER->value])->middleware('guest');
+    Route::get('/pages/{type}', [PageController::class, 'getPageContent'])->withoutMiddleware(['jwt.auth', 'banned', 'check.role:' . Role::ADMIN->value])->middleware('guest');
+    Route::post('/pages/update', [PageController::class, 'updateOrCreatePage']);
 });
 
 

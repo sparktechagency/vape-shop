@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Page;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class PageController extends Controller
@@ -23,6 +24,11 @@ class PageController extends Controller
 
     public function updateOrCreatePage(Request $request)
     {
+
+        Log::info('Update or Create Page Request', [
+            'type' => $request->type,
+            'content' => $request->content
+        ]);
         try {
             $validated = Validator::make($request->all(), [
                 'type' => 'required|string',
