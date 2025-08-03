@@ -44,7 +44,7 @@ class PageController extends Controller
                 ['content' => $request->content]
             );
 
-            return response()->success($page, 'Page updated or created successfully');
+            return response()->success($page, 'Content updated successfully');
         } catch (\Exception $th) {
             return response()->error('Error occurred while updating or creating page', 500, $th->getMessage());
         }
