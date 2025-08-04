@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Forum;
 
+use App\Enums\UserRole\Role;
 use App\Interfaces\Forum\ForumGroupInterface;
 use App\Models\ForumGroup;
 use Illuminate\Support\Facades\Auth;
@@ -153,10 +154,13 @@ class ForumGroupRepository implements ForumGroupInterface
     public function deleteGroup(int $groupId): bool
     {
         $userId = Auth::id();
-        $group = $this->model->where('user_id', $userId)
-            ->find($groupId);
+        $group = $this->model->find($groupId);
+
+        // Allow delete if user is admin or group owner
         if ($group) {
+            if (Auth::user() && (Auth::user()->role === Role::ADMIN->value || $group->user_id == $userId)) {
             return $group->delete();
+            }
         }
         return false;
     }
