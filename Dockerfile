@@ -16,10 +16,13 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg62-turbo-dev \
     libfreetype6-dev \
-    libpq-dev
+    libpq-dev \
+    libwebp-dev \
+    pkg-config \
+    iputils-ping
 
 # Configure and install the gd extension
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) gd
 
 # Install other required PHP extensions

@@ -7,9 +7,11 @@ use App\Models\Slider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Traits\FileUploadTrait;
 
 class SliderController extends Controller
 {
+    use FileUploadTrait;
     /**
      * Display a listing of the resource.
      */
@@ -51,7 +53,17 @@ class SliderController extends Controller
         $image = $request->file('image');
 
         if($image){
-            $imagePath = $image->store('sliders', 'public');
+            // $imagePath = $image->store('sliders', 'public');
+            $imagePath = $this->handleFileUpload(
+                $request,
+                'image',
+                'sliders',
+                1920, // width
+                1080, // height
+                85, // quality
+                true // forceWebp
+            );
+
         }
 
         $slider = new Slider();
@@ -114,7 +126,16 @@ class SliderController extends Controller
 
         if($request->hasFile('image')){
             $image = $request->file('image');
-            $imagePath = $image->store('sliders', 'public');
+            // $imagePath = $image->store('sliders', 'public');
+            $imagePath = $this->handleFileUpload(
+                $request,
+                'image',
+                'sliders',
+                1920, // width
+                1080, // height
+                85, // quality
+                true // forceWebp
+            );
             $slider->image = $imagePath;
         }
 

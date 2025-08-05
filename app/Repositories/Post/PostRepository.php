@@ -7,9 +7,11 @@ use App\Interfaces\Post\PostInterface;
 use App\Models\Post;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Traits\FileUploadTrait;
 
 class PostRepository implements PostInterface
 {
+    use FileUploadTrait;
     protected $post;
 
     public function __construct(Post $post)
@@ -47,7 +49,16 @@ class PostRepository implements PostInterface
                 if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
                     Storage::disk('public')->delete(($oldImagePath));
                 }
-                $data['article_image'] = $data['article_image']->store('articles', 'public');
+                // $data['article_image'] = $data['article_image']->store('articles', 'public');
+                $data['article_image'] = $this->handleFileUpload(
+                    request(),
+                    'article_image',
+                    'articles',
+                    1920, // width
+                    1080, // height
+                    85, // quality
+                    true // forceWebp
+                );
             }
 
             $post->update($data);

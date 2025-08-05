@@ -7,9 +7,11 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use App\Traits\FileUploadTrait;
 
 class ManageProductsService
 {
+    use FileUploadTrait;
     protected $manageProduct;
 
     public function __construct(ManageProductsInterface $manageProductsRepository)
@@ -55,7 +57,16 @@ class ManageProductsService
     {
         // Handle image upload if provided
         if ($productImage) {
-            $imagePath = $productImage->store('products', 'public');
+            // $imagePath = $productImage->store('products', 'public');
+            $imagePath = $this->handleFileUpload(
+                request(),
+                'product_image',
+                'products',
+                null, // width
+                null, // height
+                97, // quality
+                true // forceWebp
+            );
             $data['product_image'] = $imagePath;
         }
 
@@ -82,7 +93,16 @@ class ManageProductsService
 
         if ($productImage) {
             // Store the new image first
-            $imagePath = $productImage->store('products', 'public');
+            // $imagePath = $productImage->store('products', 'public');
+            $imagePath = $this->handleFileUpload(
+                request(),
+                'product_image',
+                'products',
+                null, // width
+                null, // height
+                97, // quality
+                true // forceWebp
+            );
             // Remove old image if it exists
             if (!empty($data['product_image'])) {
                 $oldImagePath = getStorageFilePath($data['product_image']);
