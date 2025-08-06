@@ -35,7 +35,9 @@ trait FileUploadTrait
 
         $file = $request->file($fieldName);
         $originalFileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $fileName = time() . '_' . $originalFileName;
+        $cleanFileName = Str::slug($originalFileName);
+        // $fileName = time() . '_' . $originalFileName;
+        $fileName = time() . '_' . $cleanFileName;
 
         if (str_starts_with($file->getMimeType(), 'image/')) {
             $manager = new ImageManager(new Driver());

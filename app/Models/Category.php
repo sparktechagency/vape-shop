@@ -24,4 +24,14 @@ class Category extends Model
         return $this->hasMany(TrendingProducts::class, 'category_id');
     }
 
+    /**
+     * Get the URL of the category image.
+     *
+     * @return string|null
+     */
+    public function getImageAttribute($value)
+    {
+        return $value ? asset('storage/' . $value) : null;
+    }
+
 }

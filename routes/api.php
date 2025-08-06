@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Product\ManageProductController;
 use App\Http\Controllers\Product\HeartedProductController;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\TransactionController;
@@ -111,6 +112,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
     //page create
     Route::get('/pages/{type}', [PageController::class, 'getPageContent'])->withoutMiddleware(['jwt.auth', 'banned', 'check.role:' . Role::ADMIN->value])->middleware('guest');
     Route::post('/pages/update', [PageController::class, 'updateOrCreatePage']);
+
+    //category
+    Route::apiResource('category',CategoryController::class)->except(['create', 'edit']);
 });
 
 

@@ -19,7 +19,8 @@ class CategorySeeder extends Seeder
             'E-LIQUIDS',
             'BRANDS',
             'NIC POUCHES',
-            'ACCESSORIES'
+            'ACCESSORIES',
+            'OTHERS',
         ];
 
         foreach ($categories as $category) {
