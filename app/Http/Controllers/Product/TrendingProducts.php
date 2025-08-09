@@ -108,8 +108,14 @@ class TrendingProducts extends Controller
 
     public function mostFollowersBrand(Request $request)
     {
+        $regionId = $request->input('region_id');
 
-        $brands = User::where('role', Role::BRAND->value)
+        $brands = User::with('address')->where('role', Role::BRAND->value)
+            ->whereHas('address', function ($query) use ($regionId) {
+                $query->when($regionId, function ($q) use ($regionId) {
+                    $q->where('region_id', $regionId);
+                });
+            })
             ->whereHas('followers')
             ->withCount('followers')
             ->orderByDesc('followers_count')

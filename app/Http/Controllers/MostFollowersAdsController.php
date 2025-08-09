@@ -155,7 +155,7 @@ class MostFollowersAdsController extends Controller
 
         if ($adRequestMostFollowers->isEmpty()) {
             return response()->error(
-                'No ad requests products found.',
+                'No ad requests followers found.',
                 404
             );
         }
