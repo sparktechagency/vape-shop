@@ -52,10 +52,22 @@ class TrendingProducts extends Controller
     //ad requests products
     public function adRequestsProducts(Request $request)
     {
+        $regionId = $request->input('region_id');
+        $categoryId = $request->input('category_id');
         $adRequestsProducts = ModelsTrendingProducts::with(['product:id,product_name,product_image,user_id,product_price'])
             ->where('status', 'approved')
-            ->where('is_active', true)
-            ->orderBy('display_order')
+            ->where('is_active', true);
+            // ->orderBy('display_order')
+            // ->take(8)
+            // ->get();
+        if ($regionId) {
+            $adRequestsProducts->where('region_id', $regionId);
+        }
+        if ($categoryId) {
+            $adRequestsProducts->where('category_id', $categoryId);
+        }
+
+        $adRequestsProducts = $adRequestsProducts->orderBy('display_order')
             ->take(8)
             ->get();
 
@@ -65,10 +77,16 @@ class TrendingProducts extends Controller
                 404
             );
         }
+
         $adRequestsProducts->transform(function ($adRequest) {
             return [
                 'id' => $adRequest->id,
                 'product_id' => $adRequest->product_id,
+                'category_id' => $adRequest->category_id,
+                'region_id' => $adRequest->region_id,
+                'preferred_duration' => $adRequest->preferred_duration,
+                'amount' => $adRequest->amount,
+                'slot' => $adRequest->slot,
                 'product_name' => $adRequest->Product->product_name ?? null,
                 'product_image' => $adRequest->Product->product_image ?? null,
                 'product_price' => $adRequest->Product->product_price ?? null,

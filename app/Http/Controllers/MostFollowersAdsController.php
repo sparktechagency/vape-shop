@@ -139,10 +139,17 @@ class MostFollowersAdsController extends Controller
     //ad requests products
     public function adRequestMostFollower(Request $request)
     {
+        $regionId = $request->input('region_id');
         $adRequestMostFollowers = MostFollowerAd::with(['user:id,first_name,last_name,role,cover_photo,avatar'])
             ->where('status', 'approved')
-            ->where('is_active', true)
-            ->orderBy('display_order')
+            ->where('is_active', true);
+            // ->orderBy('display_order')
+            // ->take(8)
+            // ->get();
+        if ($regionId) {
+            $adRequestMostFollowers->where('region_id', $regionId);
+        }
+        $adRequestMostFollowers = $adRequestMostFollowers->orderBy('display_order')
             ->take(8)
             ->get();
 
