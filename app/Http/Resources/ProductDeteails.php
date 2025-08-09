@@ -25,6 +25,7 @@ class ProductDeteails extends JsonResource
             'brand_name' => $this->brand_name,
             'product_description' => $this->product_description,
             'product_faqs' => $this->product_faqs,
+            'stock' => $this->product_stock,
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
             'is_hearted' => $this->is_hearted,

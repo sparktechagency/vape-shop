@@ -31,6 +31,7 @@ use App\Http\Controllers\Product\HeartedProductController;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\RegionController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\B2bConnectionController;
@@ -115,6 +116,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
 
     //category
     Route::apiResource('category',CategoryController::class)->except(['create', 'edit']);
+    Route::apiResource('region', RegionController::class)->except(['create', 'edit']);
 });
 
 
