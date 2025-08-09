@@ -97,6 +97,7 @@ class PostRepository implements PostInterface
         $perPage = request()->input('per_page', 10);
         $content_type = request()->get('content_type', 'post');
         $isGlobal = request()->boolean('is_global');
+        $regionId = request()->get('region_id', null);
         $userId = Auth::id();
         // dd($content_type, $isGlobal, $userId);
         if ($content_type === 'article') {
@@ -106,6 +107,9 @@ class PostRepository implements PostInterface
         }
         if (!$isGlobal && $userId) {
             $query->where('user_id', $userId);
+        }
+        if ($regionId) {
+            $query->whereRelation('user.address', 'region_id', $regionId);
         }
         return $query->paginate($perPage);
     }
