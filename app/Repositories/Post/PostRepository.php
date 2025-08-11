@@ -87,8 +87,11 @@ class PostRepository implements PostInterface
     //get post by id
     public function getPostById(int $postId)
     {
-        $userId = Auth::id();
-        return $this->post->where('user_id', $userId)
+        $user = Auth::user();
+        if ($user->role === Role::ADMIN->value) {
+            return $this->post->where('id', $postId)->first();
+        }
+        return $this->post->where('user_id', $user->id)
             ->where('id', $postId)
             ->first();
     }
