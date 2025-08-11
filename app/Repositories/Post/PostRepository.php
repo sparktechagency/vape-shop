@@ -59,6 +59,8 @@ class PostRepository implements PostInterface
                     85, // quality
                     true // forceWebp
                 );
+            }else{
+                $data['article_image'] = getStorageFilePath($post->article_image); // keep old image if not updated
             }
 
             $post->update($data);
