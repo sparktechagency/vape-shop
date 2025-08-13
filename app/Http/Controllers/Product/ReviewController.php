@@ -298,25 +298,58 @@ class ReviewController extends Controller
 
             $userId = $request->get('user_id');
             $user = $userId ? User::find($userId) : Auth::user();
+            if (!$user) {
+                return response()->error('User not authenticated.', 401);
+            }
             // dd($user);
             $userReview = $user ? $user->allReviews()
                 ->with([
-                    'manageProducts:id,user_id,product_name,product_image',
-                    'storeProducts:id,user_id,product_name,product_image',
-                    'wholesalerProducts:id,user_id,product_name,product_image'
+                    'manageProducts' => function ($q) {
+                        $q->select('id', 'user_id', 'product_name', 'product_image')
+                            ->with(['user:id,first_name,last_name,role,avatar']);
+                    },
+                    'storeProducts' => function ($q) {
+                        $q->select('id', 'user_id', 'product_name', 'product_image')
+                            ->with(['user:id,first_name,last_name,role,avatar']);
+                    },
+                    'wholesalerProducts' => function ($q) {
+                        $q->select('id', 'user_id', 'product_name', 'product_image')
+                            ->with(['user:id,first_name,last_name,role,avatar']);
+                    },
                 ])
                 ->latest()
                 ->take(10)
                 ->get() : null;
             $userReview->transform(function ($review) {
-                $review->product = $review->manageProducts ?: $review->storeProducts ?: $review->wholesalerProducts;
+                $product = $review->manageProducts ?: $review->storeProducts ?: $review->wholesalerProducts;
+
+                if ($product) {
+                    $review->product = $product;
+
+                    // user data only required fields
+                    $user = $product->getRelation('user');
+                    if ($user) {
+                        $review->product_user = collect($user)->only([
+                            'id',
+                            'full_name',
+                            'role',
+                            'role_label',
+                            'avatar'
+                        ]);
+                    } else {
+                        $review->product_user = null;
+                    }
+                } else {
+                    $review->product = null;
+                    $review->product_user = null;
+                }
+
                 return $review;
             });
+
             $userReview->makeHidden(['manageProducts', 'storeProducts', 'wholesalerProducts']);
             // dd($userReview);
-            if (!$user) {
-                return response()->error('User not authenticated.', 401);
-            }
+
             if (!$userReview) {
                 return response()->error('No reviews found for the user.', 404);
             }
