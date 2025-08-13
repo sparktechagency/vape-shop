@@ -187,7 +187,7 @@ class ReviewController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     ** Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
@@ -235,7 +235,7 @@ class ReviewController extends Controller
     }
 
 
-    //toggle review like
+    //**toggle review like
     public function toggleReviewLike(Review $review)
     {
 
@@ -260,24 +260,27 @@ class ReviewController extends Controller
     }
 
 
-    //most rated reviews
-
+    //**most rated reviews
     public function mostRatedReviews(Request $request)
     {
+        $regionId = $request->input('region_id');
 
-        // Fetch most rated reviews based on role
-
-        $mostRatedReviews = Review::whereNotNull('rating')
+        $query = Review::whereNotNull('rating')
             ->whereNull('store_product_id')
-            ->whereNull('parent_id')
-            ->with([
-                'manageProducts' => function ($query) {
-                    $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
-                        ->with('category:id,name');
-                },
+            ->whereNull('parent_id');
 
-                'user:id,first_name,last_name,role,avatar'
-            ])
+        $query->when($regionId, function ($q) use ($regionId) {
+            $q->whereHas('user.address', function ($addressQuery) use ($regionId) {
+                $addressQuery->where('region_id', $regionId);
+            });
+        });
+        $mostRatedReviews = $query->with([
+            'manageProducts' => function ($query) {
+                $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
+                    ->with('category:id,name');
+            },
+            'user:id,first_name,last_name,role,avatar'
+        ])
             ->withCount(['likedByUsers as like_count', 'replies'])
             ->with('replies')
             ->having('like_count', '>', 0)
@@ -291,7 +294,8 @@ class ReviewController extends Controller
         return response()->success($mostRatedReviews, 'Most rated reviews retrieved successfully.', 200);
     }
 
-    //auth user letest reviews
+
+    //**auth user letest reviews
     public function userLatestReviews(Request $request)
     {
         try {
