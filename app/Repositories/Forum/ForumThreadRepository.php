@@ -79,11 +79,7 @@ class ForumThreadRepository implements ForumThreadInterface
     }
     public function deleteThread($threadId) : bool
     {
-        $userId = Auth::id();
-        $thread = $this->model->where('user_id',$userId)->find($threadId);
-        if (!$thread) {
-            return false;
-        }
+        $thread = $this->model->find($threadId);
         return $thread->delete();
     }
     public function getThreadComments($threadId)

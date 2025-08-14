@@ -189,11 +189,15 @@ class ForumThreadController extends Controller
     {
         try {
             $thread = ForumThread::findOrFail($id);
-
-            // POLICY CHECK: Check if the user can delete this thread
+            // dd($thread);
+            // Check if the user can delete this thread
             $this->authorize('delete', $thread);
 
-            $this->forumThreadService->deleteThread($id);
+            $thread = $this->forumThreadService->deleteThread($id);
+            if (!$thread) {
+                return response()->error('Thread not found or you do not have permission to delete it', 404);
+            }
+
             return response()->success(null, 'Thread deleted successfully');
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return response()->error('You do not have permission to delete this thread.', 403);
