@@ -29,6 +29,7 @@ class ManageProductsRepository implements ManageProductsInterface
             ->toArray(),
 
             Role::WHOLESALER->value => WholesalerProduct::with('user')
+            ->where('user_id', Auth::id())
             ->when($is_most_hearted, function ($query) {
                 $query->withCount('hearts')->orderByDesc('hearts_count');
             })
