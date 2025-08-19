@@ -17,6 +17,11 @@ class Category extends Model
     {
         return $this->hasMany(StoreProduct::class, 'category_id');
     }
+    //wholesale products relationship
+    public function wholesale_products()
+    {
+        return $this->hasMany(WholesalerProduct::class, 'category_id');
+    }
 
     //trending products relationship
     public function trending_products()

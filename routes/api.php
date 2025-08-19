@@ -116,6 +116,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
 
     //category
     Route::apiResource('category',CategoryController::class)->except(['create', 'edit']);
+    //get all products by category
+    Route::get('/category/{category}/products', [CategoryController::class, 'getProductsByCategory']);
     Route::apiResource('region', RegionController::class)->except(['create', 'edit']);
 });
 

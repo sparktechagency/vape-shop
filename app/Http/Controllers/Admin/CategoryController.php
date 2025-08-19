@@ -24,7 +24,10 @@ class CategoryController extends Controller
     public function index()
     {
         try{
-            $categories = Category::all();
+            $categories = Category::withCount(['manage_products', 'store_products', 'wholesale_products'])
+                ->orderBy('id', 'desc')
+                ->get();
+
             if ($categories->isEmpty()) {
                 return response()->error('No categories found.', 404);
             }
@@ -99,7 +102,7 @@ class CategoryController extends Controller
             }
             return response()->success($category, 'Category retrieved successfully.');
         } catch (\Exception $e) {
-            return response()->error('An error occurred while retrieving the category: ' . $e->getMessage(), 500);  
+            return response()->error('An error occurred while retrieving the category: ' . $e->getMessage(), 500);
         }
     }
 
@@ -165,11 +168,11 @@ class CategoryController extends Controller
      */
     public function destroy(string $id)
     {
-    $protectedIds = Category::orderBy('id')->limit(6)->pluck('id')->toArray();
+    // $protectedIds = Category::orderBy('id')->limit(6)->pluck('id')->toArray();
 
-    if (in_array($id, $protectedIds)) {
-        return response()->error('This category cannot be deleted.', 403);
-    }
+    // if (in_array($id, $protectedIds)) {
+    //     return response()->error('This category cannot be deleted.', 403);
+    // }
 
     $category = Category::find($id);
     if (!$category) {
@@ -187,4 +190,26 @@ class CategoryController extends Controller
         return response()->error('Failed to delete category.', 500);
     }
     }
+
+   //get product by category
+    public function getProductsByCategory(Category $category)
+    {
+        try{
+        $perPage = request()->input('per_page', 10);
+        $manageProducts = $category->manage_products()->paginate($perPage);
+        $storeProducts = $category->store_products()->paginate($perPage);
+        $wholesaleProducts = $category->wholesale_products()->paginate($perPage);
+        $trendingProducts = $category->trending_products()->paginate($perPage);
+
+        return response()->success([
+            'manage_products' => $manageProducts,
+            'store_products' => $storeProducts,
+            'wholesale_products' => $wholesaleProducts,
+            'trending_products' => $trendingProducts,
+        ], 'Products retrieved successfully.');
+        } catch (\Exception $e) {
+            return response()->error('An error occurred while retrieving products: ' . $e->getMessage(), 500);
+        }
+    }
+
 }
