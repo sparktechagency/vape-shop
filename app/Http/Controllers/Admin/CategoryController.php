@@ -24,7 +24,7 @@ class CategoryController extends Controller
     public function index()
     {
         try{
-            $categories = Category::withCount(['manage_products', 'store_products', 'wholesale_products'])
+            $categories = Category::withCount(['manage_products as brand_products_count', 'store_products', 'wholesale_products'])
                 ->orderBy('id', 'desc')
                 ->get();
 
