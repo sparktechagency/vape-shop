@@ -33,7 +33,7 @@ class UpdateProfileRequest extends FormRequest
             'dob' => 'nullable|date_format:d-m-Y',
             // 'role' => 'required|string|max:255|in:2,3,4,5,6',
             // 'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'nullable|regex:/^\+?[0-9]{10,15}$/|unique:users,phone,'. Auth::id(),
+            'phone' => 'nullable|regex:/^\+?[0-9]{10,15}$/',
             'address' => Auth::user()->role == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
             'zip_code' => Auth::user()->role == Role::STORE->value ? 'required|string|max:10' : 'nullable|string|max:10',
             'region_id' => Auth::user()->role == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
