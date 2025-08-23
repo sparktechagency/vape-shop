@@ -28,6 +28,10 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
 # Install other required PHP extensions
 RUN docker-php-ext-install -j$(nproc) pdo pdo_mysql mbstring exif pcntl bcmath zip
 
+# Install redis extension via PECL
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
 # Get the latest Composer binary
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -42,9 +46,18 @@ COPY . .
 RUN composer install --no-interaction --no-plugins --no-scripts --optimize-autoloader
 
 
-# First, we set the ownership and permissions.
-# Then, using '&&', we start the main process, 'php-fpm'.
-CMD /bin/sh -c 'chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache && chmod -R 775 /var/www/storage /var/www/bootstrap/cache && php-fpm'
+# Copy the new entrypoint script into the container
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+
+# Make the entrypoint script executable
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Set the entrypoint script to be executed when the container starts
+ENTRYPOINT ["entrypoint.sh"]
+
+# Set the default command to run (this will be passed to the entrypoint)
+# This now uses the recommended exec form for graceful shutdowns
+CMD ["php-fpm"]
 
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
