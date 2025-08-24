@@ -18,7 +18,7 @@ class HomeService
     public function search(?string $searchTerm, ?string $type, int $perPage, int $regionId)
     {
         // Validate the type
-        if (!in_array($type, ['products', 'store', 'brand', 'wholesaler', 'accounts','association'])) {
+        if (!in_array($type, ['products', 'store', 'brand', 'wholesaler', 'accounts', 'association'])) {
             throw new \InvalidArgumentException('Invalid type provided. Allowed types are: products, store, brand, wholesaler and accounts.');
         }
         // Validate the search term
@@ -54,5 +54,4 @@ class HomeService
         // Call the repository method to get the data
         return $this->repository->getProductsByRoleId($type, $userId, $perPage);
     }
-
 }

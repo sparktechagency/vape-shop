@@ -165,7 +165,7 @@ class HomeController extends Controller
                 return collect($this->homeService->getProductsByRoleId($type, (int)$userId, (int)$perPage));
             });
 
-            // return $data;
+            return $data;
             if ($data->isEmpty()) {
                 return response()->error('No data found', 404);
             }

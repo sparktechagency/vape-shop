@@ -7,6 +7,7 @@ use App\Interfaces\Front\HomeInterface;
 use App\Models\ManageProduct;
 use App\Models\StoreProduct;
 use App\Models\User;
+use App\Models\WholesalerProduct;
 use Illuminate\Contracts\Cache\Store;
 
 class HomeRepository implements HomeInterface
@@ -83,8 +84,17 @@ class HomeRepository implements HomeInterface
                 ];
 
             case 'wholesaler':
-                // Future logic can go here
-                return [];
+                if ($user->role !== Role::WHOLESALER->value) return [];
+                $query = WholesalerProduct::where('user_id', $userId)->withCount('hearts');
+                if ($is_most_hearted) {
+                    $query->orderByDesc('hearts_count');
+                } else {
+                    $query->orderByDesc('created_at');
+                }
+                return [
+                    'user' => $user,
+                    'products' => $query->paginate($perPage),
+                ];
 
             default:
                 return [];
