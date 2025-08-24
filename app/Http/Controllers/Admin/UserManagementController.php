@@ -25,13 +25,19 @@ class UserManagementController extends Controller
         $search = $request->input('search', '');
 
         $query = match ($role) {
-            Role::MEMBER->value => User::with('address.region.country')->where('role', Role::MEMBER->value),
-            Role::STORE->value => User::with('address.region.country')->where('role', Role::STORE->value),
-            Role::BRAND->value => User::with('address.region.country')->where('role', Role::BRAND->value),
-            Role::WHOLESALER->value => User::with('address.region.country')->where('role', Role::WHOLESALER->value),
-            Role::ASSOCIATION->value => User::with('address.region.country')->where('role', Role::ASSOCIATION->value),
-            default => User::with('address.region.country')->where('role', '!=', Role::ADMIN->value)
+            Role::MEMBER->value => User::query(),
+            Role::STORE->value => User::query(),
+            Role::BRAND->value => User::query(),
+            Role::WHOLESALER->value => User::query(),
+            Role::ASSOCIATION->value => User::query(),
+            default => User::where('role', '!=', Role::ADMIN->value)
         };
+
+        // If a specific role is requested, filter by it
+        if (in_array($role, [Role::MEMBER->value, Role::STORE->value, Role::BRAND->value, Role::WHOLESALER->value, Role::ASSOCIATION->value])) {
+            $query->where('role', $role);
+        }
+
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
@@ -41,8 +47,14 @@ class UserManagementController extends Controller
             });
         }
 
-        $users = $query->with('favourites')->latest()->paginate($perPage);
-
+        $users = $query->with([
+            'address.region.country',
+            'favourites',
+            'subscriptions' => function ($q) {
+                $q->select('id', 'invoice_status', 'ends_at', 'subscribable_id', 'subscribable_type');
+            }
+        ])->latest()->paginate($perPage);
+            // return response()->success($users, 'Users retrieved successfully.');
         if ($users->isEmpty()) {
             return response()->error('No users found for the specified role.', 404);
         }
@@ -136,7 +148,7 @@ class UserManagementController extends Controller
         if ($user->isSuspended()) {
             return response()->error("User '{$user->full_name}' is already suspended.", 400);
         }
-        $days = (INT)$request->input('days');
+        $days = (int)$request->input('days');
         $user->suspended_at = now();
         $user->suspended_until = now()->addDays($days);
         $user->suspend_reason = $request->input('reason');
@@ -144,7 +156,7 @@ class UserManagementController extends Controller
 
         $user->notify(new UserSuspendedNotification($user->suspend_reason, $user->suspended_until));
 
-         $data = [
+        $data = [
             'suspended_until' => $user->suspended_until->toDateTimeString(),
             'reason' => $user->suspend_reason,
         ];
@@ -156,8 +168,8 @@ class UserManagementController extends Controller
     public function suspendedUsers()
     {
         $suspendedUsers = User::where('suspended_until', '>', now())
-                                ->whereNotNull('suspended_at')
-                                ->get();
+            ->whereNotNull('suspended_at')
+            ->get();
 
         $data = $suspendedUsers->map(function ($user) {
             $suspendedAt = $user->suspended_at;
@@ -184,7 +196,8 @@ class UserManagementController extends Controller
     /**
      * User er suspension tule nebe.
      */
-    public function unsuspend(User $user){
+    public function unsuspend(User $user)
+    {
 
         // Check if the user is suspended
         if (!$user->isSuspended()) {
@@ -200,7 +213,7 @@ class UserManagementController extends Controller
 
 
     //admin send notification to user
-     public function sendNotification(Request $request, User $user)
+    public function sendNotification(Request $request, User $user)
     {
         // $request->validate([
         //     'title' => 'required|string|max:255',
@@ -228,4 +241,3 @@ class UserManagementController extends Controller
         return response()->success(null, "Notification sent successfully to '{$user->full_name}'.");
     }
 }
-
