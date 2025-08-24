@@ -14,12 +14,12 @@ class ForumGroupController extends Controller
 {
 
     protected $forumGroupService;
-    
+
     // Cache configuration
     private const CACHE_TTL = 1800; // 30 minutes
     private const GROUP_INDEX_CACHE_KEY = 'forum_groups_index';
     private const GROUP_SHOW_CACHE_PREFIX = 'forum_group_show';
-    
+
     public function __construct(ForumGroupService $forumGroupService)
     {
         $this->middleware('jwt.auth')->except(['index', 'show']);
@@ -113,7 +113,7 @@ class ForumGroupController extends Controller
         try{
             // Generate cache key for specific group
             $cacheKey = $this->generateCacheKey(self::GROUP_SHOW_CACHE_PREFIX, ['id' => $id]);
-            
+
             // Use cache for single group with tags
             $result = Cache::tags(['forum', 'groups'])->remember($cacheKey, self::CACHE_TTL, function () use ($id) {
                 return $this->forumGroupService->getGroupById((int)$id);

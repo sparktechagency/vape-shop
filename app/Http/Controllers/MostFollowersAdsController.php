@@ -156,7 +156,7 @@ class MostFollowersAdsController extends Controller
     public function adRequestMostFollower(Request $request)
     {
         $regionId = $request->input('region_id');
-        
+
         // Generate cache key based on parameters
         $cacheKey = $this->generateCacheKey(self::ADS_REQUEST_CACHE_PREFIX, [
             'region_id' => $regionId

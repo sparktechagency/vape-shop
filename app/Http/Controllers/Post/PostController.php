@@ -13,11 +13,11 @@ class PostController extends Controller
 {
 
     protected $postService;
-    
+
     // Cache configuration
     private const CACHE_TTL = 1800; // 30 minutes
     private const USER_POSTS_CACHE_PREFIX = 'user_posts';
-    
+
     public function __construct(PostService $postService)
     {
         $this->middleware('jwt.auth')->except(['index', 'show']);
@@ -159,7 +159,7 @@ class PostController extends Controller
         try {
             $perPage = request()->input('per_page', 10);
             $page = request()->input('page', 1);
-            
+
             // Generate cache key based on user ID and pagination
             $cacheKey = $this->generateCacheKey(self::USER_POSTS_CACHE_PREFIX, [
                 'user_id' => $userId,
@@ -180,7 +180,7 @@ class PostController extends Controller
                 ->where('user_id', $userId)
                 ->paginate($perPage);
             });
-            
+
             if ($posts->isEmpty()) {
                 return response()->error('No posts found for this user', 404);
             }

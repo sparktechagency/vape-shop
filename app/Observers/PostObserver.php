@@ -55,7 +55,7 @@ class PostObserver
         try {
             // Clear cache tags related to posts and feeds
             Cache::tags(['posts', 'feed', 'users'])->flush();
-            
+
             // Clear user-specific caches if needed
             if ($post->user_id) {
                 Cache::tags(['users'])->flush();

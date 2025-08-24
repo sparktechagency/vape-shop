@@ -13,12 +13,12 @@ use Illuminate\Support\Facades\Cache;
 class FollowersController extends Controller
 {
     protected $followerService;
-    
+
     // Cache configuration
     private const CACHE_TTL = 1800; // 30 minutes
     private const FOLLOWERS_CACHE_PREFIX = 'user_followers';
     private const FOLLOWING_CACHE_PREFIX = 'user_following';
-    
+
     public function __construct(FollowerService $followerService)
     {
         $this->followerService = $followerService;
@@ -49,7 +49,7 @@ class FollowersController extends Controller
             $userId = $request->user_id ?? Auth::id();
             $page = $request->input('page', 1);
             $perPage = $request->input('per_page', 15);
-            
+
             // Generate cache key based on user ID and pagination
             $cacheKey = $this->generateCacheKey(self::FOLLOWERS_CACHE_PREFIX, [
                 'user_id' => $userId,
@@ -61,7 +61,7 @@ class FollowersController extends Controller
             $followers = Cache::tags(['users', 'followers'])->remember($cacheKey, self::CACHE_TTL, function () use ($userId) {
                 return $this->followerService->getAllFollowers($userId);
             });
-            
+
             if ($followers->isEmpty()) {
                 return response()->error('No followers found', 404);
             }
@@ -89,7 +89,7 @@ class FollowersController extends Controller
             $userId = $request->user_id ?? Auth::id();
             $page = $request->input('page', 1);
             $perPage = $request->input('per_page', 15);
-            
+
             // Generate cache key based on user ID and pagination
             $cacheKey = $this->generateCacheKey(self::FOLLOWING_CACHE_PREFIX, [
                 'user_id' => $userId,
@@ -101,7 +101,7 @@ class FollowersController extends Controller
             $following = Cache::tags(['users', 'followers'])->remember($cacheKey, self::CACHE_TTL, function () use ($userId) {
                 return $this->followerService->getAllFollowing($userId);
             });
-            
+
             if ($following->isEmpty()) {
                 return response()->error('No following found', 404);
             }
