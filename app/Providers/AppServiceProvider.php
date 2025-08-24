@@ -20,15 +20,20 @@ use App\Models\ForumThread;
 use App\Models\MostFollowerAd;
 use App\Models\Order;
 use App\Models\Post;
+use App\Models\Review;
+use App\Models\Message;
 use App\Models\User;
 use App\Models\ManageProduct;
 use App\Models\Slider;
 use App\Models\Category;
 use App\Observers\FollowerObserver;
 use App\Observers\ForumGroupObserver;
+use App\Observers\ForumThreadObserver;
+use App\Observers\MessageObserver;
 use App\Observers\MostFollowerAdObserver;
 use App\Observers\OrderObserver;
 use App\Observers\PostObserver;
+use App\Observers\ReviewObserver;
 use App\Observers\UserObserver;
 use App\Observers\ManageProductObserver;
 use App\Observers\SliderObserver;
@@ -93,10 +98,13 @@ class AppServiceProvider extends ServiceProvider
         ManageProduct::observe(ManageProductObserver::class);
         Slider::observe(SliderObserver::class);
         Category::observe(CategoryObserver::class);
-        
+
         // New observers for cache management
         ForumGroup::observe(ForumGroupObserver::class);
+        ForumThread::observe(ForumThreadObserver::class);
         Post::observe(PostObserver::class);
+        Review::observe(ReviewObserver::class);
+        Message::observe(MessageObserver::class);
         MostFollowerAd::observe(MostFollowerAdObserver::class);
         Follower::observe(FollowerObserver::class);
 

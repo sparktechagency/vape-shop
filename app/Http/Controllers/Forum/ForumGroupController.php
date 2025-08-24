@@ -48,8 +48,25 @@ class ForumGroupController extends Controller
     public function index()
     {
         try{
-            // Use cache for forum groups listing
-            $result = Cache::tags(['forum', 'groups'])->remember(self::GROUP_INDEX_CACHE_KEY, self::CACHE_TTL, function () {
+            // Generate cache key including pagination and filtering parameters
+            $page = request()->get('page', 1);
+            $perPage = request()->get('per_page', 10);
+            $isTrending = request()->boolean('is_trending');
+            $isGlobal = request()->boolean('show_front');
+            $userIdFilter = request()->get('user_id');
+            $isLatest = request()->boolean('is_latest', false);
+
+            $cacheKey = $this->generateCacheKey(self::GROUP_INDEX_CACHE_KEY, [
+                'page' => $page,
+                'per_page' => $perPage,
+                'is_trending' => $isTrending,
+                'show_front' => $isGlobal,
+                'user_id' => $userIdFilter,
+                'is_latest' => $isLatest
+            ]);
+
+            // Use cache for forum groups listing with pagination support
+            $result = Cache::tags(['forum', 'groups'])->remember($cacheKey, self::CACHE_TTL, function () {
                 return $this->forumGroupService->getAllGroups();
             });
 

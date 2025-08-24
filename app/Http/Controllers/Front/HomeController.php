@@ -51,33 +51,6 @@ class HomeController extends Controller
         return CacheService::clearByTags($tags);
     }
 
-    /**
-     * Manual cache clearing endpoints for admin
-     */
-    public function clearUserCache()
-    {
-        if (CacheService::clearUserCache()) {
-            return response()->success(null, 'User cache cleared successfully');
-        }
-        return response()->error('Failed to clear user cache', 500);
-    }
-
-    public function clearStoreCache()
-    {
-        if (CacheService::clearStoreCache()) {
-            return response()->success(null, 'Store cache cleared successfully');
-        }
-        return response()->error('Failed to clear store cache', 500);
-    }
-
-    public function clearProductCache()
-    {
-        if (CacheService::clearProductCache()) {
-            return response()->success(null, 'Product cache cleared successfully');
-        }
-        return response()->error('Failed to clear product cache', 500);
-    }
-
 
 
     //search brand, shops, products, all account except admin,  and everithing
@@ -165,7 +138,6 @@ class HomeController extends Controller
                 return collect($this->homeService->getProductsByRoleId($type, (int)$userId, (int)$perPage));
             });
 
-            return $data;
             if ($data->isEmpty()) {
                 return response()->error('No data found', 404);
             }

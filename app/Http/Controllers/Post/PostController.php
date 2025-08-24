@@ -46,7 +46,22 @@ class PostController extends Controller
     public function index()
     {
         try {
-            $posts = $this->postService->getAllPosts();
+            $page = request()->get('page', 1);
+            $perPage = request()->get('per_page', 10);
+            $isGlobal = request()->boolean('is_global');
+
+            // Generate cache key with all parameters
+            $cacheKey = $this->generateCacheKey('posts_index', [
+                'page' => $page,
+                'per_page' => $perPage,
+                'is_global' => $isGlobal
+            ]);
+
+            // Try to get from cache first
+            $posts = Cache::tags(['posts', 'users'])->remember($cacheKey, self::CACHE_TTL, function () {
+                return $this->postService->getAllPosts();
+            });
+
             if ($posts->isEmpty()) {
                 return response()->error('No posts found', 404);
             }

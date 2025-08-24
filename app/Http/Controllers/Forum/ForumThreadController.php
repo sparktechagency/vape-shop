@@ -10,10 +10,17 @@ use App\Models\FourmLike;
 use App\Services\Forum\ForumThreadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class ForumThreadController extends Controller
 {
     protected $forumThreadService;
+
+    // Cache configuration
+    private const CACHE_TTL = 1800; // 30 minutes
+    private const THREAD_INDEX_CACHE_PREFIX = 'forum_threads_index';
+    private const THREAD_SHOW_CACHE_PREFIX = 'forum_thread_show';
+
     public function __construct(ForumThreadService $forumThreadService)
     {
         $this->middleware('jwt.auth')->except(['index', 'show']);
@@ -25,28 +32,20 @@ class ForumThreadController extends Controller
     }
 
     /**
+     * Generate cache key for forum threads
+     */
+    private function generateCacheKey(string $prefix, array $params = []): string
+    {
+        $key = $prefix;
+        if (!empty($params)) {
+            $key .= '_' . md5(json_encode($params));
+        }
+        return $key;
+    }
+
+    /**
      * Display a listing of the resource.
      */
-    // public function index()
-    // {
-    //     try {
-    //         $groupId = request()->query('group_id');
-    //         if (!$groupId) {
-    //             return response()->error('Group ID is required', 400);
-    //         }
-    //         $threads = $this->forumThreadService->getAllThreads($groupId);
-    //         if (!empty($threads) && isset($threads['data']) && !empty($threads['data'])) {
-    //             return response()->success($threads, 'Threads retrieved successfully', 200);
-
-    //         }else {
-    //             return response()->error('No threads found for this group', 404);
-    //         }
-
-    //     } catch (\Exception $e) {
-    //         return response()->error('Failed to retrieve threads', 500, $e->getMessage());
-    //     }
-    // }
-
     public function index()
     {
         try {
@@ -58,10 +57,23 @@ class ForumThreadController extends Controller
             // Fetch the group to ensure it exists and the user has permission to view threads
             $group = ForumGroup::findOrFail($groupId);
 
-            // POLICY CHECK: Check if the user can view threads in this group
-            // $this->authorize('viewAny', [ForumThread::class, $group]);
+            // Generate cache key based on group ID, pagination, and filtering parameters
+            $page = request()->get('page', 1);
+            $perPage = request()->get('per_page', 10);
+            $isMostViewed = request()->get('is_most_viewed', false);
 
-            $threads = $this->forumThreadService->getAllThreads($groupId);
+            $cacheKey = $this->generateCacheKey(self::THREAD_INDEX_CACHE_PREFIX, [
+                'group_id' => $groupId,
+                'page' => $page,
+                'per_page' => $perPage,
+                'is_most_viewed' => $isMostViewed
+            ]);
+
+            // Use cache for forum threads with tags
+            $threads = Cache::tags(['forum', 'threads', 'groups'])->remember($cacheKey, self::CACHE_TTL, function () use ($groupId) {
+                return $this->forumThreadService->getAllThreads($groupId);
+            });
+
             if (!empty($threads['data'])) {
                 return response()->success($threads, 'Threads retrieved successfully');
             } else {
@@ -136,7 +148,14 @@ class ForumThreadController extends Controller
     public function show(string $id)
     {
         try {
-            $thread = $this->forumThreadService->getThreadById($id);
+            // Generate cache key for specific thread
+            $cacheKey = $this->generateCacheKey(self::THREAD_SHOW_CACHE_PREFIX, ['id' => $id]);
+
+            // Use cache for single thread with tags (shorter TTL due to view count increment)
+            $thread = Cache::tags(['forum', 'threads'])->remember($cacheKey, 600, function () use ($id) { // 10 minutes
+                return $this->forumThreadService->getThreadById($id);
+            });
+
             if (!$thread) {
                 return response()->error('Thread not found', 404);
             }

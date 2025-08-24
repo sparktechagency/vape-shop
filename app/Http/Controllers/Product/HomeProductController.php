@@ -31,9 +31,11 @@ class HomeProductController extends Controller
     {
         try {
             $role = request()->get('role');
+            $page = request()->get('page', 1);
+            $perPage = request()->get('per_page', 10);
 
-            // Generate cache key based on role
-            $cacheKey = "home_products_role_{$role}";
+            // Generate cache key based on role and pagination
+            $cacheKey = "home_products_role_{$role}_page_{$page}_per_page_{$perPage}";
 
             // Use cache with tags
             $products = Cache::tags(['products', 'home'])->remember($cacheKey, self::CACHE_TTL, function () use ($role) {
