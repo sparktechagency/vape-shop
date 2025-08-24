@@ -4,20 +4,43 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Slider;
+use App\Services\CacheService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
 use App\Traits\FileUploadTrait;
 
 class SliderController extends Controller
 {
     use FileUploadTrait;
+
+    // Cache key for sliders
+    private const SLIDERS_CACHE_KEY = 'sliders_list';
+    private const CACHE_TTL = 3600; // 1 hour
+
+    /**
+     * Clear all slider-related cache using CacheService
+     */
+    private function clearSliderCache($sliderId = null)
+    {
+        // Clear specific slider tags
+        CacheService::clearByTags(['sliders', 'home']);
+
+        if ($sliderId) {
+            CacheService::clearByTag("slider_{$sliderId}");
+        }
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $sliders = Slider::all();
+        $sliders = Cache::tags(['sliders', 'home'])->remember(self::SLIDERS_CACHE_KEY, self::CACHE_TTL, function () {
+            return Slider::all();
+        });
+
         if($sliders->isEmpty()){
             return response()->error('No sliders found.', 404);
         }
@@ -71,6 +94,8 @@ class SliderController extends Controller
         $slider->save();
 
         if($slider){
+            // Clear cache when new slider is created
+            $this->clearSliderCache();
             return response()->success($slider, 'Slider created successfully.');
         } else {
             return response()->error('Failed to create slider.', 500);
@@ -83,7 +108,11 @@ class SliderController extends Controller
      */
     public function show(string $id)
     {
-        $slider = Slider::find($id);
+        $cacheKey = "slider_{$id}";
+        $slider = Cache::tags(['sliders', 'home'])->remember($cacheKey, self::CACHE_TTL, function () use ($id) {
+            return Slider::find($id);
+        });
+
         if(!$slider){
             return response()->error('Slider not found.', 404);
         }
@@ -140,6 +169,8 @@ class SliderController extends Controller
         }
 
         if($slider->save()){
+            // Clear cache when slider is updated
+            $this->clearSliderCache($id);
             return response()->success($slider, 'Slider updated successfully.');
         } else {
             return response()->error('Failed to update slider.', 500);
@@ -165,6 +196,8 @@ class SliderController extends Controller
         }
 
         if($slider->delete()){
+            // Clear cache when slider is deleted
+            $this->clearSliderCache($id);
             return response()->success(null, 'Slider deleted successfully.');
         } else {
             return response()->error('Failed to delete slider.', 500);

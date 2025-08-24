@@ -15,7 +15,7 @@ class RegionController extends Controller
      */
     public function index()
     {
-        try{
+        try {
             $regions = Region::all();
             if ($regions->isEmpty()) {
                 return response()->error('No regions found.', 404);
@@ -39,8 +39,8 @@ class RegionController extends Controller
      */
     public function store(Request $request)
     {
-        try{
-            $validator = Validator::make($request->all(), [
+        // try{
+        $validator = Validator::make($request->all(), [
             'country_id' => 'required|integer|exists:countries,id',
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:10',
@@ -54,10 +54,13 @@ class RegionController extends Controller
         $region->name = $request->input('name');
         $region->code = Str::upper($request->input('code'));
         $region->save();
+        //forget cache for regions
+        cache()->forget('all_countries_with_regions');
+        cache()->forget("country_{$region->country_id}_regions");
         return response()->success($region, 'Region created successfully.');
-        } catch (\Exception $e) {
-            return response()->error('An error occurred while creating the region: ' . $e->getMessage(), 500);
-        }
+        // } catch (\Exception $e) {
+        //     return response()->error('An error occurred while creating the region: ' . $e->getMessage(), 500);
+        // }
     }
 
     /**
@@ -65,7 +68,7 @@ class RegionController extends Controller
      */
     public function show(string $id)
     {
-        try{
+        try {
             $region = Region::find($id);
             if (!$region) {
                 return response()->error('Region not found.', 404);
@@ -89,7 +92,7 @@ class RegionController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        try{
+        try {
             $validator = Validator::make($request->all(), [
                 'country_id' => 'sometimes|integer|exists:countries,id',
                 'name' => 'sometimes|required|string|max:255',
@@ -115,6 +118,9 @@ class RegionController extends Controller
                 $region->code = Str::upper($request->input('code'));
             }
             $region->save();
+            // Forget cache for regions
+            cache()->forget('all_countries_with_regions');
+            cache()->forget("country_{$region->country_id}_regions");
             return response()->success($region, 'Region updated successfully.');
         } catch (\Exception $e) {
             return response()->error('An error occurred while updating the region: ' . $e->getMessage(), 500);
@@ -126,7 +132,7 @@ class RegionController extends Controller
      */
     public function destroy(string $id)
     {
-        try{
+        try {
             $categoryIds = Region::orderBy('id')->limit(63)->pluck('id')->toArray();
 
             if (in_array($id, $categoryIds)) {
@@ -137,6 +143,10 @@ class RegionController extends Controller
             if (!$region) {
                 return response()->error('Region not found.', 404);
             }
+
+            // Forget cache for regions
+            cache()->forget('all_countries_with_regions');
+            cache()->forget("country_{$region->country_id}_regions");
             $region->delete();
             return response()->success(null, 'Region deleted successfully.');
         } catch (\Exception $e) {

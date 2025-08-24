@@ -17,7 +17,15 @@ use App\Interfaces\PaymentRepositoryInterface;
 use App\Models\ForumGroup;
 use App\Models\ForumThread;
 use App\Models\Order;
+use App\Models\User;
+use App\Models\ManageProduct;
+use App\Models\Slider;
+use App\Models\Category;
 use App\Observers\OrderObserver;
+use App\Observers\UserObserver;
+use App\Observers\ManageProductObserver;
+use App\Observers\SliderObserver;
+use App\Observers\CategoryObserver;
 use App\Policies\ForumGroupPolicy;
 use App\Policies\ForumThreadPolicy;
 use App\Policies\OrderPolicy;
@@ -72,8 +80,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-
+        // Register Observers
         Order::observe(OrderObserver::class);
+        User::observe(UserObserver::class);
+        ManageProduct::observe(ManageProductObserver::class);
+        Slider::observe(SliderObserver::class);
+        Category::observe(CategoryObserver::class);
+
         /**
          * @method static \Illuminate\Http\JsonResponse success(mixed $data = null, string $message = 'Success', int $code = 200)
          **/
