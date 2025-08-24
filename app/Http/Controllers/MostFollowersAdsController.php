@@ -10,11 +10,27 @@ use App\Notifications\MostFollowersRequestConfirmation;
 use App\Notifications\NewMostFollowersAdRequestNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
 class MostFollowersAdsController extends Controller
 {
+    // Cache configuration
+    private const CACHE_TTL = 1800; // 30 minutes
+    private const ADS_REQUEST_CACHE_PREFIX = 'most_followers_ads_request';
+
+    /**
+     * Generate cache key for ads
+     */
+    private function generateCacheKey(string $prefix, array $params = []): string
+    {
+        $key = $prefix;
+        if (!empty($params)) {
+            $key .= '_' . md5(json_encode($params));
+        }
+        return $key;
+    }
 
     /**
      * Display a listing of the resource.
@@ -140,18 +156,26 @@ class MostFollowersAdsController extends Controller
     public function adRequestMostFollower(Request $request)
     {
         $regionId = $request->input('region_id');
-        $adRequestMostFollowers = MostFollowerAd::with(['user:id,first_name,last_name,role,cover_photo,avatar'])
-            ->where('status', 'approved')
-            ->where('is_active', true);
-            // ->orderBy('display_order')
-            // ->take(8)
-            // ->get();
-        if ($regionId) {
-            $adRequestMostFollowers->where('region_id', $regionId);
-        }
-        $adRequestMostFollowers = $adRequestMostFollowers->orderBy('display_order')
-            ->take(8)
-            ->get();
+
+        // Generate cache key based on parameters
+        $cacheKey = $this->generateCacheKey(self::ADS_REQUEST_CACHE_PREFIX, [
+            'region_id' => $regionId
+        ]);
+
+        // Use cache for most followers ads with tags
+        $adRequestMostFollowers = Cache::tags(['users', 'trending', 'followers', 'ads'])->remember($cacheKey, self::CACHE_TTL, function () use ($regionId) {
+            $query = MostFollowerAd::with(['user:id,first_name,last_name,role,cover_photo,avatar'])
+                ->where('status', 'approved')
+                ->where('is_active', true);
+
+            if ($regionId) {
+                $query->where('region_id', $regionId);
+            }
+
+            return $query->orderBy('display_order')
+                ->take(8)
+                ->get();
+        });
 
         if ($adRequestMostFollowers->isEmpty()) {
             return response()->error(

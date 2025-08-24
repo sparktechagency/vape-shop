@@ -11,10 +11,15 @@ use App\Models\User;
 use App\Models\WholesalerProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 
 class ReviewController extends Controller
 {
+    // Cache configuration
+    private const CACHE_TTL = 1800; // 30 minutes
+    private const MOST_RATED_CACHE_PREFIX = 'most_rated_reviews';
+    private const USER_LATEST_CACHE_PREFIX = 'user_latest_reviews';
 
     public function __construct()
     {
@@ -24,12 +29,28 @@ class ReviewController extends Controller
     }
 
     /**
+     * Generate cache key for reviews
+     */
+    private function generateCacheKey(string $prefix, array $params = []): string
+    {
+        $key = $prefix;
+        if (!empty($params)) {
+            $key .= '_' . md5(json_encode($params));
+        }
+        return $key;
+    }
+
+    /**
      * Display a listing of the resource.
      */
 
     public function index(Request $request)
     {
         $role = (int) $request->input('role');
+        $productId = $request->input('product_id');
+        $page = $request->get('page', 1);
+        $perPage = $request->get('per_page', 10);
+
         // Build validation rules based on role
         $productRule = $this->ProductRule($role);
         // Validate the request
@@ -42,32 +63,46 @@ class ReviewController extends Controller
             return response()->error($validator->errors()->first(), 422, $validator->errors());
         }
 
+        // Generate cache key
+        $cacheKey = $this->generateCacheKey('reviews_index', [
+            'role' => $role,
+            'product_id' => $productId,
+            'page' => $page,
+            'per_page' => $perPage
+        ]);
 
-        $reviews = match ($role) {
-            Role::BRAND->value => $reviews = Review::where('manage_product_id', $request->input('product_id'))
-                ->whereNull('store_product_id')
-                ->whereNull('parent_id')
-                ->with(['user:id,first_name,last_name,role,avatar'])
-                ->withCount(['likedByUsers as like_count', 'replies'])
-                ->with('replies')
-                ->latest()
-                ->paginate(10),
-            Role::STORE->value => Review::where('store_product_id', $request->input('product_id'))
-                ->whereNull('parent_id')
-                ->with(['user:id,first_name,last_name,email,role'])
-                ->withCount(['likedByUsers as like_count', 'replies'])
-                ->with('replies')
-                ->latest()
-                ->paginate(10),
-            Role::WHOLESALER->value => Review::where('wholesaler_product_id', $request->input('product_id'))
-                ->whereNull('parent_id')
-                ->with(['user:id,first_name,last_name,email,role'])
-                ->withCount(['likedByUsers as like_count', 'replies'])
-                ->with('replies')
-                ->latest()
-                ->paginate(10),
-            default =>  response()->error('Invalid role provided.', 400),
-        };
+        // Try to get from cache first
+        $reviews = Cache::tags(['reviews', 'products', 'users'])->remember($cacheKey, self::CACHE_TTL, function () use ($role, $productId, $perPage) {
+            return match ($role) {
+                Role::BRAND->value => Review::where('manage_product_id', $productId)
+                    ->whereNull('store_product_id')
+                    ->whereNull('parent_id')
+                    ->with(['user:id,first_name,last_name,role,avatar'])
+                    ->withCount(['likedByUsers as like_count', 'replies'])
+                    ->with('replies')
+                    ->latest()
+                    ->paginate($perPage),
+                Role::STORE->value => Review::where('store_product_id', $productId)
+                    ->whereNull('parent_id')
+                    ->with(['user:id,first_name,last_name,email,role'])
+                    ->withCount(['likedByUsers as like_count', 'replies'])
+                    ->with('replies')
+                    ->latest()
+                    ->paginate($perPage),
+                Role::WHOLESALER->value => Review::where('wholesaler_product_id', $productId)
+                    ->whereNull('parent_id')
+                    ->with(['user:id,first_name,last_name,email,role'])
+                    ->withCount(['likedByUsers as like_count', 'replies'])
+                    ->with('replies')
+                    ->latest()
+                    ->paginate($perPage),
+                default => null
+            };
+        });
+
+        if (!$reviews) {
+            return response()->error('Invalid role provided.', 400);
+        }
 
         // Return the reviews
         return response()->success($reviews, 'Reviews retrieved successfully.', 200);
@@ -265,28 +300,36 @@ class ReviewController extends Controller
     {
         $regionId = $request->input('region_id');
 
-        $query = Review::whereNotNull('rating')
-            ->whereNull('store_product_id')
-            ->whereNull('parent_id');
+        // Generate cache key
+        $cacheKey = $this->generateCacheKey(self::MOST_RATED_CACHE_PREFIX, [
+            'region_id' => $regionId
+        ]);
 
-        $query->when($regionId, function ($q) use ($regionId) {
-            $q->whereHas('user.address', function ($addressQuery) use ($regionId) {
-                $addressQuery->where('region_id', $regionId);
+        // Try to get from cache first
+        $mostRatedReviews = Cache::tags(['reviews', 'products', 'users'])->remember($cacheKey, self::CACHE_TTL, function () use ($regionId) {
+            $query = Review::whereNotNull('rating')
+                ->whereNull('store_product_id')
+                ->whereNull('parent_id');
+
+            $query->when($regionId, function ($q) use ($regionId) {
+                $q->whereHas('user.address', function ($addressQuery) use ($regionId) {
+                    $addressQuery->where('region_id', $regionId);
+                });
             });
+            return $query->with([
+                'manageProducts' => function ($query) {
+                    $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
+                        ->with('category:id,name');
+                },
+                'user:id,first_name,last_name,role,avatar'
+            ])
+                ->withCount(['likedByUsers as like_count', 'replies'])
+                ->with('replies')
+                ->having('like_count', '>', 0)
+                ->orderByDesc('like_count')
+                ->take(50)
+                ->get();
         });
-        $mostRatedReviews = $query->with([
-            'manageProducts' => function ($query) {
-                $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
-                    ->with('category:id,name');
-            },
-            'user:id,first_name,last_name,role,avatar'
-        ])
-            ->withCount(['likedByUsers as like_count', 'replies'])
-            ->with('replies')
-            ->having('like_count', '>', 0)
-            ->orderByDesc('like_count')
-            ->take(50)
-            ->get();
 
         if ($mostRatedReviews->isEmpty()) {
             return response()->error('No most rated reviews found.', 404);
@@ -299,31 +342,40 @@ class ReviewController extends Controller
     public function userLatestReviews(Request $request)
     {
         try {
-
             $userId = $request->get('user_id');
             $user = $userId ? User::find($userId) : Auth::user();
             if (!$user) {
                 return response()->error('User not authenticated.', 401);
             }
-            // dd($user);
-            $userReview = $user ? $user->allReviews()
-                ->with([
-                    'manageProducts' => function ($q) {
-                        $q->select('id', 'user_id', 'product_name', 'product_image')
-                            ->with(['user:id,first_name,last_name,role,avatar']);
-                    },
-                    'storeProducts' => function ($q) {
-                        $q->select('id', 'user_id', 'product_name', 'product_image')
-                            ->with(['user:id,first_name,last_name,role,avatar']);
-                    },
-                    'wholesalerProducts' => function ($q) {
-                        $q->select('id', 'user_id', 'product_name', 'product_image')
-                            ->with(['user:id,first_name,last_name,role,avatar']);
-                    },
-                ])
-                ->latest()
-                ->take(10)
-                ->get() : null;
+
+            // Generate cache key based on user ID
+            $actualUserId = $user->id;
+            $cacheKey = $this->generateCacheKey(self::USER_LATEST_CACHE_PREFIX, [
+                'user_id' => $actualUserId
+            ]);
+
+            // Try to get from cache first (shorter TTL for user-specific data)
+            $userReview = Cache::tags(['reviews', 'users', 'products'])->remember($cacheKey, 900, function () use ($user) { // 15 minutes
+                return $user->allReviews()
+                    ->with([
+                        'manageProducts' => function ($q) {
+                            $q->select('id', 'user_id', 'product_name', 'product_image')
+                                ->with(['user:id,first_name,last_name,role,avatar']);
+                        },
+                        'storeProducts' => function ($q) {
+                            $q->select('id', 'user_id', 'product_name', 'product_image')
+                                ->with(['user:id,first_name,last_name,role,avatar']);
+                        },
+                        'wholesalerProducts' => function ($q) {
+                            $q->select('id', 'user_id', 'product_name', 'product_image')
+                                ->with(['user:id,first_name,last_name,role,avatar']);
+                        },
+                    ])
+                    ->latest()
+                    ->take(10)
+                    ->get();
+            });
+
             $userReview->transform(function ($review) {
                 $product = $review->manageProducts ?: $review->storeProducts ?: $review->wholesalerProducts;
 
@@ -352,7 +404,6 @@ class ReviewController extends Controller
             });
 
             $userReview->makeHidden(['manageProducts', 'storeProducts', 'wholesalerProducts']);
-            // dd($userReview);
 
             if (!$userReview) {
                 return response()->error('No reviews found for the user.', 404);

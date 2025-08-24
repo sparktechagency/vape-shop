@@ -78,7 +78,8 @@ class ForumGroupRepository implements ForumGroupInterface
         } elseif ($isLatest) {
             $query->orderByDesc('created_at');
         } else {
-            $query->inRandomOrder();
+            // Use consistent ordering instead of random for cache compatibility
+            $query->orderByDesc('id');
         }
 
         if (!$isGlobal && $userId) {

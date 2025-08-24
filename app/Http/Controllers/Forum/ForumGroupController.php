@@ -7,12 +7,19 @@ use App\Http\Requests\Forum\ForumGroupRequest;
 use App\Models\ForumGroup;
 use App\Services\Forum\ForumGroupService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 
 class ForumGroupController extends Controller
 {
 
     protected $forumGroupService;
+
+    // Cache configuration
+    private const CACHE_TTL = 1800; // 30 minutes
+    private const GROUP_INDEX_CACHE_KEY = 'forum_groups_index';
+    private const GROUP_SHOW_CACHE_PREFIX = 'forum_group_show';
+
     public function __construct(ForumGroupService $forumGroupService)
     {
         $this->middleware('jwt.auth')->except(['index', 'show']);
@@ -24,12 +31,44 @@ class ForumGroupController extends Controller
     }
 
     /**
+     * Generate cache key for forum groups
+     */
+    private function generateCacheKey(string $prefix, array $params = []): string
+    {
+        $key = $prefix;
+        if (!empty($params)) {
+            $key .= '_' . md5(json_encode($params));
+        }
+        return $key;
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
     {
         try{
-            $result = $this->forumGroupService->getAllGroups();
+            // Generate cache key including pagination and filtering parameters
+            $page = request()->get('page', 1);
+            $perPage = request()->get('per_page', 10);
+            $isTrending = request()->boolean('is_trending');
+            $isGlobal = request()->boolean('show_front');
+            $userIdFilter = request()->get('user_id');
+            $isLatest = request()->boolean('is_latest', false);
+
+            $cacheKey = $this->generateCacheKey(self::GROUP_INDEX_CACHE_KEY, [
+                'page' => $page,
+                'per_page' => $perPage,
+                'is_trending' => $isTrending,
+                'show_front' => $isGlobal,
+                'user_id' => $userIdFilter,
+                'is_latest' => $isLatest
+            ]);
+
+            // Use cache for forum groups listing with pagination support
+            $result = Cache::tags(['forum', 'groups'])->remember($cacheKey, self::CACHE_TTL, function () {
+                return $this->forumGroupService->getAllGroups();
+            });
 
             if (!empty($result) && isset($result['data']) && !empty($result['data'])) {
                 return response()->success(
@@ -89,7 +128,13 @@ class ForumGroupController extends Controller
     public function show(string $id)
     {
         try{
-            $result = $this->forumGroupService->getGroupById((int)$id);
+            // Generate cache key for specific group
+            $cacheKey = $this->generateCacheKey(self::GROUP_SHOW_CACHE_PREFIX, ['id' => $id]);
+
+            // Use cache for single group with tags
+            $result = Cache::tags(['forum', 'groups'])->remember($cacheKey, self::CACHE_TTL, function () use ($id) {
+                return $this->forumGroupService->getGroupById((int)$id);
+            });
 
             if ($result) {
                 return response()->success(

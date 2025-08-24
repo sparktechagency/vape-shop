@@ -4,14 +4,27 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Services\CacheService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use App\Traits\FileUploadTrait;
 
 class CategoryController extends Controller
 {
     use FileUploadTrait;
+
+    // Cache TTL
+    private const CACHE_TTL = 3600; // 1 hour
+
+    /**
+     * Clear category related cache
+     */
+    private function clearCategoryCache()
+    {
+        CacheService::clearByTags(['categories', 'home', 'products']);
+    }
 
 
 
@@ -24,9 +37,12 @@ class CategoryController extends Controller
     public function index()
     {
         try{
-            $categories = Category::withCount(['manage_products as brand_products_count', 'store_products', 'wholesale_products'])
-                ->orderBy('id', 'desc')
-                ->get();
+            // Use cache with tags for categories
+            $categories = Cache::tags(['categories', 'admin'])->remember('admin_categories_with_counts', self::CACHE_TTL, function () {
+                return Category::withCount(['manage_products as brand_products_count', 'store_products', 'wholesale_products'])
+                    ->orderBy('id', 'desc')
+                    ->get();
+            });
 
             if ($categories->isEmpty()) {
                 return response()->error('No categories found.', 404);
@@ -81,6 +97,8 @@ class CategoryController extends Controller
             $category->save();
 
             if ($category) {
+                // Clear category related cache
+                $this->clearCategoryCache();
                 return response()->success($category, 'Category created successfully.');
             } else {
                 return response()->error('Failed to create category.', 500);
@@ -157,6 +175,9 @@ class CategoryController extends Controller
 
             $category->save();
 
+            // Clear category related cache after update
+            $this->clearCategoryCache();
+
             return response()->success($category, 'Category updated successfully.');
         } catch (\Exception $e) {
             return response()->error('An error occurred while updating the category: ' . $e->getMessage(), 500);
@@ -185,6 +206,8 @@ class CategoryController extends Controller
     }
 
     if ($category->delete()) {
+        // Clear category related cache after delete
+        $this->clearCategoryCache();
         return response()->success(null, 'Category deleted successfully.');
     } else {
         return response()->error('Failed to delete category.', 500);

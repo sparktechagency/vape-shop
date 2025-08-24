@@ -6,27 +6,53 @@ use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use DB;
 
 class MessageController extends Controller
 {
+    // Cache configuration
+    private const CACHE_TTL = 300; // 5 minutes for real-time chat features
+    private const SEARCH_USER_CACHE_PREFIX = 'search_new_user';
+    private const CHAT_LIST_CACHE_PREFIX = 'chat_list';
+
+    /**
+     * Generate cache key for messages
+     */
+    private function generateCacheKey(string $prefix, array $params = []): string
+    {
+        $key = $prefix;
+        if (!empty($params)) {
+            $key .= '_' . md5(json_encode($params));
+        }
+        return $key;
+    }
     public function searchNewUser(Request $request)
     {
         $request->validate([
             'search' => 'nullable|string|max:255',
         ]);
 
-        $users = User::where('id', '!=', Auth::id())
-            ->whereNull('banned_at')
-            ->when($request->search, function ($query) use ($request) {
-                $query->where(function ($q) use ($request) {
-                    $q->where('first_name', 'LIKE', '%' . $request->search . '%')
-                        ->orWhere('last_name', 'LIKE', '%' . $request->search . '%')
-                        ->orWhere('email', 'LIKE', '%' . $request->search . '%');
-                });
-            })
-            ->get();
+        // Generate cache key
+        $cacheKey = $this->generateCacheKey(self::SEARCH_USER_CACHE_PREFIX, [
+            'search' => $request->search,
+            'auth_id' => Auth::id()
+        ]);
+
+        // Try to get from cache first
+        $users = Cache::tags(['users', 'messages'])->remember($cacheKey, self::CACHE_TTL, function () use ($request) {
+            return User::where('id', '!=', Auth::id())
+                ->whereNull('banned_at')
+                ->when($request->search, function ($query) use ($request) {
+                    $query->where(function ($q) use ($request) {
+                        $q->where('first_name', 'LIKE', '%' . $request->search . '%')
+                            ->orWhere('last_name', 'LIKE', '%' . $request->search . '%')
+                            ->orWhere('email', 'LIKE', '%' . $request->search . '%');
+                    });
+                })
+                ->get();
+        });
 
         return response()->json([
             'status'  => true,
@@ -39,52 +65,68 @@ class MessageController extends Controller
     {
         $userId = Auth::id();
         $search = $request->search;
+        $page = $request->get('page', 1);
+        $perPage = $request->get('per_page', 15);
 
-        $chatListQuery = Message::with(['receiver:id,first_name,last_name,avatar', 'sender:id,first_name,last_name,avatar'])
-            ->where(function ($query) use ($userId) {
-                $query->where('sender_id', $userId)
-                    ->orWhere('receiver_id', $userId);
-            });
+        // Generate cache key with pagination
+        $cacheKey = $this->generateCacheKey(self::CHAT_LIST_CACHE_PREFIX, [
+            'user_id' => $userId,
+            'search' => $search,
+            'page' => $page,
+            'per_page' => $perPage
+        ]);
 
-        // Apply search if provided
-        if ($search) {
-            $chatListQuery->where(function ($query) use ($search, $userId) {
-                $query->whereHas('receiver', function ($q) use ($search) {
-                    $q->where('first_name', 'LIKE', '%' . $search . '%')
-                        ->orWhere('last_name', 'LIKE', '%' . $search . '%')
-                        ->orWhere('email', 'LIKE', '%' . $search . '%');
-                })
-                    ->orWhereHas('sender', function ($q) use ($search) {
+        // Try to get from cache first - shorter TTL for real-time chat
+        $chatListData = Cache::tags(['messages', 'users'])->remember($cacheKey, self::CACHE_TTL, function () use ($userId, $search) {
+            $chatListQuery = Message::with(['receiver:id,first_name,last_name,avatar', 'sender:id,first_name,last_name,avatar'])
+                ->where(function ($query) use ($userId) {
+                    $query->where('sender_id', $userId)
+                        ->orWhere('receiver_id', $userId);
+                });
+
+            // Apply search if provided
+            if ($search) {
+                $chatListQuery->where(function ($query) use ($search, $userId) {
+                    $query->whereHas('receiver', function ($q) use ($search) {
                         $q->where('first_name', 'LIKE', '%' . $search . '%')
                             ->orWhere('last_name', 'LIKE', '%' . $search . '%')
                             ->orWhere('email', 'LIKE', '%' . $search . '%');
-                    });
+                    })
+                        ->orWhereHas('sender', function ($q) use ($search) {
+                            $q->where('first_name', 'LIKE', '%' . $search . '%')
+                                ->orWhere('last_name', 'LIKE', '%' . $search . '%')
+                                ->orWhere('email', 'LIKE', '%' . $search . '%');
+                        });
+                });
+            }
+
+            // Get the latest message for each conversation to form the chat list
+            $latestMessages = $chatListQuery->latest('created_at')->get()->unique(function ($message) use ($userId) {
+                return $message->sender_id === $userId ? $message->receiver_id : $message->sender_id;
             });
-        }
 
-        // Get the latest message for each conversation to form the chat list
-        $latestMessages = $chatListQuery->latest('created_at')->get()->unique(function ($message) use ($userId) {
-            return $message->sender_id === $userId ? $message->receiver_id : $message->sender_id;
+            // Get the IDs of the other users in the conversations
+            $partnerIds = $latestMessages->map(function ($message) use ($userId) {
+                return $message->sender_id === $userId ? $message->receiver_id : $message->sender_id;
+            });
+
+             $unreadCounts = Message::where('receiver_id', $userId)
+                ->where('is_read', false)
+                ->whereIn('sender_id', $partnerIds)
+                ->select('sender_id', DB::raw('count(*) as messages_count'))
+                ->groupBy('sender_id')
+                ->get()
+                ->keyBy('sender_id'); // keyBy makes it easy to look up counts by sender_id
+
+            return [
+                'latest_messages' => $latestMessages,
+                'unread_counts' => $unreadCounts
+            ];
         });
 
-        // Get the IDs of the other users in the conversations
-        $partnerIds = $latestMessages->map(function ($message) use ($userId) {
-            return $message->sender_id === $userId ? $message->receiver_id : $message->sender_id;
-        });
-
-         $unreadCounts = Message::where('receiver_id', $userId)
-            ->where('is_read', false)
-            ->whereIn('sender_id', $partnerIds)
-            ->select('sender_id', DB::raw('count(*) as messages_count'))
-            ->groupBy('sender_id')
-            ->get()
-            ->keyBy('sender_id'); // keyBy makes it easy to look up counts by sender_id
-
-
-        $chatList = $latestMessages->map(function ($message) use ($userId, $unreadCounts) {
-
+        $chatList = $chatListData['latest_messages']->map(function ($message) use ($userId, $chatListData) {
             $partner = $message->sender_id === $userId ? $message->receiver : $message->sender;
-            $unreadCount = $unreadCounts->get($partner->id)?->messages_count ?? 0;
+            $unreadCount = $chatListData['unread_counts']->get($partner->id)?->messages_count ?? 0;
             $message->user = $partner;
             $message->unread_messages_count = $unreadCount;
             unset($message->sender, $message->receiver);
