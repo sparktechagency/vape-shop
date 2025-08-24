@@ -12,14 +12,14 @@ class ClearAppCache extends Command
      *
      * @var string
      */
-    protected $signature = 'app:clear-cache {--type=all : Cache type to clear (all|users|stores|products|sliders|categories|countries|search)}';
+    protected $signature = 'app:clear-cache {--type=all : Cache type to clear (all|users|stores|products|sliders|categories|locations|search|trending|forum|posts|feed|followers|ads)}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Clear application cache by type or all';
+    protected $description = 'Clear application cache by type or all - Production ready cache management';
 
     /**
      * Execute the console command.

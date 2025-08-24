@@ -14,14 +14,21 @@ use App\Interfaces\Products\HeartedProductsInterface;
 use App\Interfaces\Products\HomeProductInterface;
 use App\Interfaces\Products\ManageProductsInterface;
 use App\Interfaces\PaymentRepositoryInterface;
+use App\Models\Follower;
 use App\Models\ForumGroup;
 use App\Models\ForumThread;
+use App\Models\MostFollowerAd;
 use App\Models\Order;
+use App\Models\Post;
 use App\Models\User;
 use App\Models\ManageProduct;
 use App\Models\Slider;
 use App\Models\Category;
+use App\Observers\FollowerObserver;
+use App\Observers\ForumGroupObserver;
+use App\Observers\MostFollowerAdObserver;
 use App\Observers\OrderObserver;
+use App\Observers\PostObserver;
 use App\Observers\UserObserver;
 use App\Observers\ManageProductObserver;
 use App\Observers\SliderObserver;
@@ -86,6 +93,12 @@ class AppServiceProvider extends ServiceProvider
         ManageProduct::observe(ManageProductObserver::class);
         Slider::observe(SliderObserver::class);
         Category::observe(CategoryObserver::class);
+        
+        // New observers for cache management
+        ForumGroup::observe(ForumGroupObserver::class);
+        Post::observe(PostObserver::class);
+        MostFollowerAd::observe(MostFollowerAdObserver::class);
+        Follower::observe(FollowerObserver::class);
 
         /**
          * @method static \Illuminate\Http\JsonResponse success(mixed $data = null, string $message = 'Success', int $code = 200)
