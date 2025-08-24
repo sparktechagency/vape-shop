@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Cache;
 
 class TrendingProducts extends Controller
 {
-        // Cache configuration
+    // Cache configuration
     private const CACHE_TTL = 3600; // 1 hour
     private const HEARTS_CACHE_PREFIX = 'trending_most_hearted';
     private const AD_REQUESTS_CACHE_PREFIX = 'trending_ad_requests';
@@ -33,40 +33,34 @@ class TrendingProducts extends Controller
     //most hearted products
     public function mostHeartedProducts(Request $request)
     {
-        $regionId = request('region_id');
-        $categoryId = request('category_id');
+        $regionId = $request->input('region_id');
+        $categoryId = $request->input('category_id');
 
-        // Generate cache key based on parameters
         $cacheKey = $this->generateCacheKey(self::HEARTS_CACHE_PREFIX, [
             'region_id' => $regionId,
             'category_id' => $categoryId
         ]);
 
-        // Use cache for most hearted products with tags
         $products = Cache::tags(['products', 'trending', 'hearts'])->remember($cacheKey, self::CACHE_TTL, function () use ($regionId, $categoryId) {
-            return ManageProduct::when($categoryId, function ($query) use ($categoryId) {
-                $query->where('category_id', $categoryId);
-            })
-                ->whereHas('hearts', function ($query) use ($regionId) {
-                    $query->when($regionId, function ($q) use ($regionId) {
-                        $q->where('region_id', $regionId);
-                    });
+
+            $heartFilter = function ($query) use ($regionId) {
+                $query->when($regionId, function ($q) use ($regionId) {
+                    $q->where('region_id', $regionId);
+                });
+            };
+
+            return ManageProduct::withCount(['hearts as hearts_count' => $heartFilter])
+                ->whereHas('hearts', $heartFilter)
+                ->when($categoryId, function ($query) use ($categoryId) {
+                    $query->where('category_id', $categoryId);
                 })
-                ->withCount(['hearts' => function ($query) use ($regionId) {
-                    $query->when($regionId, function ($q) use ($regionId) {
-                        $q->where('region_id', $regionId);
-                    });
-                }])
                 ->orderByDesc('hearts_count')
                 ->take(50)
                 ->get();
         });
 
         if ($products->isEmpty()) {
-            return response()->error(
-                'No hearted products found.',
-                404
-            );
+            return response()->error('No hearted products found.', 404);
         }
 
         return response()->success(
