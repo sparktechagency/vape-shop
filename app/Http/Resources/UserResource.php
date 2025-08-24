@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Enums\UserRole\Role;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -45,6 +46,18 @@ class UserResource extends JsonResource
                     'region_id' => $this->address->region->id ?? null,
                     'region' => $this->address->region->name ?? null,
                     'country' => $this->address->region->country->name ?? null,
+                ];
+            }),
+
+            $this->mergeWhen($this->relationLoaded('subscriptions') && $this->subscriptions->isNotEmpty(), function () {
+                $latestSubscription = $this->subscriptions->last();
+
+                $endsAt = Carbon::parse($latestSubscription->ends_at);
+                $remainingDays = (int) max(0, ceil(now()->floatDiffInDays($endsAt, false)));
+
+                return [
+                    'invoice_status' => $latestSubscription->invoice_status,
+                    'remaining_days' => $remainingDays,
                 ];
             }),
 
