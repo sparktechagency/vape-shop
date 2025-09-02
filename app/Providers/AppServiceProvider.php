@@ -17,6 +17,7 @@ use App\Interfaces\PaymentRepositoryInterface;
 use App\Models\Follower;
 use App\Models\ForumGroup;
 use App\Models\ForumThread;
+use App\Models\Heart;
 use App\Models\MostFollowerAd;
 use App\Models\Order;
 use App\Models\Post;
@@ -27,6 +28,7 @@ use App\Models\ManageProduct;
 use App\Models\Slider;
 use App\Models\Category;
 use App\Observers\FollowerObserver;
+use App\Observers\HeartObserver;
 use App\Observers\ForumGroupObserver;
 use App\Observers\ForumThreadObserver;
 use App\Observers\MessageObserver;
@@ -107,6 +109,7 @@ class AppServiceProvider extends ServiceProvider
         Message::observe(MessageObserver::class);
         MostFollowerAd::observe(MostFollowerAdObserver::class);
         Follower::observe(FollowerObserver::class);
+        Heart::observe(HeartObserver::class);
 
         /**
          * @method static \Illuminate\Http\JsonResponse success(mixed $data = null, string $message = 'Success', int $code = 200)

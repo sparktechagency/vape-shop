@@ -7,10 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Models\ManageProduct;
 use App\Models\TrendingProducts as ModelsTrendingProducts;
 use App\Models\User;
+use App\Models\Heart;
 use App\Services\CacheService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 
 class TrendingProducts extends Controller
 {

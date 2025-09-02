@@ -17,22 +17,24 @@ class CheckActiveSubscription
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = Auth::user();
+        // $user = Auth::user();
 
-        if ($user && in_array($user->role, [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])) {
+        // if ($user && in_array($user->role, [Role::BRAND->value, Role::STORE->value, Role::WHOLESALER->value])) {
 
-            if (!$user->hasActiveSubscription()) {
+        //     if (!$user->hasActiveSubscription()) {
 
-                Auth::logout();
+        //         Auth::logout();
 
 
-                return response()->json([
-                    'ok' => false,
-                    'is_subscribed' => false,
-                    'message' => 'Your subscription has expired. Please renew your subscription.'
-                ], 403); // 403 Forbidden status code
-            }
-        }
+        //         return response()->json([
+        //             'ok' => false,
+        //             'is_subscribed' => false,
+        //             'message' => 'Your subscription has expired. Please renew your subscription.'
+        //         ], 403); // 403 Forbidden status code
+        //     }
+        // }
+
+        //subscription check disabled for now - to be enabled in future
 
         return $next($request);
     }
