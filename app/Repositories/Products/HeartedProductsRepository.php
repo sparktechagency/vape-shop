@@ -51,9 +51,8 @@ class HeartedProductsRepository implements HeartedProductsInterface
 
 
         $likingUser = User::with('address')->find($userId);
-        // dd($likingUser);
         $userRegionId = $likingUser?->address?->region_id;
-        // dd($userRegionId);
+
         switch ($role) {
             case Role::BRAND->value:
                 $model = $this->model->create([

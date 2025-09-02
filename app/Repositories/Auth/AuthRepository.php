@@ -39,8 +39,15 @@ class AuthRepository implements AuthRepositoryInterface
         $user->ein = $data['ein'] ?? null;
         $user->save();
 
-        $address = Address::create([
-            'user_id' => $user->id,
+        // $address = Address::create([
+        //     'user_id' => $user->id,
+        //     'region_id' => $data['region_id'] ?? null,
+        //     'address' => $data['address'] ?? null,
+        //     'zip_code' => $data['zip_code'] ?? null,
+        //     'latitude' => $data['latitude'] ?? null,
+        //     'longitude' => $data['longitude'] ?? null,
+        // ]);
+        $user->address()->create([
             'region_id' => $data['region_id'] ?? null,
             'address' => $data['address'] ?? null,
             'zip_code' => $data['zip_code'] ?? null,
@@ -219,6 +226,7 @@ class AuthRepository implements AuthRepositoryInterface
         $address->longitude = $data['longitude'] ?? $address->longitude;
         $address->save();
 
+        $user->load('address.region');
         return [
             'success' => true,
             'message' => 'Profile updated successfully.',
