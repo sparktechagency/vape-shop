@@ -28,7 +28,7 @@ class AuthRepository implements AuthRepositoryInterface
         $otp_data = sentOtp($otp_data, 5);
         $user = new User();
         $user->first_name = $firstName;
-        $user->last_name = (int) $data['role'] === Role::MEMBER->value ? $data['last_name'] : null;
+        $user->last_name = (int) $data['role'] === Role::MEMBER->value ? $data['last_name'] : '';
         $user->dob = $data['dob'] ?? null;
         $user->email = $data['email'];
         $user->password = $data['password'];
@@ -206,7 +206,7 @@ class AuthRepository implements AuthRepositoryInterface
 
         $firstName = $this->getFirstNameByRole($user->role, $data);
         $user->first_name = $firstName;
-        $user->last_name = $data['last_name'] ?? $user->last_name;
+        $user->last_name = $data['last_name'] ?? $user->last_name ?? '';
         $user->phone = $data['phone'] ?? $user->phone;
         $user->dob = $data['dob'] ?? $user->dob;
         $user->ein = $data['ein'] ?? $user->ein;

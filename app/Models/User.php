@@ -126,7 +126,10 @@ class User extends Authenticatable implements JWTSubject
     //full  name
     public function getFullNameAttribute(): string
     {
-        $fullName = $this->last_name === null ? $this->first_name : $this->first_name . ' ' . $this->last_name;
+        if($this->last_name === 'null' || $this->last_name === null){
+            return $this->first_name;
+        }
+        $fullName = $this->first_name . ' ' . $this->last_name;
 
         return $fullName;
     }

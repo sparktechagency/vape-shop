@@ -47,6 +47,13 @@ class PlanSeeder extends Seeder
             'badge' => 'Core Club',
             'description' => 'Optional add-on to support industry associations.'
         ]);
+        Plan::updateOrCreate(['slug' => 'free-membership'], [
+            'name' => 'Free Membership',
+            'price' => 0.00,
+            'type' => 'member',
+            'badge' => 'Free Member',
+            'description' => 'Perfect for new users wanting to explore the platform.'
+        ]);
 
         Plan::updateOrCreate(['slug' => 'hemp-alley'], [
             'name' => 'Hemp Alley Add-on',
