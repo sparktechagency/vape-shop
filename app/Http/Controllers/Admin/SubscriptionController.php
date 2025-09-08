@@ -88,6 +88,7 @@ class SubscriptionController extends Controller
             if ($request->has('status')) {
                 $query->where('invoice_status', $request->status);
             }
+            $query->where('total_cost', '!=', 0);
 
             $subscriptions = $query->latest()->paginate($perPage);
 
