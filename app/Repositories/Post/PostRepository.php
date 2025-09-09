@@ -116,7 +116,7 @@ class PostRepository implements PostInterface
         if ($regionId) {
             $query->whereRelation('user.address', 'region_id', $regionId);
         }
-        return $query->paginate($perPage);
+        return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
     public function likePost(int $postId, int $userId)
     {
