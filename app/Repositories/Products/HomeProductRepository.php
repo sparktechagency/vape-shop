@@ -49,6 +49,7 @@ class HomeProductRepository implements HomeProductInterface
                 // related product filter by top rating
                 $product->makeVisible(['user', 'category']);
                 $relatedProducts = ManageProduct::where('id', '!=', $id)
+                    ->where('user_id', $product->user_id) // Assuming 'user_id' is the foreign key
                     ->inRandomOrder()
                     ->take(4)
                     ->get();
@@ -60,6 +61,7 @@ class HomeProductRepository implements HomeProductInterface
                         ->findOrFail($id)
                         ->makeVisible(['user', 'category']);
                 $relatedProducts = StoreProduct::where('id', '!=', $id)
+                    ->where('user_id', $product->user_id) // Ensure related products are from the same store
                     ->inRandomOrder()
                     ->take(4)
                     ->get();
@@ -71,6 +73,7 @@ class HomeProductRepository implements HomeProductInterface
                         ->findOrFail($id)
                         ->makeVisible(['user', 'category']);
                 $relatedProducts = WholesalerProduct::where('id', '!=', $id)
+                    ->where('user_id', $product->user_id) // Ensure related products are from the same wholesaler
                     ->inRandomOrder()
                     ->take(4)
                     ->get();

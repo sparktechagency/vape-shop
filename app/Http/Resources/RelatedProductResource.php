@@ -16,6 +16,8 @@ class RelatedProductResource extends JsonResource
     {
          return [
             'id' => $this->id,
+            'user_id' => $this->user_id,
+            'category_id' => $this->category_id,
             'product_name' => $this->product_name,
             'product_image' => $this->product_image,
             'product_price' => $this->product_price,
