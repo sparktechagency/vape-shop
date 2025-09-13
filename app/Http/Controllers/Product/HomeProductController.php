@@ -66,9 +66,7 @@ class HomeProductController extends Controller
             $cacheKey = "home_product_{$id}_role_{$role}";
 
             // Use cache with tags
-            $product = Cache::tags(['products', 'home'])->remember($cacheKey, self::CACHE_TTL, function () use ($id, $role) {
-                return $this->homeProductService->getProductById((int)$id, (int)$role);
-            });
+            $product = $this->homeProductService->getProductById((int)$id, (int)$role);
 
             if (!empty($product)) {
                 return response()->success($product, 'Product retrieved successfully.');
@@ -103,6 +101,5 @@ class HomeProductController extends Controller
                 $e->getMessage()
             );
         }
-
     }
 }
