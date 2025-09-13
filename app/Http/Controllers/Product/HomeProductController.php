@@ -62,10 +62,6 @@ class HomeProductController extends Controller
         try {
             $role = request()->get('role');
 
-            // Generate cache key based on product ID and role
-            $cacheKey = "home_product_{$id}_role_{$role}";
-
-            // Use cache with tags
             $product = $this->homeProductService->getProductById((int)$id, (int)$role);
 
             if (!empty($product)) {
