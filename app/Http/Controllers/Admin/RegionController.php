@@ -133,11 +133,11 @@ class RegionController extends Controller
     public function destroy(string $id)
     {
         try {
-            $categoryIds = Region::orderBy('id')->limit(63)->pluck('id')->toArray();
+            // $categoryIds = Region::orderBy('id')->limit(63)->pluck('id')->toArray();
 
-            if (in_array($id, $categoryIds)) {
-                return response()->error('This region cannot be deleted.', 403);
-            }
+            // if (in_array($id, $categoryIds)) {
+            //     return response()->error('This region cannot be deleted.', 403);
+            // }
 
             $region = Region::find($id);
             if (!$region) {

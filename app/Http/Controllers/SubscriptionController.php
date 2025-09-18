@@ -69,15 +69,19 @@ class SubscriptionController extends Controller
             'invoice_status' => 'pending_invoice',
         ]);
 
-        //send notification to admin
-        $admin = User::where('role', Role::ADMIN)->get();
-        foreach ($admin as $adminUser) {
-            $adminUser->notify(new SubscriptionRequestReceivedNotification($subscription));
-        }
-
+        //send notification to admin if plan price > 0
+        if ($totalPrice > 0) {
+            $admins = User::where('role', Role::ADMIN->value)->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new SubscriptionRequestReceivedNotification($subscription));
+            }
         //send notification to user
         $user->notify(new SubscriptionRequestConfirmation($subscription));
+        }
 
-        return response()->success(null, 'Your subscription request has been submitted. You will receive an invoice via email shortly.');
+
+
+
+        return response()->success(null, 'Thank you! Your subscription has been submitted.');
     }
 }
