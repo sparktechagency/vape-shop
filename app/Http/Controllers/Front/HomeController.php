@@ -2,13 +2,20 @@
 
 namespace App\Http\Controllers\Front;
 
+use App\Enums\UserRole\Role;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\NearbyStoreResource;
+use App\Models\Address;
+use App\Models\Branch;
 use App\Models\User;
 use App\Services\Front\HomeService;
 use App\Services\CacheService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Cache;
+use MatanYadaev\EloquentSpatial\Objects\Point;
+use MatanYadaev\EloquentSpatial\Objects\LineString;
+use MatanYadaev\EloquentSpatial\Objects\Polygon;
 
 class HomeController extends Controller
 {
@@ -148,49 +155,140 @@ class HomeController extends Controller
     }
 
     //store maps view
-    public function getStoresByLocation(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'sw_lat' => 'required|numeric|between:-90,90',
-            'sw_lng' => 'required|numeric|between:-180,180',
-            'ne_lat' => 'required|numeric|between:-90,90',
-            'ne_lng' => 'required|numeric|between:-180,180',
-        ]);
+    // public function getStoresByLocation(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'sw_lat' => 'required|numeric|between:-90,90',
+    //         'sw_lng' => 'required|numeric|between:-180,180',
+    //         'ne_lat' => 'required|numeric|between:-90,90',
+    //         'ne_lng' => 'required|numeric|between:-180,180',
+    //     ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
+    //     if ($validator->fails()) {
+    //         return response()->json($validator->errors(), 422);
+    //     }
 
-        $validatedData = $validator->validated();
+    //     $validatedData = $validator->validated();
 
-        // Generate cache key based on location parameters
-        $cacheKey = $this->generateCacheKey(self::STORES_BY_LOCATION_CACHE_PREFIX, [
-            'sw_lat' => $validatedData['sw_lat'],
-            'sw_lng' => $validatedData['sw_lng'],
-            'ne_lat' => $validatedData['ne_lat'],
-            'ne_lng' => $validatedData['ne_lng']
-        ]);
+    //     // Generate cache key based on location parameters
+    //     $cacheKey = $this->generateCacheKey(self::STORES_BY_LOCATION_CACHE_PREFIX, [
+    //         'sw_lat' => $validatedData['sw_lat'],
+    //         'sw_lng' => $validatedData['sw_lng'],
+    //         'ne_lat' => $validatedData['ne_lat'],
+    //         'ne_lng' => $validatedData['ne_lng']
+    //     ]);
 
-        // Use cache for stores by location data with tags
-        $stores = Cache::tags(['stores', 'users', 'locations'])->remember($cacheKey, self::CACHE_TTL, function () use ($validatedData) {
-            return User::query()
-                ->with('address')
-                ->where('role', 5)
-                ->whereHas('address', function ($query) use ($validatedData) {
-                    $query->whereNotNull('latitude')
-                          ->whereNotNull('longitude')
-                          ->whereBetween('latitude', [$validatedData['sw_lat'], $validatedData['ne_lat']])
-                          ->whereBetween('longitude', [$validatedData['sw_lng'], $validatedData['ne_lng']]);
-                })
-                ->get();
-        });
+    //     // Use cache for stores by location data with tags
+    //     $stores = Cache::tags(['stores', 'users', 'locations'])->remember($cacheKey, self::CACHE_TTL, function () use ($validatedData) {
+    //         return User::query()
+    //             ->with('address')
+    //             ->where('role', 5)
+    //             ->whereHas('address', function ($query) use ($validatedData) {
+    //                 $query->whereNotNull('latitude')
+    //                       ->whereNotNull('longitude')
+    //                       ->whereBetween('latitude', [$validatedData['sw_lat'], $validatedData['ne_lat']])
+    //                       ->whereBetween('longitude', [$validatedData['sw_lng'], $validatedData['ne_lng']]);
+    //             })
+    //             ->get();
+    //     });
 
-        return response()->json([
-            'ok' => true,
-            'message' => 'Stores retrieved successfully.',
-            'data' => $stores
-        ]);
+    //     return response()->json([
+    //         'ok' => true,
+    //         'message' => 'Stores retrieved successfully.',
+    //         'data' => $stores
+    //     ]);
+    // }
+
+
+
+
+public function searchLocations(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        // Radius Search Parameters
+        'latitude' => 'required_with:radius,longitude|numeric|between:-90,90',
+        'longitude' => 'required_with:radius,latitude|numeric|between:-180,180',
+        'radius' => 'sometimes|required_with:latitude,longitude|numeric|min:1',
+
+        // Bounding Box Search Parameters
+        'sw_lat' => 'sometimes|required_with:sw_lng,ne_lat,ne_lng|numeric|between:-90,90',
+        'sw_lng' => 'sometimes|required_with:sw_lat,ne_lat,ne_lng|numeric|between:-180,180',
+        'ne_lat' => 'sometimes|required_with:sw_lat,sw_lng,ne_lng|numeric|between:-90,90',
+        'ne_lng' => 'sometimes|required_with:sw_lat,sw_lng,ne_lat|numeric|between:-180,180',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 422);
     }
+
+    $baseQuery = Address::query()
+        ->where(function ($query) {
+            $query->where('addressable_type', Branch::class)
+                ->orWhereHasMorph(
+                    'addressable',
+                    [User::class],
+                    fn ($q) => $q->where('role', Role::STORE->value)
+                );
+        })
+        ->with('addressable');
+
+    if ($request->has('radius')) {
+        // --- Radius Search Logic ---
+        $lat = $request->input('latitude');
+        $lng = $request->input('longitude');
+        $radiusInMeters = $request->input('radius', 10000);
+        $userLocation = new Point($lat, $lng);
+
+        $locations = $baseQuery
+            ->withDistance('location', $userLocation)
+            ->whereDistanceSphere('location', $userLocation, '<=', $radiusInMeters)
+            ->orderBy('distance', 'asc')
+            ->get();
+
+    } elseif ($request->has('sw_lat')) {
+    // --- Bounding Box Search Logic ---
+    $sw_lat = $request->sw_lat;
+    $sw_lng = $request->sw_lng;
+    $ne_lat = $request->ne_lat;
+    $ne_lng = $request->ne_lng;
+
+    $boundingBox = new Polygon([
+        new LineString([
+            new Point($sw_lat, $sw_lng), new Point($ne_lat, $sw_lng),
+            new Point($ne_lat, $ne_lng), new Point($sw_lat, $ne_lng),
+            new Point($sw_lat, $sw_lng),
+        ])
+    ]);
+
+
+    $locationsQuery = $baseQuery->whereWithin('location', $boundingBox);
+
+
+    $referencePoint = null;
+    if ($request->has('latitude') && $request->has('longitude')) {
+
+        $referencePoint = new Point($request->latitude, $request->longitude);
+    } else {
+
+        $centerLat = ($sw_lat + $ne_lat) / 2;
+        $centerLng = ($sw_lng + $ne_lng) / 2;
+        $referencePoint = new Point($centerLat, $centerLng);
+    }
+
+    $locationsQuery->withDistance('location', $referencePoint)
+                   ->orderBy('distance', 'asc');
+
+    $locations = $locationsQuery->get();
+} else {
+        return response()->error('Invalid search parameters. Please provide either radius or bounding box coordinates.', 422);
+    }
+
+    if ($locations->isEmpty()) {
+        return response()->error('No nearby locations found', 404);
+    }
+
+    return NearbyStoreResource::collection($locations);
+}
 
 
 }
