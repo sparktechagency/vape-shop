@@ -3,10 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class Address extends Model
 {
+    use HasSpatial;
     protected $guarded = ['id'];
+
+     protected $casts = [
+        'location' => Point::class,
+    ];
 
     // public function user()
     // {

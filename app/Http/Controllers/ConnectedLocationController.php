@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class ConnectedLocationController extends Controller
 {
@@ -44,6 +45,7 @@ class ConnectedLocationController extends Controller
                 'zip_code' => $validatedData['zip_code'] ?? null,
                 'latitude' => $validatedData['latitude'] ?? null,
                 'longitude' => $validatedData['longitude'] ?? null,
+                'location' => new Point($data['latitude'], $data['longitude']) ?? null,
             ]);
 
 
