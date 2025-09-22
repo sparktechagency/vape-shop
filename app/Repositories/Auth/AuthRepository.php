@@ -54,7 +54,9 @@ class AuthRepository implements AuthRepositoryInterface
             'zip_code' => $data['zip_code'] ?? null,
             'latitude' => $data['latitude'] ?? null,
             'longitude' => $data['longitude'] ?? null,
-            'location' => new Point($data['latitude'], $data['longitude']) ?? null,
+            'location' => (isset($data['latitude'], $data['longitude']) && $data['latitude'] !== null && $data['longitude'] !== null)
+                ? new Point((float)$data['latitude'], (float)$data['longitude'])
+                : null,
         ]);
         $user->load('address');
         return $user;

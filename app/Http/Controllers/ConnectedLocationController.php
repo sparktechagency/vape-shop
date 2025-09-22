@@ -45,7 +45,13 @@ class ConnectedLocationController extends Controller
                 'zip_code' => $validatedData['zip_code'] ?? null,
                 'latitude' => $validatedData['latitude'] ?? null,
                 'longitude' => $validatedData['longitude'] ?? null,
-                'location' => new Point($data['latitude'], $data['longitude']) ?? null,
+                'location' => (
+                    isset($validatedData['latitude'], $validatedData['longitude']) &&
+                    $validatedData['latitude'] !== null &&
+                    $validatedData['longitude'] !== null
+                )
+                    ? new Point((float)$validatedData['latitude'], (float)$validatedData['longitude'])
+                    : null,
             ]);
 
 
