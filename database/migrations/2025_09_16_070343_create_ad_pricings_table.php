@@ -16,15 +16,17 @@ return new class extends Migration
 
             // Foreign Keys
             $table->foreignId('ad_slot_id')->constrained()->onDelete('cascade');
-            $table->foreignId('category_id')->constrained();
+            $table->foreignId('category_id')->nullable()->constrained();
             $table->foreignId('region_id')->constrained();
+            $table->enum('type', ['product', 'follower', 'featured']);
             $table->json('details')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
-            // Unique key (Best Practice)
+
+            // Unique key (Updated)
             $table->unique(
-                ['ad_slot_id', 'category_id', 'region_id'],
-                'slot_category_region_unique'
+                ['ad_slot_id', 'category_id', 'region_id', 'type'],
+                'slot_category_region_type_unique'
             );
         });
     }

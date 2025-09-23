@@ -2,10 +2,8 @@
 
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\AboutController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use Illuminate\Container\Attributes\Auth;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\FavouriteController;
@@ -63,7 +61,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/update-profile', 'updateProfile')->middleware('jwt.auth', 'banned', 'is.suspended');
 });
 
-//admin routes
+//** admin routes
 Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::ADMIN->value]], function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard']);
 
@@ -179,7 +177,7 @@ Route::group([
 
 
 
-//Store Order routes
+//** Store Order routes
 Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE->value, 'check.subscription']], function () {
     Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index']);
     Route::get('/orders/{order}', [\App\Http\Controllers\OrderController::class, 'show']);
@@ -194,7 +192,7 @@ Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE
 
 
 
-//manage follow
+//** manage follow
 Route::group(['middleware' => ['jwt.auth', 'banned', 'check.subscription', 'is.suspended']], function () {
     Route::post('/follow', [FollowersController::class, 'follow']);
     Route::post('/unfollow', [FollowersController::class, 'unfollow']);
