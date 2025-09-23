@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Country;
 use App\Models\Region;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -16,7 +17,7 @@ class RegionController extends Controller
     public function index()
     {
         try {
-            $regions = Region::all();
+            $regions = Country::with('regions')->get();
             if ($regions->isEmpty()) {
                 return response()->error('No regions found.', 404);
             }
