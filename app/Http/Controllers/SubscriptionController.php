@@ -76,7 +76,7 @@ class SubscriptionController extends Controller
                 $admin->notify(new SubscriptionRequestReceivedNotification($subscription));
             }
         //send notification to user
-        $user->notify(new SubscriptionRequestConfirmation($subscription));
+        // $user->notify(new SubscriptionRequestConfirmation($subscription));
         }
 
 

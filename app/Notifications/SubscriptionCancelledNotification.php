@@ -21,7 +21,8 @@ class SubscriptionCancelledNotification extends Notification implements ShouldQu
 
     public function via($notifiable)
     {
-        return ['mail', 'database'];
+        // return ['mail', 'database'];
+        return ['database'];
     }
 
     public function toMail($notifiable)
