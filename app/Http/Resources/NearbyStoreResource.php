@@ -31,10 +31,7 @@ class NearbyStoreResource extends JsonResource
             'is_favourite' => $addressable->is_favourite ?? false,
             'avg_rating' => $addressable->avg_rating ?? 0,
             'distance' => $this->when(isset($this->distance), function () {
-                if ($this->distance < 1000) {
-                    return round($this->distance, 2) . ' m';
-                }
-                return round($this->distance / 1000, 2) . ' km';
+                return round($this->distance * 0.000621371, 2) . ' miles';
             }),
 
 
