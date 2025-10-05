@@ -54,7 +54,8 @@ class PostController extends Controller
             $cacheKey = $this->generateCacheKey('posts_index', [
                 'page' => $page,
                 'per_page' => $perPage,
-                'is_global' => $isGlobal
+                'is_global' => $isGlobal,
+                'content_type' => request()->get('content_type', 'post')
             ]);
 
             // Try to get from cache first
