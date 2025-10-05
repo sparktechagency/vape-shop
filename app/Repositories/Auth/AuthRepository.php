@@ -26,7 +26,7 @@ class AuthRepository implements AuthRepositoryInterface
             'name' => $firstName,
             'email' => $data['email'],
         ];
-        $otp_data = sentOtp($otp_data, 5);
+        $otp_data = sentOtp($otp_data, 10);
         $user = new User();
         $user->first_name = $firstName;
         $user->last_name = (int) $data['role'] === Role::MEMBER->value ? $data['last_name'] : '';
@@ -123,7 +123,7 @@ class AuthRepository implements AuthRepositoryInterface
             'name' => $user->first_name,
             'email' => $user->email,
         ];
-        $otp_data = sentOtp($otp_data, 5);
+        $otp_data = sentOtp($otp_data, 10);
         $user->otp = $otp_data['otp'];
         $user->otp_expire_at = $otp_data['otp_expire_at'];
         $user->save();
@@ -226,6 +226,7 @@ class AuthRepository implements AuthRepositoryInterface
         $address->region_id = $data['region_id'] ?? $address->region_id;
         $address->address = $data['address'] ?? $address->address;
         $address->zip_code = $data['zip_code'] ?? $address->zip_code;
+        $address->city = $data['city'] ?? $address->city;
         $address->latitude = $data['latitude'] ?? $address->latitude;
         $address->longitude = $data['longitude'] ?? $address->longitude;
         $address->location = new Point($data['latitude'], $data['longitude']) ?? $address->location;

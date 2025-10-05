@@ -27,6 +27,17 @@ class PostService
                 85, // quality
                 true // forceWebp
             );
+        }else{
+            $data['article_image'] = $data['article_image'] = $this->handleFileUpload(
+                request(),
+                'article_image',
+                'posts',
+                1920, // width
+                1080, // height
+                85, // quality
+                true // forceWebp
+            );
+
         }
         return $this->postRepository->createPost($data);
     }

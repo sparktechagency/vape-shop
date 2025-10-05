@@ -37,6 +37,7 @@ class UpdateProfileRequest extends FormRequest
             'address' => Auth::user()->role == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
             'zip_code' => Auth::user()->role == Role::STORE->value ? 'required|string|max:10' : 'nullable|string|max:10',
             'region_id' => Auth::user()->role == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'open_from' => 'nullable|date_format:H:i',
