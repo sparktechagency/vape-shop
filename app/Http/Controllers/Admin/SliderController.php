@@ -62,6 +62,7 @@ class SliderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:3072',
+            'link' => 'nullable|url|max:255',
         ]);
         if($validator->fails()){
             return response()->error($validator->errors()->first(), 422, $validator->errors());
@@ -91,6 +92,7 @@ class SliderController extends Controller
 
         $slider = new Slider();
         $slider->image = $imagePath;
+        $slider->link = $request->input('link');
         $slider->save();
 
         if($slider){
@@ -134,6 +136,7 @@ class SliderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:3072',
+            'link' => 'sometimes|url|max:255',
         ]);
         if($validator->fails()){
             return response()->error($validator->errors()->first(), 422, $validator->errors());
@@ -166,6 +169,7 @@ class SliderController extends Controller
                 true // forceWebp
             );
             $slider->image = $imagePath;
+            $slider->link = $request->input('link', $slider->link);
         }
 
         if($slider->save()){
