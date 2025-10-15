@@ -29,6 +29,7 @@ use App\Http\Controllers\Product\HeartedProductController;
 use App\Http\Controllers\Admin\AdApprovalsManageController;
 use App\Http\Controllers\Admin\AdPricingController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\RegionController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
@@ -123,6 +124,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
     Route::get('/ad-pricings', [AdPricingController::class, 'index'])->withoutMiddleware(['check.role:' . Role::ADMIN->value]);
     Route::post('/ad-pricings', [AdPricingController::class, 'saveOrUpdate']);
     Route::delete('/ad-pricings/{id}', [AdPricingController::class, 'destroy']);
+
+    //country
+    Route::apiResource('country',CountryController::class)->except(['create', 'edit']);
 });
 
 

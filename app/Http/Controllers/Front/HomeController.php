@@ -202,93 +202,97 @@ class HomeController extends Controller
 
 
 
-public function searchLocations(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        // Radius Search Parameters
-        'latitude' => 'required_with:radius,longitude|numeric|between:-90,90',
-        'longitude' => 'required_with:radius,latitude|numeric|between:-180,180',
-        'radius' => 'sometimes|required_with:latitude,longitude|numeric|min:1',
+    public function searchLocations(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            // Radius Search Parameters
+            'latitude' => 'required_with:radius,longitude|numeric|between:-90,90',
+            'longitude' => 'required_with:radius,latitude|numeric|between:-180,180',
+            'radius' => 'sometimes|required_with:latitude,longitude|numeric|min:1',
 
-        // Bounding Box Search Parameters
-        'sw_lat' => 'sometimes|required_with:sw_lng,ne_lat,ne_lng|numeric|between:-90,90',
-        'sw_lng' => 'sometimes|required_with:sw_lat,ne_lat,ne_lng|numeric|between:-180,180',
-        'ne_lat' => 'sometimes|required_with:sw_lat,sw_lng,ne_lng|numeric|between:-90,90',
-        'ne_lng' => 'sometimes|required_with:sw_lat,sw_lng,ne_lat|numeric|between:-180,180',
-    ]);
+            // Bounding Box Search Parameters
+            'sw_lat' => 'sometimes|required_with:sw_lng,ne_lat,ne_lng|numeric|between:-90,90',
+            'sw_lng' => 'sometimes|required_with:sw_lat,ne_lat,ne_lng|numeric|between:-180,180',
+            'ne_lat' => 'sometimes|required_with:sw_lat,sw_lng,ne_lng|numeric|between:-90,90',
+            'ne_lng' => 'sometimes|required_with:sw_lat,sw_lng,ne_lat|numeric|between:-180,180',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json($validator->errors(), 422);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $baseQuery = Address::query()
+            ->where(function ($query) {
+                $query->where('addressable_type', Branch::class)
+                    ->orWhereHasMorph(
+                        'addressable',
+                        [User::class],
+                        fn($q) => $q->where('role', Role::STORE->value)
+                    );
+            })
+            ->with('addressable');
+
+        if ($request->has('radius')) {
+            // --- Radius Search Logic ---
+            $lat = $request->input('latitude');
+            $lng = $request->input('longitude');
+
+
+            $radiusInMeters = $request->input('radius', 10000);
+            $userLocation = new Point($lat, $lng);
+
+            $locations = $baseQuery
+                ->selectRaw(
+                    "*, ST_DISTANCE_SPHERE(location, POINT(?, ?)) as distance",
+                    [$lng, $lat]
+                )
+                ->whereDistanceSphere('location', $userLocation, '<=', $radiusInMeters)
+                ->orderBy('distance', 'asc')
+                ->get();
+        } elseif ($request->has('sw_lat')) {
+            // --- Bounding Box Search Logic ---
+            $sw_lat = $request->sw_lat;
+            $sw_lng = $request->sw_lng;
+            $ne_lat = $request->ne_lat;
+            $ne_lng = $request->ne_lng;
+
+            $boundingBox = new Polygon([
+                new LineString([
+                    new Point($sw_lat, $sw_lng),
+                    new Point($ne_lat, $sw_lng),
+                    new Point($ne_lat, $ne_lng),
+                    new Point($sw_lat, $ne_lng),
+                    new Point($sw_lat, $sw_lng),
+                ])
+            ]);
+
+
+            $locationsQuery = $baseQuery->whereWithin('location', $boundingBox);
+
+
+            $referencePoint = null;
+            if ($request->has('latitude') && $request->has('longitude')) {
+
+                $referencePoint = new Point($request->latitude, $request->longitude);
+            } else {
+
+                $centerLat = ($sw_lat + $ne_lat) / 2;
+                $centerLng = ($sw_lng + $ne_lng) / 2;
+                $referencePoint = new Point($centerLat, $centerLng);
+            }
+
+            $locationsQuery->withDistance('location', $referencePoint)
+                ->orderBy('distance', 'asc');
+
+            $locations = $locationsQuery->get();
+        } else {
+            return response()->error('Invalid search parameters. Please provide either radius or bounding box coordinates.', 422);
+        }
+
+        if ($locations->isEmpty()) {
+            return response()->error('No nearby locations found', 404);
+        }
+
+        return NearbyStoreResource::collection($locations);
     }
-
-    $baseQuery = Address::query()
-        ->where(function ($query) {
-            $query->where('addressable_type', Branch::class)
-                ->orWhereHasMorph(
-                    'addressable',
-                    [User::class],
-                    fn ($q) => $q->where('role', Role::STORE->value)
-                );
-        })
-        ->with('addressable');
-
-    if ($request->has('radius')) {
-        // --- Radius Search Logic ---
-        $lat = $request->input('latitude');
-        $lng = $request->input('longitude');
-        $radiusInMeters = $request->input('radius', 10000);
-        $userLocation = new Point($lat, $lng);
-
-        $locations = $baseQuery
-            ->withDistance('location', $userLocation)
-            ->whereDistanceSphere('location', $userLocation, '<=', $radiusInMeters)
-            ->orderBy('distance', 'asc')
-            ->get();
-
-    } elseif ($request->has('sw_lat')) {
-    // --- Bounding Box Search Logic ---
-    $sw_lat = $request->sw_lat;
-    $sw_lng = $request->sw_lng;
-    $ne_lat = $request->ne_lat;
-    $ne_lng = $request->ne_lng;
-
-    $boundingBox = new Polygon([
-        new LineString([
-            new Point($sw_lat, $sw_lng), new Point($ne_lat, $sw_lng),
-            new Point($ne_lat, $ne_lng), new Point($sw_lat, $ne_lng),
-            new Point($sw_lat, $sw_lng),
-        ])
-    ]);
-
-
-    $locationsQuery = $baseQuery->whereWithin('location', $boundingBox);
-
-
-    $referencePoint = null;
-    if ($request->has('latitude') && $request->has('longitude')) {
-
-        $referencePoint = new Point($request->latitude, $request->longitude);
-    } else {
-
-        $centerLat = ($sw_lat + $ne_lat) / 2;
-        $centerLng = ($sw_lng + $ne_lng) / 2;
-        $referencePoint = new Point($centerLat, $centerLng);
-    }
-
-    $locationsQuery->withDistance('location', $referencePoint)
-                   ->orderBy('distance', 'asc');
-
-    $locations = $locationsQuery->get();
-} else {
-        return response()->error('Invalid search parameters. Please provide either radius or bounding box coordinates.', 422);
-    }
-
-    if ($locations->isEmpty()) {
-        return response()->error('No nearby locations found', 404);
-    }
-
-    return NearbyStoreResource::collection($locations);
-}
-
-
 }
