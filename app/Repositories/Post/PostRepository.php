@@ -8,6 +8,8 @@ use App\Models\Post;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Traits\FileUploadTrait;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PostRepository implements PostInterface
 {
@@ -20,19 +22,41 @@ class PostRepository implements PostInterface
     }
 
     //create post
-    public function createPost(array $data)
+    public function createPost(array $data, ?Request $request = null)
     {
-        $content_type = request()->get('content_type', 'post');
-        if ($content_type === 'article') {
-            $data['content_type'] = 'article';
-        } else {
-            $data['content_type'] = 'post';
+        $post = DB::transaction(function () use ($data) {
+
+            $postData = [
+                'title'     => $data['title'] ?? null,
+                'content'   => $data['content'],
+                'user_id'   => Auth::id(),
+                'content_type'  => $data['content_type'],
+                'is_in_gallery' => $data['is_in_gallery'] ?? false,
+                'article_image' => null,
+            ];
+
+            if ($data['content_type'] === 'article') {
+                $postData['article_image'] = $data['article_image_path'] ?? null;
+                $post = $this->post->create($postData);
+            } else {
+                $post = $this->post->create($postData);
+                if (!empty($data['image_paths'])) {
+                    foreach ($data['image_paths'] as $path) {
+                        $post->postImages()->create([
+                            'image_path' => $path,
+                        ]);
+                    }
+                }
+            }
+
+
+            return $post;
+        });
+
+        if ($post->content_type === 'post') {
+            $post->load('postImages');
         }
-        $data['user_id'] = Auth::id();
-        // if ($content_type !== 'article' && (Auth::user()->role === Role::MEMBER->value || Auth::user()->role === Role::ADMIN->value || Auth::user()->role === Role::ASSOCIATION)) {
-        //     throw new \Exception('You are not allowed to create a post');
-        // }
-        return $this->post->create($data);
+        return $post;
     }
 
     //update post
@@ -59,7 +83,7 @@ class PostRepository implements PostInterface
                     85, // quality
                     true // forceWebp
                 );
-            }else{
+            } else {
                 $data['article_image'] = getStorageFilePath($post->article_image); // keep old image if not updated
             }
 
@@ -108,7 +132,7 @@ class PostRepository implements PostInterface
         if ($content_type === 'article') {
             $query = $this->post->where('content_type', 'article');
         } else {
-            $query = $this->post->where('content_type', 'post');
+            $query = $this->post->with('postImages')->where('content_type', 'post');
         }
         if (!$isGlobal && $userId) {
             $query->where('user_id', $userId);
