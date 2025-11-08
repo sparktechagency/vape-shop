@@ -53,6 +53,7 @@ class PostController extends Controller
             // Generate cache key with all parameters
             $cacheKey = $this->generateCacheKey('posts_index', [
                 'page' => $page,
+                'user_id' => auth()->id(),
                 'per_page' => $perPage,
                 'is_global' => $isGlobal,
                 'content_type' => request()->get('content_type', 'post')
@@ -87,7 +88,7 @@ class PostController extends Controller
     {
         try {
             $data = $request->validated();
-            $post = $this->postService->createPost($data);
+            $post = $this->postService->createPost($data, $request);
             return response()->success($post, 'Post created successfully');
         } catch (\Exception $e) {
             return response()->error('Failed to create post', 500, $e->getMessage());

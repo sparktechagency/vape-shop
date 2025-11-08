@@ -85,4 +85,8 @@ class Post extends Model
         return $userId ? $this->likes()->where('user_id', $userId)->exists() : false;
     }
 
+    public function postImages()
+    {
+        return $this->hasMany(PostImage::class);
+    }
 }

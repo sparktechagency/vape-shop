@@ -1,7 +1,11 @@
 <?php
+
 namespace App\Services\Post;
+
 use App\Interfaces\Post\PostInterface;
 use App\Traits\FileUploadTrait;
+use Illuminate\Http\Request;
+
 
 class PostService
 {
@@ -13,31 +17,36 @@ class PostService
         $this->postRepository = $postRepository;
     }
 
-    public function createPost(array $data)
+    public function createPost(array $data, Request $request)
     {
-        $articleImage = request()->file('article_image') ?? null;
-        if ($articleImage) {
-            // $data['article_image'] = $articleImage->store('articles', 'public');
-            $data['article_image'] = $this->handleFileUpload(
-                request(),
-                'article_image',
-                'articles',
-                1920, // width
-                1080, // height
-                85, // quality
-                true // forceWebp
-            );
-        }else{
-            $data['article_image'] = $data['article_image'] = $this->handleFileUpload(
-                request(),
-                'article_image',
-                'posts',
-                1920, // width
-                1080, // height
-                85, // quality
-                true // forceWebp
-            );
+        if ($data['content_type'] === 'article') {
 
+
+            if ($request->hasFile('image')) {
+                $data['article_image_path'] = $this->handleFileUpload(
+                    $request,
+                    'image',
+                    'articles',
+                    1920,
+                    1080,
+                    85,
+                    true
+                );
+            }
+        } else {
+
+            $data['image_paths'] = [];
+
+            if ($request->hasFile('images')) {
+
+                foreach ($request->file('images') as $imageFile) {
+
+                    $path = $imageFile->store('public/posts');
+                    $data['image_paths'][] = $path;
+                }
+
+
+            }
         }
         return $this->postRepository->createPost($data);
     }

@@ -1,9 +1,10 @@
 <?php
 namespace App\Interfaces\Post;
+use Illuminate\Http\Request;
 
 interface PostInterface
 {
-    public function createPost(array $data);
+    public function createPost(array $data, ?Request $request = null);
     public function updatePost(int $postId, array $data);
     public function deletePost(int $postId);
     public function getPostById(int $postId);

@@ -23,11 +23,23 @@ class PostRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $contentType = $this->input('content_type', 'post');
+        $rules = [
             'title' => 'nullable|string|max:255',
             'content' => 'required|string',
-            'article_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'content_type' => 'required|in:post,article',
         ];
+
+        if ($contentType === 'article') {
+
+            $rules['image'] = 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048';
+        } else {
+            $rules['images'] = 'required|array|min:1';
+            $rules['images.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
+            $rules['is_in_gallery'] = 'sometimes|boolean';
+        }
+
+        return $rules;
     }
 
     //attributes
@@ -47,5 +59,4 @@ class PostRequest extends FormRequest
             response()->error($validator->errors()->first(), 422, $validator->errors())
         );
     }
-
 }
