@@ -49,6 +49,7 @@ class PostController extends Controller
             $page = request()->get('page', 1);
             $perPage = request()->get('per_page', 10);
             $isGlobal = request()->boolean('is_global');
+            $isInGallery = request()->boolean('is_in_gallery');
 
             // Generate cache key with all parameters
             $cacheKey = $this->generateCacheKey('posts_index', [
@@ -56,6 +57,7 @@ class PostController extends Controller
                 'user_id' => auth()->id(),
                 'per_page' => $perPage,
                 'is_global' => $isGlobal,
+                'is_in_gallery' => $isInGallery,
                 'content_type' => request()->get('content_type', 'post')
             ]);
 

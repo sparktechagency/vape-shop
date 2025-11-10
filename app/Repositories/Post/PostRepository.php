@@ -127,6 +127,7 @@ class PostRepository implements PostInterface
         $content_type = request()->get('content_type', 'post');
         $isGlobal = request()->boolean('is_global');
         $regionId = request()->get('region_id', null);
+        $isInGallery = request()->boolean('is_in_gallery', false);
         $userId = Auth::id();
         // dd($content_type, $isGlobal, $userId);
         if ($content_type === 'article') {
@@ -139,6 +140,9 @@ class PostRepository implements PostInterface
         }
         if ($regionId) {
             $query->whereRelation('user.address', 'region_id', $regionId);
+        }
+        if ($isInGallery) {
+            $query->where('is_in_gallery', true);
         }
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
