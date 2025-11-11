@@ -4,6 +4,7 @@ namespace App\Services\Post;
 
 use App\Interfaces\Post\PostInterface;
 use App\Traits\FileUploadTrait;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 
 
@@ -20,7 +21,6 @@ class PostService
     public function createPost(array $data, Request $request)
     {
         if ($data['content_type'] === 'article') {
-
 
             if ($request->hasFile('image')) {
                 $data['article_image_path'] = $this->handleFileUpload(
@@ -40,8 +40,14 @@ class PostService
             if ($request->hasFile('images')) {
 
                 foreach ($request->file('images') as $imageFile) {
+                    $originalFileName = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                    $cleanFileName = \Illuminate\Support\Str::slug($originalFileName);
+                    $fileName = time() . '_' . $cleanFileName . '.' . $imageFile->getClientOriginalExtension();
 
-                    $path = $imageFile->store('public/posts');
+                    $path = Storage::disk('public')->put(
+                        'posts',
+                        $imageFile
+                    );
                     $data['image_paths'][] = $path;
                 }
 

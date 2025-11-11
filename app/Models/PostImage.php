@@ -12,4 +12,10 @@ class PostImage extends Model
     {
         return $this->belongsTo(Post::class);
     }
+
+    // Accessor to get full URL of the image
+    public function getImagePathAttribute($value)
+    {
+        return $value ? asset('storage/' . $value) : null;
+    }
 }

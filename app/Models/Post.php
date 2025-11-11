@@ -9,6 +9,7 @@ class Post extends Model
 {
     protected $fillable = [
         'user_id',
+        'is_in_gallery',
         'title',
         'content',
         'article_image',

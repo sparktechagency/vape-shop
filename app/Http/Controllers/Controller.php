@@ -10,3 +10,4 @@ abstract class Controller extends \Illuminate\Routing\Controller
     //
     use AuthorizesRequests, ValidatesRequests;
 }
+
