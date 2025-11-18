@@ -154,4 +154,31 @@ class PostRepository implements PostInterface
         }
         return null;
     }
+
+
+    public function getTrendingPosts()
+    {
+        $userId = Auth::id();
+        $limit = request()->get('limit', 10);
+
+        return $this->post->query()
+            ->with('postImages')
+            ->withCount('likes')
+
+            ->withExists(['likes as is_post_liked' => function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            }])
+
+            ->where('content_type', 'post')
+            ->where('is_in_gallery', true)
+
+            ->has('likes')
+            ->where('created_at', '>=', now()->subDays(30))
+
+            ->orderBy('likes_count', 'desc')
+            ->orderBy('created_at', 'desc')
+
+            ->take($limit)
+            ->get();
+    }
 }

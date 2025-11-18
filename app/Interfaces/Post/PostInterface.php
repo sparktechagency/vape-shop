@@ -9,6 +9,7 @@ interface PostInterface
     public function deletePost(int $postId);
     public function getPostById(int $postId);
     public function getAllPosts();
+    public function getTrendingPosts();
     // public function likePost(int $postId, int $userId);
     // public function unlikePost(int $postId, int $userId);
     // public function commentOnPost(int $postId, int $userId, string $comment);

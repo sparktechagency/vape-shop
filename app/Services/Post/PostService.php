@@ -50,8 +50,6 @@ class PostService
                     );
                     $data['image_paths'][] = $path;
                 }
-
-
             }
         }
         return $this->postRepository->createPost($data);
@@ -77,5 +75,10 @@ class PostService
     public function getAllPosts()
     {
         return $this->postRepository->getAllPosts();
+    }
+
+    public function getTrendingPosts()
+    {
+        return $this->postRepository->getTrendingPosts();
     }
 }

@@ -279,6 +279,7 @@ Route::prefix('forum-groups/{group}')->group(function () {
 
 //==================forum routes=======================
 //post and article routes
+Route::get('/posts/trending', [PostController::class, 'getTrendingPosts']);
 Route::apiResource('post', PostController::class)->except(['create', 'edit']);
 //get post by user id
 Route::get('/get-posts-by-user-id/{userId}', [PostController::class, 'getPostsByUserId']);

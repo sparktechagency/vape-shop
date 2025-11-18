@@ -174,7 +174,8 @@ class PostController extends Controller
     }
 
     // get all posts by user
-    public function getPostsByUserId($userId){
+    public function getPostsByUserId($userId)
+    {
         try {
             $perPage = request()->input('per_page', 10);
             $page = request()->input('page', 1);
@@ -196,17 +197,35 @@ class PostController extends Controller
                     },
                     'comments.replies'
                 ])
-                ->where('user_id', $userId)
-                ->paginate($perPage);
+                    ->where('user_id', $userId)
+                    ->paginate($perPage);
             });
 
             if ($posts->isEmpty()) {
                 return response()->error('No posts found for this user', 404);
             }
             return response()->success($posts, 'Posts retrieved successfully');
-
         } catch (\Exception $e) {
             return response()->error('Failed to retrieve posts', 500, $e->getMessage());
+        }
+    }
+
+
+    public function getTrendingPosts()
+    {
+        try {
+
+            $posts = Cache::remember('posts_trending', 600, function () {
+                return $this->postService->getTrendingPosts();
+            });
+
+            if($posts->isEmpty()) {
+                return response()->error('No trending posts found', 404);
+            }
+
+            return response()->success($posts, 'Trending posts retrieved');
+        } catch (\Exception $e) {
+            return response()->error('Failed to get trending posts', 500, $e->getMessage());
         }
     }
 }
