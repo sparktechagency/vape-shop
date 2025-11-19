@@ -16,7 +16,7 @@ class B2bProductResource extends JsonResource
     {
         $b2bPricing = $this->b2bPricing;
 
-        
+
         if (!$b2bPricing) {
             return [];
         }

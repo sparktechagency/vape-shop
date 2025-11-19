@@ -24,5 +24,8 @@ class B2bPricing extends Model
         return $this->morphOne(B2bPricing::class, 'productable');
     }
 
-    
+    public function productable()
+    {
+        return $this->morphTo();
+    }
 }
