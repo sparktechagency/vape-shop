@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use App\Traits\HasAdjustedMetrics;
 
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasAdjustedMetrics;
 
     /**
      * The attributes that are mass assignable.
@@ -254,7 +255,8 @@ class User extends Authenticatable implements JWTSubject
     //get total followers
     public function getTotalFollowersAttribute(): int
     {
-        return $this->followers()->count();
+        $realCount = $this->followers()->count();
+        return $this->getAdjustedTotal('follower', $realCount);
     }
     //get total following
     public function getTotalFollowingAttribute(): int

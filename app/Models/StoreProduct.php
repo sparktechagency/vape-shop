@@ -4,9 +4,12 @@ namespace App\Models;
 
 use App\Enums\UserRole\Role;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasAdjustedMetrics;
 
 class StoreProduct extends Model
 {
+    use HasAdjustedMetrics;
+
     protected $table = 'store_products';
     protected $guarded = ['id'];
     protected $casts = [
@@ -58,7 +61,8 @@ class StoreProduct extends Model
     //hearted product count
     public function getTotalHeartAttribute()
     {
-        return $this->hasMany(Heart::class, 'store_product_id')->count();
+        $realCount = $this->hasMany(Heart::class, 'store_product_id')->count();
+        return $this->getAdjustedTotal('heart', $realCount);
     }
 
     //is_hearted attribute

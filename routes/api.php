@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\RegionController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\AdminMetricController;
 use App\Http\Controllers\B2bConnectionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\B2bPricingController;
@@ -127,6 +128,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['jwt.auth', 'banned', 'check
 
     //country
     Route::apiResource('country',CountryController::class)->except(['create', 'edit']);
+
+    Route::post('/interactions/update', [AdminMetricController::class, 'storeOrUpdate']);
+    Route::get('/interactions/get', [AdminMetricController::class, 'getMetric']);
+    Route::get('/interactions/list', [AdminMetricController::class, 'getAllAdjustments']);
 });
 
 
