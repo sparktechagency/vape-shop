@@ -215,9 +215,9 @@ class PostController extends Controller
     {
         try {
 
-            $posts = Cache::remember('posts_trending', 600, function () {
-                return $this->postService->getTrendingPosts();
-            });
+
+            $posts = $this->postService->getTrendingPosts();
+
 
             if($posts->isEmpty()) {
                 return response()->error('No trending posts found', 404);
