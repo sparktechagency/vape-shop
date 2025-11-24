@@ -12,6 +12,7 @@ use App\Models\StoreProduct;
 use App\Models\ManageProduct; // Used for Brands
 use App\Models\WholesalerProduct;
 use App\Models\User;
+use App\Models\Post;
 
 class AdminMetricController extends Controller
 {
