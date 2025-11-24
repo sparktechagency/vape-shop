@@ -414,21 +414,28 @@ class User extends Authenticatable implements JWTSubject
 
     public function getSubscriptionDataAttribute()
     {
-        $activeSubscription = $this->subscriptions()
+        $activeSubscriptions = $this->subscriptions()
             ->where('invoice_status', 'paid')
             ->where('ends_at', '>', now())
             ->orderBy('ends_at', 'desc')
-            ->first();
+            ->get();
 
-        if (!$activeSubscription || empty($activeSubscription->plan_details)) {
-            return null;
+
+        if ($activeSubscriptions->isEmpty()) {
+            return [];
         }
-        $details = $activeSubscription->plan_details[0];
 
-        return [
-            'type'  => $details['type'] ?? null,
-            'badge' => $details['badge'] ?? null,
-        ];
+        return $activeSubscriptions->map(function ($sub) {
+
+
+            $details = $sub->plan_details[0] ?? [];
+
+            return [
+                'type'    => $details['type'] ?? null,
+                'badge'   => $details['badge'] ?? null,
+                'ends_at' => $sub->ends_at->format('Y-m-d'), 
+            ];
+        });
     }
 
     public function joinedForumGroups()
