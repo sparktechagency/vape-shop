@@ -191,6 +191,7 @@ class PostController extends Controller
             $posts = Cache::tags(['posts', 'users'])->remember($cacheKey, self::CACHE_TTL, function () use ($userId, $perPage) {
                 return Post::with([
                     'user:id,first_name,last_name,role,avatar',
+                    'postImages',
                     'comments' => function ($query) {
                         $query->whereNull('parent_id')
                             ->with(['user:id,first_name,last_name,role,avatar']);

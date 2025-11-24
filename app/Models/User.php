@@ -44,6 +44,7 @@ class User extends Authenticatable implements JWTSubject
         'unread_conversations_count',
         'is_subscribed',
         'unread_notifications',
+        'subscription_data',
         // 'region',
     ];
 
@@ -127,7 +128,7 @@ class User extends Authenticatable implements JWTSubject
     //full  name
     public function getFullNameAttribute(): string
     {
-        if($this->last_name === 'null' || $this->last_name === null){
+        if ($this->last_name === 'null' || $this->last_name === null) {
             return $this->first_name;
         }
         $fullName = $this->first_name . ' ' . $this->last_name;
@@ -189,7 +190,7 @@ class User extends Authenticatable implements JWTSubject
     // {
     //     return $this->hasOne(Address::class);
     // }
-     public function address()
+    public function address()
     {
         return $this->morphOne(Address::class, 'addressable');
     }
@@ -409,6 +410,25 @@ class User extends Authenticatable implements JWTSubject
     public function getIsSubscribedAttribute(): bool
     {
         return $this->hasActiveSubscription();
+    }
+
+    public function getSubscriptionDataAttribute()
+    {
+        $activeSubscription = $this->subscriptions()
+            ->where('invoice_status', 'paid')
+            ->where('ends_at', '>', now())
+            ->orderBy('ends_at', 'desc')
+            ->first();
+
+        if (!$activeSubscription || empty($activeSubscription->plan_details)) {
+            return null;
+        }
+        $details = $activeSubscription->plan_details[0];
+
+        return [
+            'type'  => $details['type'] ?? null,
+            'badge' => $details['badge'] ?? null,
+        ];
     }
 
     public function joinedForumGroups()
