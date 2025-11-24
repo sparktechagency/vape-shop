@@ -107,7 +107,6 @@ class Post extends Model
         return $userId ? $this->likes()->where('user_id', $userId)->exists() : false;
     }
 
-   -
     public function getIsHeartedAttribute()
     {
         if (array_key_exists('is_hearted', $this->attributes)) {
