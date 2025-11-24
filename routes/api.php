@@ -254,6 +254,8 @@ Route::get('/most-rated-reviews', [ReviewController::class, 'mostRatedReviews'])
 //user latest reviews
 Route::get('/user-latest-reviews', [ReviewController::class, 'userLatestReviews']);
 
+Route::get('/my-latest-reviews', [ReviewController::class, 'myLatestReviews']);
+
 //==================forum routes=======================
 //Forum group
 Route::apiResource('forum-group', ForumGroupController::class)->except(['create', 'edit'])->parameter('forum-group', 'group');

@@ -31,7 +31,7 @@ class FeedController extends Controller
         $perPage = $request->input('per_page', 10);
         $userID = $request->input('user_id', Auth::id());
         $page = $request->input('page', 1);
-        
+
         $user = User::find($userID);
 
         if (!$user) {
@@ -59,7 +59,7 @@ class FeedController extends Controller
         $post = Cache::tags(['posts', 'feed', 'users'])->remember($cacheKey, self::CACHE_TTL, function () use ($followingsIds, $perPage) {
             return Post::whereIn('user_id', $followingsIds)
                 ->where('content_type', 'post')
-                ->with(['user:id,first_name,last_name,avatar,role', 'comments' => function ($query) {
+                ->with(['user:id,first_name,last_name,avatar,role','postImages', 'comments' => function ($query) {
                     $query->select('id', 'post_id', 'user_id', 'comment', 'created_at')
                         ->with(['user:id,first_name,last_name,avatar,role','replies']);
                 }])
