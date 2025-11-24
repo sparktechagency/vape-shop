@@ -4,9 +4,11 @@ namespace App\Models;
 
 use App\Enums\UserRole\Role;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasAdjustedMetrics;
 
 class Post extends Model
 {
+    use HasAdjustedMetrics;
     protected $fillable = [
         'user_id',
         'is_in_gallery',
@@ -19,9 +21,9 @@ class Post extends Model
     protected $appends = [
         'role',
         'like_count',
-        'hearts_count',  // <--- ঠিক আছে
+        'hearts_count',
         'is_post_liked',
-        'is_hearted',    // <--- (NEW) এইটা মিসিং ছিল
+        'is_hearted',
     ];
 
     protected $hidden = ['user'];
@@ -77,24 +79,27 @@ class Post extends Model
         return $value ? asset('storage/' . $value) : null;
     }
 
-    // --- (FIXED) Like Count Attribute ---
+
     public function getLikeCountAttribute()
     {
-        // আগে চেক করবে withCount করা আছে কিনা, না থাকলে কুয়েরি করবে
-        return $this->attributes['likes_count'] ?? $this->likes()->count();
+
+        $realCount = $this->attributes['likes_count'] ?? $this->likes()->count();
+
+        return $this->getAdjustedTotal('upvote', $realCount);
     }
 
-    // --- (NEW) Heart Count Attribute ---
+
     public function getHeartsCountAttribute()
     {
-        // (NEW) এই ফাংশনটা মিসিং ছিল যার কারণে এরর আসতো
-        return $this->attributes['hearts_count'] ?? $this->hearts()->count();
+
+        $realCount = $this->attributes['hearts_count'] ?? $this->hearts()->count();
+        return $this->getAdjustedTotal('heart', $realCount);
     }
 
-    // --- (FIXED) Is Post Liked Attribute ---
+
     public function getIsPostLikedAttribute()
     {
-        // আগে চেক করবে withExists করা আছে কিনা
+
         if (array_key_exists('is_post_liked', $this->attributes)) {
             return (bool) $this->attributes['is_post_liked'];
         }
@@ -102,7 +107,7 @@ class Post extends Model
         return $userId ? $this->likes()->where('user_id', $userId)->exists() : false;
     }
 
-    // --- (NEW) Is Hearted Attribute ---
+   -
     public function getIsHeartedAttribute()
     {
         if (array_key_exists('is_hearted', $this->attributes)) {
