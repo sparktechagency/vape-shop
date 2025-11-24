@@ -12,18 +12,18 @@ class PostLikeService
         $this->postLikeRepository = $postLikeRepository;
     }
 
-    public function tiggerLike(int $postId, int $userId): bool
+    public function tiggerLike(int $postId, int $userId, string $type): array
     {
-        return $this->postLikeRepository->tiggerLike($postId, $userId);
+        return $this->postLikeRepository->tiggerLike($postId, $userId, $type);
     }
 
-    public function getLikesCount(int $postId): int
+    public function getLikesCount(int $postId, string $type): int
     {
-        return $this->postLikeRepository->getLikesCount($postId);
+        return $this->postLikeRepository->getLikesCount($postId, $type);
     }
 
-    public function getLikesByPostId(int $postId): array
+    public function getLikesByPostId(int $postId, string $type): array
     {
-        return $this->postLikeRepository->getLikesByPostId($postId);
+        return $this->postLikeRepository->getLikesByPostId($postId, $type);
     }
 }

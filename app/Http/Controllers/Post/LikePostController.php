@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Post\PostLikeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class LikePostController extends Controller
 {
@@ -15,16 +16,16 @@ class LikePostController extends Controller
         $this->postLikeService = $postLikeService;
     }
     //tigger like post
-    public function tiggerLike($postId)
+    public function tiggerLike(Request $request, $postId)
     {
         try {
             $userId = Auth::id();
-            $tiggerLike = $this->postLikeService->tiggerLike((int)$postId, $userId);
-            // dd($tiggerLike);
-            if ($tiggerLike) {
-                return response()->success($tiggerLike, 'Post liked successfully');
+            $type = $request->input('type', 'like');
+            $tiggerLike = $this->postLikeService->tiggerLike((int)$postId, $userId, $type);
+            if ($tiggerLike['is_active']) {
+                return response()->success($tiggerLike, "Post " . $type . "d successfully");
             } else {
-                return response()->success($tiggerLike, 'Post unliked successfully');
+                return response()->success($tiggerLike, "Post " . $type . " removed successfully");
             }
         } catch (\Exception $e) {
             return response()->error('Failed to like post', 500, $e->getMessage());
@@ -32,26 +33,28 @@ class LikePostController extends Controller
     }
 
     //get likes count
-    public function getLikesCount($postId)
+    public function getLikesCount(Request $request, $postId)
     {
         try {
-            $likesCount = $this->postLikeService->getLikesCount((int)$postId);
-            return response()->success($likesCount, 'Likes count retrieved successfully');
+            $type = $request->input('type', 'like');
+            $likesCount = $this->postLikeService->getLikesCount((int)$postId, $type);
+            return response()->success($likesCount, "{$type}s count retrieved successfully");
         } catch (\Exception $e) {
-            return response()->error('Failed to retrieve likes count', 500, $e->getMessage());
+            return response()->error("Failed to retrieve {$type}s count", 500, $e->getMessage());
         }
     }
     //get likes by post id
-    public function getLikesByPostId($postId)
+    public function getLikesByPostId(Request $request, $postId)
     {
         try {
-            $likes = $this->postLikeService->getLikesByPostId((int)$postId);
+            $type = $request->input('type', 'like');
+            $likes = $this->postLikeService->getLikesByPostId((int)$postId, $type);
             if (empty($likes)) {
-                return response()->error('No likes found for this post', 404);
+                return response()->error("No ". $type."s found for this post", 404);
             }
-            return response()->success($likes, 'Likes retrieved successfully');
+            return response()->success($likes, Str::ucfirst($type) . "s retrieved successfully");
         } catch (\Exception $e) {
-            return response()->error('Failed to retrieve likes', 500, $e->getMessage());
+            return response()->error("Failed to retrieve " . $type. "s", 500, $e->getMessage());
         }
     }
 }

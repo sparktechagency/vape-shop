@@ -418,7 +418,7 @@ class User extends Authenticatable implements JWTSubject
             ->where('invoice_status', 'paid')
             ->where('ends_at', '>', now())
             ->orderBy('ends_at', 'desc')
-            ->first();
+            ->get();
 
         if (!$activeSubscription || empty($activeSubscription->plan_details)) {
             return null;

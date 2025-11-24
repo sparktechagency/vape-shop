@@ -163,19 +163,17 @@ class PostRepository implements PostInterface
 
         return $this->post->query()
             ->with('postImages')
-            ->withCount('likes')
+            ->withCount('hearts')
 
-            ->withExists(['likes as is_post_liked' => function ($q) use ($userId) {
+            ->withExists(['hearts as is_hearted' => function ($q) use ($userId) {
                 $q->where('user_id', $userId);
             }])
-
             ->where('content_type', 'post')
             ->where('is_in_gallery', true)
-
-            ->has('likes')
+            ->has('hearts')
             ->where('created_at', '>=', now()->subDays(30))
+            ->orderBy('hearts_count', 'desc')
 
-            ->orderBy('likes_count', 'desc')
             ->orderBy('created_at', 'desc')
 
             ->take($limit)
