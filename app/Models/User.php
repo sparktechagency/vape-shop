@@ -433,7 +433,7 @@ class User extends Authenticatable implements JWTSubject
             return [
                 'type'    => $details['type'] ?? null,
                 'badge'   => $details['badge'] ?? null,
-                'ends_at' => $sub->ends_at->format('Y-m-d'), 
+                'ends_at' => $sub->ends_at->format('Y-m-d'),
             ];
         });
     }
@@ -455,5 +455,29 @@ class User extends Authenticatable implements JWTSubject
     public function branches()
     {
         return $this->hasMany(Branch::class);
+    }
+
+
+    public function outgoingConnections()
+    {
+        return $this->belongsToMany(User::class, 'connected_locations', 'store_id', 'connected_store_id')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
+
+
+    public function incomingConnections()
+    {
+        return $this->belongsToMany(User::class, 'connected_locations', 'connected_store_id', 'store_id')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
+
+
+    public function getConnectedLocationsAttribute()
+    {
+        $sent = $this->outgoingConnections()->wherePivot('status', 'accepted')->get();
+        $received = $this->incomingConnections()->wherePivot('status', 'accepted')->get();
+        return $sent->merge($received);
     }
 }

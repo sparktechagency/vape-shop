@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole\Role;
 use App\Http\Requests\ConnectedLocationRequest;
 use App\Models\Branch;
 use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use MatanYadaev\EloquentSpatial\Objects\Point;
@@ -142,5 +144,120 @@ class ConnectedLocationController extends Controller
         }
 
         return response()->success($branches, 'Active branches retrieved successfully.');
+    }
+
+
+
+    //**===================New connected location logic====================**//
+
+    public function sendConnectionRequest(Request $request)
+    {
+        $request->validate(['store_id' => 'required|integer']);
+
+        $user = Auth::user();
+
+
+        if ($user->role !== Role::STORE->value) {
+            return response()->error('Only stores can send connection requests.', 403);
+        }
+
+
+        if ($user->id == $request->store_id) {
+            return response()->error('You cannot connect with yourself.', 400);
+        }
+
+
+        $targetStore = User::where('id', $request->store_id)
+            ->where('role', Role::STORE->value)
+            ->first();
+
+        if (!$targetStore) {
+            return response()->error('Target store not found or is not a valid store.', 404);
+        }
+
+        $alreadyConnected = DB::table('connected_locations')
+            ->where(function ($q) use ($user, $targetStore) {
+                $q->where('store_id', $user->id)
+                    ->where('connected_store_id', $targetStore->id);
+            })
+            ->orWhere(function ($q) use ($user, $targetStore) {
+                $q->where('store_id', $targetStore->id)
+                    ->where('connected_store_id', $user->id);
+            })
+            ->exists();
+
+        if ($alreadyConnected) {
+            return response()->error('Request already sent or already connected.', 400);
+        }
+
+
+        $user->outgoingConnections()->syncWithoutDetaching([
+            $targetStore->id => ['status' => 'pending']
+        ]);
+
+        return response()->success(null, 'Connection request sent successfully.');
+    }
+
+
+    public function getConnectedLocations()
+    {
+        $locations = Auth::user()->connected_locations;
+        if($locations->isEmpty()){
+            return response()->error('No connected locations found.', 404);
+        }
+        return response()->success($locations, 'Connected locations retrieved successfully.');
+    }
+
+
+    public function respondToRequest(Request $request, $requesterId)
+    {
+        $request->validate([
+            'status' => 'required|in:accepted,rejected'
+        ]);
+
+        $user = Auth::user();
+        $updated = $user->incomingConnections()->updateExistingPivot($requesterId, [
+            'status' => $request->status
+        ]);
+
+        if ($updated) {
+            return response()->json([
+                'ok' => true,
+                'message' => 'Connection request ' . $request->status . ' successfully.'
+            ]);
+        }
+
+        return response()->json([
+            'ok' => false,
+            'message' => 'Request not found or already processed.'
+        ], 404);
+    }
+
+    public function removeConnection($storeId)
+    {
+        $myId = Auth::id();
+
+        $deleted = DB::table('connected_locations')
+            ->where(function ($query) use ($myId, $storeId) {
+                $query->where('store_id', $myId)
+                    ->where('connected_store_id', $storeId);
+            })
+            ->orWhere(function ($query) use ($myId, $storeId) {
+                $query->where('store_id', $storeId)
+                    ->where('connected_store_id', $myId);
+            })
+            ->delete();
+
+        if ($deleted) {
+            return response()->json([
+                'ok' => true,
+                'message' => 'Store disconnected successfully.'
+            ]);
+        }
+
+        return response()->json([
+            'ok' => false,
+            'message' => 'Connection not found or already removed.'
+        ], 404);
     }
 }

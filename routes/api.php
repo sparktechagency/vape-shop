@@ -198,7 +198,15 @@ Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE
     Route::get('/users/{user}/active-branches', [ConnectedLocationController::class, 'getActiveBranchesForUser']);
     Route::post('connected-location', [ConnectedLocationController::class, 'storeBranchRequest']);
     Route::delete('/branches/{branch}/cancel', [ConnectedLocationController::class, 'cancelBranchRequest']);
+
+    //**=====================New connected location logic====================**//
+
+    Route::post('/connected-location/add', [ConnectedLocationController::class, 'sendConnectionRequest']);
+    Route::get('/connected-location/get', [ConnectedLocationController::class, 'getConnectedLocations']);
+    Route::post('/connected-location/respond/{id}', [ConnectedLocationController::class, 'respondToRequest']);
+    Route::delete('/connected-location/remove/{id}', [ConnectedLocationController::class, 'removeConnection']);
 });
+
 
 
 
