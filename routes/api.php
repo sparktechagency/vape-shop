@@ -203,6 +203,7 @@ Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE
 
     Route::post('/connected-location/add', [ConnectedLocationController::class, 'sendConnectionRequest']);
     Route::get('/connected-location/get', [ConnectedLocationController::class, 'getConnectedLocations']);
+    Route::get('/incoming-connected-location/requests', [ConnectedLocationController::class, 'getIncomingConnectionRequests']);
     Route::post('/connected-location/respond/{id}', [ConnectedLocationController::class, 'respondToRequest']);
     Route::delete('/connected-location/remove/{id}', [ConnectedLocationController::class, 'removeConnection']);
 });

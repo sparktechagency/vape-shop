@@ -414,7 +414,7 @@ class User extends Authenticatable implements JWTSubject
 
    public function getSubscriptionDataAttribute()
 {
-    
+
     $activeSubscriptions = $this->subscriptions()
         ->where('invoice_status', 'paid')
         ->where('ends_at', '>', now())
@@ -488,4 +488,10 @@ class User extends Authenticatable implements JWTSubject
         $received = $this->incomingConnections()->wherePivot('status', 'accepted')->get();
         return $sent->merge($received);
     }
+
+    public function connectedLocationRequests()
+    {
+        return $this->incomingConnections()->wherePivot('status', 'pending');
+    }
+    
 }
