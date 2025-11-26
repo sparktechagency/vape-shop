@@ -208,6 +208,18 @@ class ConnectedLocationController extends Controller
         return response()->success($locations, 'Connected locations retrieved successfully.');
     }
 
+
+    //get location requests
+    public function getConnectedLocationsByUser(Request $request, User $user)
+    {
+        $locations = $user->connected_locations;
+        if($locations->isEmpty()){
+            return response()->error('No connected locations found.', 404);
+        }
+        return response()->success($locations, 'Connected locations retrieved successfully.');
+    }
+
+
     public function getIncomingConnectionRequests()
     {
         $requests = Auth::user()->connectedLocationRequests()->get();
