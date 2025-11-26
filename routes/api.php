@@ -208,7 +208,7 @@ Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE
     Route::delete('/connected-location/remove/{id}', [ConnectedLocationController::class, 'removeConnection']);
 });
 //**=====================New connected location logic without login user===================**//
-Route::get('/connected-location/user/{id}', [ConnectedLocationController::class, 'getConnectedLocationsByUser']);
+Route::get('/connected-location/user/{user}', [ConnectedLocationController::class, 'getConnectedLocationsByUser']);
 
 
 
