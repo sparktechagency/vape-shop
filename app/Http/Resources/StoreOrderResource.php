@@ -18,6 +18,7 @@ class StoreOrderResource extends JsonResource
             'order_id' => $this->id,
             'status' => $this->status,
             'sub_total' => $this->subtotal,
+            'tax_amount' => $this->tax_amount,
             'order_date' => $this->created_at->format('d M, Y'),
             'customer' => [
                 'name' =>$this->whenLoaded('checkout', $this->checkout->customer_name) ?? $this->user->full_name,

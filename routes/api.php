@@ -241,6 +241,7 @@ Route::group(['middleware' => ['jwt.auth', 'banned', 'check.subscription', 'is.s
 
     //order request
     Route::post('/order-request', [CheckoutController::class, 'orderRequest'])->middleware('check.role:' . Role::MEMBER->value);
+    Route::put('/order/update/{checkout_group_id}', [CheckoutController::class, 'updateOrderRequest'])->middleware('check.role:' . Role::MEMBER->value);
     Route::post('/checkout/{checkout:checkout_group_id}/cancel', [CheckoutController::class, 'cancelOrderRequest'])
      ->middleware('check.role:' . Role::MEMBER->value);
     Route::get('/checkouts', [CheckoutController::class, 'index']);

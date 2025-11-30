@@ -56,8 +56,8 @@ class CheckoutController extends Controller
             $products = StoreProduct::whereIn('id', array_column($cartItems, 'product_id'))->get()->keyBy('id');
             $groupedByStore = [];
             $grandTotal = 0;
-            // dd($products);
-            // return $cartItems;
+            $totaltaxAmount = 0;
+
             foreach ($cartItems as $item) {
                 $product = $products[$item['product_id']];
                 // return $product;
@@ -67,6 +67,7 @@ class CheckoutController extends Controller
                     $groupedByStore[$storeId] = [
                         'items' => [],
                         'sub_total' => 0,
+                        'tax_amount' => 0,
                         'store_owner' => $product->user,
                     ];
                 }
@@ -81,11 +82,22 @@ class CheckoutController extends Controller
                 $grandTotal += $lineTotal;
             }
 
+            foreach ($groupedByStore as $storeId => &$storeData) {
+
+                $taxRate = $storeData['store_owner']->tax_percentage ?? 0;
+                $taxAmount = ($storeData['sub_total'] * $taxRate) / 100;
+                $totaltaxAmount += $taxAmount;
+                $storeData['tax_amount'] = $taxAmount;
+                $grandTotal += ($storeData['sub_total'] + $taxAmount);
+            }
+            unset($storeData);
+            // dd($totaltaxAmount);
 
             $checkout = Checkout::create([
                 'user_id' => Auth::id(),
                 'checkout_group_id' => 'VSM-' . strtoupper(Str::random(12)),
                 'grand_total' => $grandTotal,
+                'total_tax_amount' => $totaltaxAmount,
                 'customer_name' => $validatedData['customer_name'],
                 'customer_email' => $validatedData['customer_email'],
                 'customer_phone' => $validatedData['customer_phone'],
@@ -102,6 +114,7 @@ class CheckoutController extends Controller
                     'store_id' => $storeId,
                     'user_id' => Auth::id(),
                     'subtotal' => $storeData['sub_total'],
+                    'tax_amount' => $storeData['tax_amount'],
                     'status' => 'pending',
                 ]);
 
@@ -152,6 +165,112 @@ class CheckoutController extends Controller
         }
     }
 
+
+    public function updateOrderRequest(CheckoutRequest $request, $checkoutGroupId)
+    {
+
+        $validatedData = $request->validated();
+        $cartItems = $validatedData['cart_items'];
+
+        DB::beginTransaction();
+
+        try {
+            $checkout = Checkout::where('checkout_group_id', $checkoutGroupId)
+                ->where('user_id', Auth::id())
+                ->firstOrFail();
+
+            if ($checkout->status !== 'pending') {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'This order cannot be updated because it is already ' . $checkout->status,
+                ], 403);
+            }
+
+            $checkout->orders()->delete();
+
+            $products = StoreProduct::whereIn('id', array_column($cartItems, 'product_id'))
+                ->get()
+                ->keyBy('id');
+
+            $groupedByStore = [];
+            $grandTotal = 0;
+
+            foreach ($cartItems as $item) {
+                $product = $products[$item['product_id']];
+                $storeId = $product->user_id;
+
+                if (!isset($groupedByStore[$storeId])) {
+                    $groupedByStore[$storeId] = [
+                        'items' => [],
+                        'sub_total' => 0,
+                        'store_owner' => $product->user,
+                    ];
+                }
+
+                $lineTotal = $product->product_price * $item['quantity'];
+
+                $groupedByStore[$storeId]['items'][] = [
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $product->product_price,
+                ];
+
+                $groupedByStore[$storeId]['sub_total'] += $lineTotal;
+                $grandTotal += $lineTotal;
+            }
+
+            $checkout->update([
+                'grand_total' => $grandTotal,
+                'customer_name' => $validatedData['customer_name'],
+                'customer_email' => $validatedData['customer_email'],
+                'customer_phone' => $validatedData['customer_phone'],
+                'customer_dob' => $validatedData['customer_dob'] ? \Carbon\Carbon::createFromFormat('d-m-Y', $validatedData['customer_dob']) : null,
+                'customer_address' => $validatedData['customer_address'],
+                'status' => 'pending',
+            ]);
+
+
+            foreach ($groupedByStore as $storeId => $storeData) {
+                $order = Order::create([
+                    'checkout_id' => $checkout->id,
+                    'store_id' => $storeId,
+                    'user_id' => Auth::id(),
+                    'subtotal' => $storeData['sub_total'],
+                    'status' => 'pending',
+                ]);
+
+
+                foreach ($storeData['items'] as $itemData) {
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $itemData['product_id'],
+                        'quantity' => $itemData['quantity'],
+                        'price' => $itemData['price'],
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Order updated successfully.',
+                'checkout_id' => $checkout->checkout_group_id,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'An error occurred while updating your order.',
+                'error' => [
+                    'message' => $e->getMessage(),
+                    'line' => $e->getLine()
+                ]
+            ], 500);
+        }
+    }
+
     //cancel order request
     public function cancelOrderRequest(string $checkoutGroupId)
     {
@@ -159,9 +278,9 @@ class CheckoutController extends Controller
 
         try {
             $checkout = Checkout::where('checkout_group_id', $checkoutGroupId)
-                                ->where('user_id', Auth::id())
-                                ->with('orders.store')
-                                ->first();
+                ->where('user_id', Auth::id())
+                ->with('orders.store')
+                ->first();
 
 
             if (!$checkout) {
@@ -218,7 +337,6 @@ class CheckoutController extends Controller
                 'ok' => true,
                 'message' => 'Your order has been successfully cancelled.',
             ], 200);
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -361,7 +479,7 @@ class CheckoutController extends Controller
                     throw new \Exception("The quantity for '{$product->product_name}' does not meet the minimum order requirement of {$b2bPriceRecord->moq}.");
                 }
 
-                 $price = $b2bPriceRecord->wholesale_price;
+                $price = $b2bPriceRecord->wholesale_price;
                 $subTotal += $price * $item['quantity'];
                 $orderItemsData[] = [
                     'productable_id' => $product->id,
@@ -410,7 +528,6 @@ class CheckoutController extends Controller
             DB::commit();
 
             return response()->success($checkout->load('orders.b2bOrderItems'), 'Your order has been sent successfully.', 201);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->error($e->getMessage(), 400);
@@ -445,7 +562,7 @@ class CheckoutController extends Controller
 
 
     //order cancel
-     public function cancelOrder(Checkout $checkout)
+    public function cancelOrder(Checkout $checkout)
     {
 
         if (Auth::id() !== $checkout->user_id) {
@@ -492,6 +609,4 @@ class CheckoutController extends Controller
             'Your order has been cancelled successfully.',
         );
     }
-
 }
-
