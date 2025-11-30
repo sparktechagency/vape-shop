@@ -17,6 +17,7 @@ class CheckoutResource extends JsonResource
         return [
             'checkout_id' => $this->checkout_group_id,
             'grand_total' => $this->grand_total,
+            'total_tax_amount' => $this->total_tax_amount,
             'overall_status' => $this->status,
             'checkout_date' => $this->created_at->format('d M, Y'),
             'sub_orders' => StoreOrderResource::collection($this->whenLoaded('orders')),

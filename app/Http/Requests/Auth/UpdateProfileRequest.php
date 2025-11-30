@@ -44,6 +44,7 @@ class UpdateProfileRequest extends FormRequest
             'close_at' => 'nullable|date_format:H:i|',
             'ein' => 'nullable|string|max:20|unique:users,ein,'. Auth::id(),
             'pl' => 'nullable|boolean',
+            'tax_percentage' => 'nullable|numeric|min:0|max:100',
         ];
 
         if (Auth::user()->role == Role::STORE->value) {
