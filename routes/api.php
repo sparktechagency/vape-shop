@@ -191,6 +191,7 @@ Route::group([
 Route::group(['middleware' => ['jwt.auth', 'banned', 'check.role:' . Role::STORE->value, 'check.subscription']], function () {
     Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index']);
     Route::get('/orders/{order}', [\App\Http\Controllers\OrderController::class, 'show']);
+    Route::put('/seller/order/update/{order_id}', [\App\Http\Controllers\OrderController::class, 'sellerUpdateOrder']);
     Route::put('/orders/{order}/status', [\App\Http\Controllers\OrderController::class, 'updateStatus'])->middleware('is.suspended');
 
     //connected Location
