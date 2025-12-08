@@ -17,8 +17,6 @@ use Illuminate\Support\Facades\Validator;
 class SubscriptionController extends Controller
 {
 
-
-
     //update Plans
     public function updatePlan(Request $request, $id)
     {

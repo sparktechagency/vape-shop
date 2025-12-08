@@ -11,6 +11,7 @@ class StoreProduct extends Model
     use HasAdjustedMetrics;
 
     protected $table = 'store_products';
+    protected $with = ['metricAdjustments'];
     protected $guarded = ['id'];
     protected $casts = [
         'product_faqs' => 'array',

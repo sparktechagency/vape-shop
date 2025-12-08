@@ -21,12 +21,11 @@ class AdminMetricController extends Controller
      */
     public function storeOrUpdate(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'target_id'   => 'required|integer',
             'target_type' => 'required|string|in:user,shop,brand,wholesaler,post',
             'metric_type' => 'required|string|in:follower,heart,upvote',
-            'count'       => 'required|integer|min:0',
+            'count'       => 'required|integer',
         ]);
 
         if ($validator->fails()) {
@@ -34,8 +33,6 @@ class AdminMetricController extends Controller
         }
 
         try {
-
-
             $metric = $request->metric_type;
             $targetType = $request->target_type;
 
@@ -45,7 +42,6 @@ class AdminMetricController extends Controller
                     'message' => 'Invalid Request: Followers can only be increased for Users.'
                 ], 400);
             }
-
 
             if ($metric === 'upvote' && $targetType !== 'post') {
                 return response()->json([
@@ -62,11 +58,11 @@ class AdminMetricController extends Controller
             }
 
             $modelClass = match ($targetType) {
-                'user'       => User::class,
-                'shop'       => StoreProduct::class,
-                'brand'      => ManageProduct::class,
-                'wholesaler' => WholesalerProduct::class,
-                'post'       => Post::class,
+                'user'       => \App\Models\User::class,
+                'shop'       => \App\Models\StoreProduct::class,
+                'brand'      => \App\Models\ManageProduct::class,
+                'wholesaler' => \App\Models\WholesalerProduct::class,
+                'post'       => \App\Models\Post::class,
                 default      => null,
             };
 
@@ -78,27 +74,26 @@ class AdminMetricController extends Controller
             $targetModel = $modelClass::find($request->target_id);
 
             if (!$targetModel) {
-
                 return response()->json([
                     'ok' => false,
                     'message' => ucfirst($targetType) . ' not found with the provided ID: ' . $request->target_id
                 ], 404);
             }
 
-            MetricAdjustment::updateOrCreate(
-                [
-                    'adjustable_id'   => $targetModel->id,
-                    'adjustable_type' => get_class($targetModel),
-                    'metric_type'     => $metric,
-                ],
-                [
-                    'adjustment_count' => $request->count
-                ]
-            );
+            $metricAdjustment = MetricAdjustment::firstOrNew([
+                'adjustable_id'   => $targetModel->id,
+                'adjustable_type' => get_class($targetModel),
+                'metric_type'     => $metric,
+            ]);
+
+            $metricAdjustment->adjustment_count = ($metricAdjustment->adjustment_count ?? 0) + $request->count;
+
+            $metricAdjustment->save();
 
             return response()->json([
                 'ok' => true,
-                'message' => ucfirst($metric) . ' count updated successfully for ' . ucfirst($targetType) . '.'
+                'message' => ucfirst($metric) . ' count updated successfully. Current total fake: ' . $metricAdjustment->adjustment_count,
+                'current_fake_count' => $metricAdjustment->adjustment_count
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -179,13 +174,10 @@ class AdminMetricController extends Controller
             $entity = $item->adjustable;
 
             $name = 'Unknown/Deleted';
-            $avatar = asset('images/default-avatar.png'); // ডিফল্ট ইমেজ
+            $avatar = asset('images/default-avatar.png');
             $realCount = 0;
 
             if ($entity) {
-                // ==========================================
-                // ১. নাম এবং অবতার সেটআপ
-                // ==========================================
                 if ($item->adjustable_type === \App\Models\User::class) {
                     $name = $entity->full_name ?? $entity->first_name ?? 'User';
                     $avatar = $entity->avatar;
@@ -199,10 +191,9 @@ class AdminMetricController extends Controller
                     $name = $entity->product_name ?? 'Wholesaler Item';
                     $avatar = $entity->image ? asset('storage/' . $entity->image) : asset('images/default-product.png');
                 } elseif ($item->adjustable_type === \App\Models\Post::class) {
-                    // <--- নতুন POST লজিক
+
                     $name = $entity->title ?? Str::limit($entity->content, 30) ?? 'Untitled Post';
 
-                    // পোস্টের ছবি: যদি আর্টিকেল হয় তবে article_image, আর গ্যালারি হলে ১ম ছবি
                     if ($entity->content_type === 'article' && $entity->article_image) {
                         $avatar = asset('storage/' . $entity->article_image);
                     } elseif ($entity->images && $entity->images->first()) {
@@ -213,9 +204,6 @@ class AdminMetricController extends Controller
                 }
 
 
-                // ==========================================
-                // ২. রিয়েল কাউন্ট লজিক
-                // ==========================================
                 switch ($item->metric_type) {
                     case 'follower':
                         if (method_exists($entity, 'followers')) {
@@ -223,22 +211,20 @@ class AdminMetricController extends Controller
                         }
                         break;
 
-                    case 'upvote': // <--- নতুন: পোস্টের জন্য
-                        // ফিড লাইক (যাকে আমরা upvote বলছি)
+                    case 'upvote':
+
                         if ($item->adjustable_type === \App\Models\Post::class && method_exists($entity, 'likes')) {
                             $realCount = $entity->likes()->count();
                         }
                         break;
 
                     case 'heart':
-                        // যদি পোস্ট হয় (গ্যালারি হার্ট)
+
                         if ($item->adjustable_type === \App\Models\Post::class) {
                             if (method_exists($entity, 'hearts')) {
                                 $realCount = $entity->hearts()->count();
                             }
-                        }
-                        // যদি প্রোডাক্ট বা ইউজার হয়
-                        elseif (method_exists($entity, 'favouritesBy')) {
+                        } elseif (method_exists($entity, 'favouritesBy')) {
                             $realCount = $entity->favouritesBy()->count();
                         } elseif (method_exists($entity, 'favourites')) {
                             $realCount = $entity->favourites()->count();
