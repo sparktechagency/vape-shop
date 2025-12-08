@@ -21,7 +21,9 @@ class Post extends Model
     protected $appends = [
         'role',
         'like_count',
+        'real_like_count',
         'hearts_count',
+        'real_hearts_count',
         'is_post_liked',
         'is_hearted',
     ];
@@ -83,17 +85,29 @@ class Post extends Model
     public function getLikeCountAttribute()
     {
 
-        $realCount = $this->attributes['likes_count'] ?? $this->likes()->count();
+        $realCount = $this->getRealLikeCountAttribute();
 
         return $this->getAdjustedTotal('upvote', $realCount);
+    }
+
+    //real like count
+    public function getRealLikeCountAttribute()
+    {
+        return $this->attributes['likes_count'] ?? $this->likes()->count();
     }
 
 
     public function getHeartsCountAttribute()
     {
 
-        $realCount = $this->attributes['hearts_count'] ?? $this->hearts()->count();
+        $realCount = $this->getRealHeartsCountAttribute();
         return $this->getAdjustedTotal('heart', $realCount);
+    }
+
+    //real hearts count
+    public function getRealHeartsCountAttribute()
+    {
+        return $this->attributes['hearts_count'] ?? $this->hearts()->count();
     }
 
 
