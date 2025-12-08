@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class WholesalerProduct extends Model
 {
     use HasAdjustedMetrics;
+    protected $with = ['metricAdjustments'];
     protected $guarded = ['id'];
     protected $table = 'wholesaler_products';
     protected $casts = [
@@ -20,6 +21,7 @@ class WholesalerProduct extends Model
         'role_label',
         'is_hearted',
         'total_heart',
+        'real_heart_count',
     ];
 
     protected $hidden = ['user'];
@@ -91,9 +93,15 @@ class WholesalerProduct extends Model
     //hearted product count
     public function getTotalHeartAttribute()
     {
-        $realCount = $this->hasMany(Heart::class, 'wholesaler_product_id')->count();
+        $realCount = $this->getRealHeartCountAttribute();
 
         return $this->getAdjustedTotal('heart', $realCount);
+    }
+
+    //real heart count
+    public function getRealHeartCountAttribute()
+    {
+        return $this->hasMany(Heart::class, 'wholesaler_product_id')->count();
     }
 
     //is_hearted attribute

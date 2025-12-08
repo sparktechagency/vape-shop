@@ -30,6 +30,7 @@ class ProductDeteails extends JsonResource
             'updated_at' => $this->updated_at->toIso8601String(),
             'is_hearted' => $this->is_hearted,
             'total_heart' => $this->total_heart,
+            'real_heart_count' => $this->real_heart_count,
             'average_rating' => $this->average_rating,
             'category' => $this->whenLoaded('category', function () {
                 return [

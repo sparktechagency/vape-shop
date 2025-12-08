@@ -34,7 +34,7 @@ class PostRequest extends FormRequest
 
             $rules['image'] = 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048';
         } else {
-            $rules['images'] = 'required|array|min:1';
+            $rules['images'] = 'nullable|array|min:1';
             $rules['images.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
             $rules['is_in_gallery'] = 'sometimes|boolean';
         }
