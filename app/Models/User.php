@@ -35,6 +35,7 @@ class User extends Authenticatable implements JWTSubject
         'full_name',
         'total_followers',
         'total_following',
+        'real_follower_count',
         'is_following',
         'avg_rating',
         'total_reviews',
@@ -256,8 +257,13 @@ class User extends Authenticatable implements JWTSubject
     //get total followers
     public function getTotalFollowersAttribute(): int
     {
-        $realCount = $this->followers()->count();
+        $realCount = $this->getRealFollowerCountAttribute();
         return $this->getAdjustedTotal('follower', $realCount);
+    }
+    //real follower count
+    public function getRealFollowerCountAttribute(): int
+    {
+        return $this->followers()->count();
     }
     //get total following
     public function getTotalFollowingAttribute(): int
@@ -493,5 +499,5 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->incomingConnections()->wherePivot('status', 'pending');
     }
-    
+
 }

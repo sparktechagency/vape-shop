@@ -9,6 +9,7 @@ use App\Traits\HasAdjustedMetrics;
 class ManageProduct extends Model
 {
     use HasAdjustedMetrics;
+    protected $with = ['metricAdjustments'];
     protected $guarded = ['id'];
     protected $casts = [
         'product_faqs' => 'array',
@@ -19,6 +20,7 @@ class ManageProduct extends Model
         'role_label',
         'is_hearted',
         'total_heart',
+        'real_heart_count',
         'average_rating',
     ];
 
@@ -96,8 +98,14 @@ class ManageProduct extends Model
     //hearted product count
     public function getTotalHeartAttribute()
     {
-        $realCount = $this->hasMany(Heart::class, 'manage_product_id')->count();
+        $realCount = $this->getRealHeartCountAttribute();
         return $this->getAdjustedTotal('heart', $realCount);
+    }
+
+    //real heart count
+    public function getRealHeartCountAttribute()
+    {
+        return $this->hasMany(Heart::class, 'manage_product_id')->count();
     }
 
     //is_hearted attribute

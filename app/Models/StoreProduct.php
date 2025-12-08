@@ -11,6 +11,7 @@ class StoreProduct extends Model
     use HasAdjustedMetrics;
 
     protected $table = 'store_products';
+    protected $with = ['metricAdjustments'];
     protected $guarded = ['id'];
     protected $casts = [
         'product_faqs' => 'array',
@@ -20,6 +21,7 @@ class StoreProduct extends Model
         'role_label',
         'is_hearted',
         'total_heart',
+        'real_heart_count',
     ];
 
     protected $hidden = ['user'];
@@ -61,8 +63,14 @@ class StoreProduct extends Model
     //hearted product count
     public function getTotalHeartAttribute()
     {
-        $realCount = $this->hasMany(Heart::class, 'store_product_id')->count();
+        $realCount = $this->getRealHeartCountAttribute();
         return $this->getAdjustedTotal('heart', $realCount);
+    }
+
+    //real heart count
+    public function getRealHeartCountAttribute()
+    {
+        return $this->hasMany(Heart::class, 'store_product_id')->count();
     }
 
     //is_hearted attribute
