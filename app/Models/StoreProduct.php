@@ -86,6 +86,14 @@ class StoreProduct extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    //PRODUCT FAVOURITES RELATION
+    public function favourites()
+    {
+        return $this->morphMany(ProductFavourite::class, 'favouritable');
+    }
+
+
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id');
