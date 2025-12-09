@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\UserRole\Role;
 use App\Traits\HasAdjustedMetrics;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class WholesalerProduct extends Model
 {
@@ -22,6 +23,7 @@ class WholesalerProduct extends Model
         'is_hearted',
         'total_heart',
         'real_heart_count',
+        'is_favorite',
     ];
 
     protected $hidden = ['user'];
@@ -59,6 +61,14 @@ class WholesalerProduct extends Model
     public function getRoleLabelAttribute()
     {
         return $this->user->role ? Role::from($this->user->role)->label() : null;
+    }
+
+    public function getIsFavoriteAttribute(): bool
+    {
+        if (!Auth::check()) {
+            return false;
+        }
+        return $this->favourites()->where('user_id', Auth::id())->exists();
     }
 
 

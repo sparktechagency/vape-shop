@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\UserRole\Role;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasAdjustedMetrics;
+use Illuminate\Support\Facades\Auth;
 
 class ManageProduct extends Model
 {
@@ -22,6 +23,7 @@ class ManageProduct extends Model
         'total_heart',
         'real_heart_count',
         'average_rating',
+        'is_favorite',
     ];
 
     protected $hidden = ['user'];
@@ -124,6 +126,14 @@ class ManageProduct extends Model
             return 0;
         }
         return round($avg, 1);
+    }
+
+    public function getIsFavoriteAttribute(): bool
+    {
+        if (!Auth::check()) {
+            return false;
+        }
+        return $this->favourites()->where('user_id', Auth::id())->exists();
     }
 
     public function b2bPricing()
