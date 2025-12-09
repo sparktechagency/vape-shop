@@ -186,6 +186,12 @@ class User extends Authenticatable implements JWTSubject
             ->withTimestamps();
     }
 
+    //product favourites relationship
+    public function productFavourites()
+    {
+        return $this->hasMany(ProductFavourite::class);
+    }
+
     //address
     // public function address()
     // {
@@ -418,39 +424,39 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasActiveSubscription();
     }
 
-   public function getSubscriptionDataAttribute()
-{
+    public function getSubscriptionDataAttribute()
+    {
 
-    $activeSubscriptions = $this->subscriptions()
-        ->where('invoice_status', 'paid')
-        ->where('ends_at', '>', now())
-        ->orderBy('ends_at', 'desc')
-        ->get();
+        $activeSubscriptions = $this->subscriptions()
+            ->where('invoice_status', 'paid')
+            ->where('ends_at', '>', now())
+            ->orderBy('ends_at', 'desc')
+            ->get();
 
-    if ($activeSubscriptions->isEmpty()) {
-        return [];
-    }
+        if ($activeSubscriptions->isEmpty()) {
+            return [];
+        }
 
-    $allPlans = $activeSubscriptions->flatMap(function ($sub) {
+        $allPlans = $activeSubscriptions->flatMap(function ($sub) {
 
-        $detailsArray = $sub->plan_details ?? [];
+            $detailsArray = $sub->plan_details ?? [];
 
-        return collect($detailsArray)->map(function ($detail) use ($sub) {
-            return [
-                'type'    => $detail['type'] ?? null,
-                'badge'   => $detail['badge'] ?? null,
-                'ends_at' => $sub->ends_at->format('Y-m-d'),
-                'timestamp' => $sub->ends_at->timestamp
-            ];
+            return collect($detailsArray)->map(function ($detail) use ($sub) {
+                return [
+                    'type'    => $detail['type'] ?? null,
+                    'badge'   => $detail['badge'] ?? null,
+                    'ends_at' => $sub->ends_at->format('Y-m-d'),
+                    'timestamp' => $sub->ends_at->timestamp
+                ];
+            });
         });
-    });
 
-    $uniquePlans = $allPlans->unique('badge')->values();
-    return $uniquePlans->map(function ($item) {
-        unset($item['timestamp']);
-        return $item;
-    });
-}
+        $uniquePlans = $allPlans->unique('badge')->values();
+        return $uniquePlans->map(function ($item) {
+            unset($item['timestamp']);
+            return $item;
+        });
+    }
 
     public function joinedForumGroups()
     {
@@ -499,5 +505,4 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->incomingConnections()->wherePivot('status', 'pending');
     }
-
 }

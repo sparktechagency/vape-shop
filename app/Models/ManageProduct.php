@@ -134,4 +134,10 @@ class ManageProduct extends Model
     {
         return $this->morphMany(B2BOrderItem::class, 'productable');
     }
+
+    //PRODUCT FAVOURITES RELATION
+    public function favourites()
+    {
+        return $this->morphMany(ProductFavourite::class, 'favouritable');
+    }
 }

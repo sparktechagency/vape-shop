@@ -45,6 +45,7 @@ use App\Http\Controllers\FeedController;
 use App\Http\Controllers\Forum\ForumGroupMemberController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\PaymentGatewayController;
+use App\Http\Controllers\Product\ProductFavoriteController;
 use App\Http\Controllers\Product\TrendingAdProductController;
 use App\Http\Controllers\SubscriptionController;
 use App\Models\Subscription;
@@ -253,6 +254,10 @@ Route::group(['middleware' => ['jwt.auth', 'banned', 'check.subscription', 'is.s
     Route::get('/inbox/{userId}', [InboxController::class, 'getInboxByUserId']);
     //delete a message
     Route::delete('/inbox/delete-message/{id}', [InboxController::class, 'deleteMessage']);
+
+    //product favorites
+    Route::post('/product/toggle-favorite', [ProductFavoriteController::class, 'toggleProductFavorite']);
+    Route::get('/product/user-favorites', [ProductFavoriteController::class, 'getUserFavorites']);
 });
 
 Route::apiResource('hearted-product', HeartedProductController::class)->middleware('jwt.auth')->except(['create', 'edit', 'update', 'show', 'destroy']);
