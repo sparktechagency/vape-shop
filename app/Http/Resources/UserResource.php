@@ -39,6 +39,7 @@ class UserResource extends JsonResource
             'is_banned' => $this->is_banned,
             'is_suspended' => $this->is_suspended,
             'tax_percentage' => $this->tax_percentage,
+            'shipping_cost' => $this->shipping_cost,
             'address' => $this->whenLoaded('address', function () {
                 return [
                     'address_id' => $this->address->id ?? null,
