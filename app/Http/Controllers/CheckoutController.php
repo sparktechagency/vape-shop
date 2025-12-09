@@ -489,11 +489,13 @@ class CheckoutController extends Controller
                 ];
             }
 
+            $shippingCost = $seller->shipping_cost ?? 0;
+            $grandTotal = $subTotal + $shippingCost;
 
             $checkout = Checkout::create([
                 'user_id' => $buyer->id,
                 'checkout_group_id' => 'CHK-' . strtoupper(Str::random(12)),
-                'grand_total' => $subTotal,
+                'grand_total' => $grandTotal,
                 'customer_name' => $validatedData['customer_name'],
                 'customer_address' => $validatedData['customer_address'],
                 'status' => 'pending',
@@ -503,6 +505,7 @@ class CheckoutController extends Controller
             $order = $checkout->orders()->create([
                 'store_id' => $sellerId,
                 'user_id' => $buyer->id,
+                'shipping_cost' => $shippingCost,
                 'subtotal' => $subTotal,
                 'status' => 'pending',
             ]);
