@@ -29,6 +29,7 @@ class ProductDeteails extends JsonResource
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
             'is_hearted' => $this->is_hearted,
+            'is_favorite' => $this->is_favorite,
             'total_heart' => $this->total_heart,
             'real_heart_count' => $this->real_heart_count,
             'average_rating' => $this->average_rating,

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\UserRole\Role;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasAdjustedMetrics;
+use Illuminate\Support\Facades\Auth;
 
 class StoreProduct extends Model
 {
@@ -22,6 +23,7 @@ class StoreProduct extends Model
         'is_hearted',
         'total_heart',
         'real_heart_count',
+        'is_favorite',
     ];
 
     protected $hidden = ['user'];
@@ -80,6 +82,17 @@ class StoreProduct extends Model
             ->where('user_id', auth()->id())
             ->exists();
     }
+
+
+    public function getIsFavoriteAttribute(): bool
+    {
+        if (!Auth::check()) {
+            return false;
+        }
+        return $this->favourites()->where('user_id', Auth::id())->exists();
+    }
+
+
 
     //Relationships
     public function user()
