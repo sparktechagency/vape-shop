@@ -208,7 +208,9 @@ class AuthRepository implements AuthRepositoryInterface
 
 
 
-        $firstName = $this->getFirstNameByRole($user->role, $data);
+        $firstName = isset($data['first_name']) || isset($data['store_name']) || isset($data['brand_name']) 
+            ? $this->getFirstNameByRole($user->role, $data)
+            : $user->first_name;
         $user->first_name = $firstName;
         $user->last_name = $data['last_name'] ?? $user->last_name ?? '';
         $user->phone = $data['phone'] ?? $user->phone;
@@ -231,7 +233,9 @@ class AuthRepository implements AuthRepositoryInterface
         $address->city = $data['city'] ?? $address->city;
         $address->latitude = $data['latitude'] ?? $address->latitude;
         $address->longitude = $data['longitude'] ?? $address->longitude;
-        $address->location = new Point($data['latitude'], $data['longitude']) ?? $address->location;
+        $address->location = (isset($data['latitude'], $data['longitude']) && $data['latitude'] !== null && $data['longitude'] !== null)
+            ? new Point((float)$data['latitude'], (float)$data['longitude'])
+            : $address->location;
         $address->save();
 
         $user->load('address.region');

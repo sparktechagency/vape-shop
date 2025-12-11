@@ -28,15 +28,15 @@ class UpdateProfileRequest extends FormRequest
 
         $rules = [
             'last_name' => 'nullable|string|max:255',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
-            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'cover_photo' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'dob' => 'nullable|date_format:d-m-Y',
             // 'role' => 'required|string|max:255|in:2,3,4,5,6',
             // 'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'nullable|regex:/^\+?[0-9]{10,15}$/',
-            'address' => Auth::user()->role == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
-            'zip_code' => Auth::user()->role == Role::STORE->value ? 'required|string|max:10' : 'nullable|string|max:10',
-            'region_id' => Auth::user()->role == Role::STORE->value ? 'required|string|max:255' : 'nullable|string|max:255',
+            'address' => Auth::user()->role == Role::STORE->value ? 'sometimes|string|max:255' : 'nullable|string|max:255',
+            'zip_code' => Auth::user()->role == Role::STORE->value ? 'sometimes|string|max:10' : 'nullable|string|max:10',
+            'region_id' => Auth::user()->role == Role::STORE->value ? 'sometimes|string|max:255' : 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
@@ -49,11 +49,11 @@ class UpdateProfileRequest extends FormRequest
         ];
 
         if (Auth::user()->role == Role::STORE->value) {
-            $rules = array_merge(['store_name' => 'required|string|max:255'], $rules);
+            $rules = array_merge(['store_name' => 'sometimes|string|max:255'], $rules);
         } elseif (Auth::user()->role == Role::BRAND->value) {
-            $rules = array_merge(['brand_name' => 'required|string|max:255'], $rules);
+            $rules = array_merge(['brand_name' => 'sometimes|string|max:255'], $rules);
         } else {
-            $rules = array_merge(['first_name' => 'required|string|max:255'], $rules);
+            $rules = array_merge(['first_name' => 'sometimes|string|max:255'], $rules);
         }
 
         return $rules;
