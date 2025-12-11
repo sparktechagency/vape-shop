@@ -114,16 +114,16 @@ class AuthController extends Controller
     //update profile
     public function updateProfile(UpdateProfileRequest $request)
     {
-        // try {
+        try {
             $data = $request->validated();
             $result = $this->authService->updateProfile($data);
             if ($result['success'] === false) {
                 return response()->error($result['message'], $result['code']);
             }
             return response()->success($result['data'], $result['message']);
-        // } catch (\Exception $e) {
-        //     return response()->error('Failed to update profile.', 500, $e->getMessage());
-        // }
+        } catch (\Exception $e) {
+            return response()->error('Failed to update profile.', 500, $e->getMessage());
+        }
     }
 
     //get user by id

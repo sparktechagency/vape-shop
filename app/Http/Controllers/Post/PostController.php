@@ -88,13 +88,13 @@ class PostController extends Controller
      */
     public function store(PostRequest $request)
     {
-        try {
+        // try {
             $data = $request->validated();
             $post = $this->postService->createPost($data, $request);
             return response()->success($post, 'Post created successfully');
-        } catch (\Exception $e) {
-            return response()->error('Failed to create post', 500, $e->getMessage());
-        }
+        // } catch (\Exception $e) {
+        //     return response()->error('Failed to create post', 500, $e->getMessage());
+        // }
     }
 
     /**

@@ -20,7 +20,7 @@ class PostService
 
     public function createPost(array $data, Request $request)
     {
-        if ($data['content_type'] === 'article') {
+        if ($data['content_type'] ?? 'post' === 'article') {
 
             if ($request->hasFile('image')) {
                 $data['article_image_path'] = $this->handleFileUpload(

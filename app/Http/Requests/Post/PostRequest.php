@@ -27,7 +27,7 @@ class PostRequest extends FormRequest
         $rules = [
             'title' => 'nullable|string|max:255',
             'content' => 'required|string',
-            'content_type' => 'required|in:post,article',
+            'content_type' => 'sometimes|in:post,article',
         ];
 
         if ($contentType === 'article') {

@@ -30,12 +30,12 @@ class PostRepository implements PostInterface
                 'title'     => $data['title'] ?? null,
                 'content'   => $data['content'],
                 'user_id'   => Auth::id(),
-                'content_type'  => $data['content_type'],
+                'content_type'  => $data['content_type'] ?? 'post',
                 'is_in_gallery' => $data['is_in_gallery'] ?? false,
                 'article_image' => null,
             ];
 
-            if ($data['content_type'] === 'article') {
+            if ($data['content_type'] ?? 'post' === 'article') {
                 $postData['article_image'] = $data['article_image_path'] ?? null;
                 $post = $this->post->create($postData);
             } else {
