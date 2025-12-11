@@ -13,6 +13,7 @@ use App\Models\ManageProduct; // Used for Brands
 use App\Models\WholesalerProduct;
 use App\Models\User;
 use App\Models\Post;
+use Illuminate\Support\Facades\Cache;
 
 class AdminMetricController extends Controller
 {
@@ -137,7 +138,7 @@ class AdminMetricController extends Controller
                 ->where('adjustable_type', $modelClass)
                 ->where('metric_type', $request->metric_type)
                 ->first();
-
+            Cache::tags(['products', 'users', 'roles'])->flush();
             return response()->json([
                 'ok' => true,
                 'data' => [
