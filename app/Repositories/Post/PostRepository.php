@@ -28,7 +28,7 @@ class PostRepository implements PostInterface
 
             $postData = [
                 'title'     => $data['title'] ?? null,
-                'content'   => $data['content'],
+                'content'   => $data['content'] ?? null,
                 'user_id'   => Auth::id(),
                 'content_type'  => $data['content_type'] ?? 'post',
                 'is_in_gallery' => $data['is_in_gallery'] ?? false,
