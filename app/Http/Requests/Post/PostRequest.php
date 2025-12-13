@@ -26,7 +26,7 @@ class PostRequest extends FormRequest
         $contentType = $this->input('content_type', 'post');
         $rules = [
             'title' => 'nullable|string|max:255',
-            'content' => 'sometimes|string',
+            'content' => 'nullable|string',
             'content_type' => 'sometimes|in:post,article',
         ];
 
