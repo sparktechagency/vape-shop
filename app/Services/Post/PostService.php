@@ -58,25 +58,61 @@ class PostService
     public function updatePost(int $postId, array $data)
     {
         $post = $this->postRepository->getPostById($postId);
-
         if (!$post) {
             return null;
         }
 
         $contentType = $data['content_type'] ?? $post->content_type;
 
-        /* ---------- Article Image (Single) ---------- */
+        /* ---------- Delete selected gallery images ---------- */
+        if (!empty($data['deleted_image_ids'])) {
+
+            foreach ($data['deleted_image_ids'] as $imageId) {
+                $image = $post->postImages()->find($imageId);
+
+                if ($image) {
+                    if ($image->image_path) {
+                        $path = getStorageFilePath($image->image_path);
+                        Storage::disk('public')->delete($path);
+                    }
+
+                    $image->delete();
+                }
+            }
+
+            unset($data['deleted_image_ids']);
+        }
+
+        /* ---------- Add new gallery images ---------- */
+        if ($contentType === 'post' && request()->hasFile('images')) {
+
+            $galleryPaths = [];
+
+            foreach (request()->file('images') as $imageFile) {
+                $fileName = time() . '_' .
+                    \Str::slug(pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME)) .
+                    '.' . $imageFile->getClientOriginalExtension();
+
+                $path = Storage::disk('public')->putFileAs('posts', $imageFile, $fileName);
+
+                // store path with storage prefix
+
+                $galleryPaths[] = $path;
+            }
+
+            $data['new_gallery_images'] = $galleryPaths;
+        }
+
+        /* ---------- Update article image ---------- */
         if ($contentType === 'article') {
 
             if (request()->hasFile('image')) {
 
-                // delete old image if exists
                 if ($post->article_image) {
                     $oldPath = getStorageFilePath($post->article_image);
                     Storage::disk('public')->delete($oldPath);
                 }
 
-                // upload new image
                 $data['article_image'] = $this->handleFileUpload(
                     request(),
                     'image',
@@ -91,26 +127,12 @@ class PostService
             }
         }
 
-        /* ---------- Post Gallery (Multiple) ---------- */
-        if ($contentType === 'post' && request()->hasFile('images')) {
-
-            $data['new_gallery_images'] = collect(request()->file('images'))
-                ->map(function ($image) {
-                    $name = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
-                    $fileName = time() . '_' . \Str::slug($name) . '.' . $image->getClientOriginalExtension();
-
-                    $path = Storage::disk('public')->putFileAs('posts', $image, $fileName);
-
-                    return 'storage/' . $path;
-                })
-                ->toArray();
-        }
-
         // remove raw file inputs
         unset($data['image'], $data['images']);
 
         return $this->postRepository->updatePost($postId, $data);
     }
+
 
 
     public function deletePost(int $postId)

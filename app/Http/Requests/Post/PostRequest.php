@@ -29,16 +29,18 @@ class PostRequest extends FormRequest
             'title' => 'nullable|string|max:255',
             'content' => 'nullable|string',
             'content_type' => 'sometimes|in:post,article',
+            'deleted_image_ids' => 'sometimes|array',
+            'deleted_image_ids.*' => 'integer|exists:post_images,id',
         ];
 
         if ($contentType === 'article') {
             $rules['image'] = $this->isMethod('post')
-                ? 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
-                : 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048';
+                ? 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048'
+                : 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048';
         } else {
             // Gallery Images
             $rules['images'] = 'nullable|array|min:1';
-            $rules['images.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
+            $rules['images.*'] = 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048';
             $rules['is_in_gallery'] = 'sometimes|boolean';
         }
 
