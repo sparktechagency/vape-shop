@@ -90,7 +90,7 @@ class AdminMetricController extends Controller
             $metricAdjustment->adjustment_count = ($metricAdjustment->adjustment_count ?? 0) + $request->count;
 
             $metricAdjustment->save();
-
+            Cache::tags(['products', 'users', 'roles'])->flush();
             return response()->json([
                 'ok' => true,
                 'message' => ucfirst($metric) . ' count updated successfully. Current total fake: ' . $metricAdjustment->adjustment_count,
@@ -138,7 +138,6 @@ class AdminMetricController extends Controller
                 ->where('adjustable_type', $modelClass)
                 ->where('metric_type', $request->metric_type)
                 ->first();
-            Cache::tags(['products', 'users', 'roles'])->flush();
             return response()->json([
                 'ok' => true,
                 'data' => [
