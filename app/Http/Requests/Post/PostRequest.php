@@ -24,6 +24,7 @@ class PostRequest extends FormRequest
     public function rules(): array
     {
         $contentType = $this->input('content_type', 'post');
+
         $rules = [
             'title' => 'nullable|string|max:255',
             'content' => 'nullable|string',
@@ -31,9 +32,11 @@ class PostRequest extends FormRequest
         ];
 
         if ($contentType === 'article') {
-
-            $rules['image'] = 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048';
+            $rules['image'] = $this->isMethod('post')
+                ? 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+                : 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048';
         } else {
+            // Gallery Images
             $rules['images'] = 'nullable|array|min:1';
             $rules['images.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
             $rules['is_in_gallery'] = 'sometimes|boolean';

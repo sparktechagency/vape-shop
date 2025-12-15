@@ -231,8 +231,13 @@ class ReviewController extends Controller
             return response()->error('Review not found.', 404);
         }
 
+        $user = auth()->user();
+        if (!$user) {
+            return response()->error('User not authenticated.', 401);
+        }
+
         // Check if the authenticated user is the owner of the review
-        if ($review->user_id !== auth()->id()) {
+        if ($user->role !== Role::ADMIN->value && $review->user_id !== $user->id) {
             return response()->error('You are not authorized to delete this review.', 403);
         }
 
@@ -414,7 +419,8 @@ class ReviewController extends Controller
         }
     }
 
-    public function myLatestReviews(Request $request){
+    public function myLatestReviews(Request $request)
+    {
         try {
 
             $userId = $request->get('user_id');
@@ -427,50 +433,50 @@ class ReviewController extends Controller
             }
 
             $role = $user->role;
-             $reviews = match($role){
+            $reviews = match ($role) {
                 Role::BRAND->value => $user->reviewsOnManageProducts()
-                            ->whereNull('parent_id')
-                            ->whereNull('store_product_id')
-                            ->with([
-                                 'manageProducts' => function ($query) {
-                                     $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
-                                     ->with('category:id,name');
-                                 },
-                                 'user:id,first_name,last_name,role,avatar',
-                             ])
-                             ->withCount(['likedByUsers as like_count', 'replies'])
-                             ->with('replies')
-                             ->latest()
-                             ->paginate($perPage),
+                    ->whereNull('parent_id')
+                    ->whereNull('store_product_id')
+                    ->with([
+                        'manageProducts' => function ($query) {
+                            $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
+                                ->with('category:id,name');
+                        },
+                        'user:id,first_name,last_name,role,avatar',
+                    ])
+                    ->withCount(['likedByUsers as like_count', 'replies'])
+                    ->with('replies')
+                    ->latest()
+                    ->paginate($perPage),
                 Role::STORE->value => $user->reviewsOnStoreProducts()
-                            ->whereNull('parent_id')
-                            //  ->whereNull('wholesaler_product_id')
-                            ->with([
-                                 'storeProducts' => function ($query) {
-                                     $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
-                                     ->with('category:id,name');
-                                 },
-                                 'user:id,first_name,last_name,role,avatar',
-                             ])
-                             ->withCount(['likedByUsers as like_count', 'replies'])
-                             ->with('replies')
-                             ->latest()
-                             ->paginate($perPage),
+                    ->whereNull('parent_id')
+                    //  ->whereNull('wholesaler_product_id')
+                    ->with([
+                        'storeProducts' => function ($query) {
+                            $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
+                                ->with('category:id,name');
+                        },
+                        'user:id,first_name,last_name,role,avatar',
+                    ])
+                    ->withCount(['likedByUsers as like_count', 'replies'])
+                    ->with('replies')
+                    ->latest()
+                    ->paginate($perPage),
                 Role::WHOLESALER->value => $user->reviewsOnWholesalerProducts()
-                            ->whereNull('parent_id')
-                            ->with([
-                                 'wholesalerProducts' => function ($query) {
-                                     $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
-                                     ->with('category:id,name');
-                                 },
-                                 'user:id,first_name,last_name,role,avatar',
-                             ])
-                             ->withCount(['likedByUsers as like_count', 'replies'])
-                             ->with('replies')
-                             ->latest()
-                             ->paginate($perPage),
+                    ->whereNull('parent_id')
+                    ->with([
+                        'wholesalerProducts' => function ($query) {
+                            $query->select('id', 'user_id', 'category_id', 'product_name', 'product_image', 'product_price', 'slug')
+                                ->with('category:id,name');
+                        },
+                        'user:id,first_name,last_name,role,avatar',
+                    ])
+                    ->withCount(['likedByUsers as like_count', 'replies'])
+                    ->with('replies')
+                    ->latest()
+                    ->paginate($perPage),
                 default => false,
-             };
+            };
 
             if (!$reviews) {
                 return response()->error('No reviews found for the user.', 404);

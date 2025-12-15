@@ -48,8 +48,6 @@ class PostRepository implements PostInterface
                     }
                 }
             }
-
-
             return $post;
         });
 
@@ -60,55 +58,53 @@ class PostRepository implements PostInterface
     }
 
     //update post
-    public function updatePost(int $postId, array $data)
-    {
-        $user = Auth::user();
-        $post = $this->getPostById($postId);
+   public function updatePost(int $postId, array $data)
+{
+    $post = $this->post->find($postId);
 
-        if ($post) {
-            if (isset($data['article_image'])) {
-                //remove old image if exists
-                $oldImagePath = getStorageFilePath($post->article_image);
-
-                if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
-                    Storage::disk('public')->delete(($oldImagePath));
-                }
-                // $data['article_image'] = $data['article_image']->store('articles', 'public');
-                $data['article_image'] = $this->handleFileUpload(
-                    request(),
-                    'article_image',
-                    'articles',
-                    1920, // width
-                    1080, // height
-                    85, // quality
-                    true // forceWebp
-                );
-            } else {
-                $data['article_image'] = getStorageFilePath($post->article_image); // keep old image if not updated
-            }
-
-            $post->update($data);
-            return $post;
-        }
+    if (!$post) {
         return null;
     }
+
+    /* ---------- Insert new gallery images ---------- */
+    if (!empty($data['new_gallery_images'])) {
+
+        foreach ($data['new_gallery_images'] as $path) {
+            $post->postImages()->create([
+                'image_path' => $path,
+            ]);
+        }
+
+        // not a column of posts table
+        unset($data['new_gallery_images']);
+    }
+
+    /* ---------- Update main post ---------- */
+    $post->update($data);
+
+    /* ---------- Reload relations for fresh response ---------- */
+    if ($post->content_type === 'post') {
+        $post->load('postImages');
+    }
+
+    return $post;
+}
+
+
     public function deletePost(int $postId)
-    {
-        $post = $this->getPostById($postId);
-        //remove old image if exists
-        if ($post && $post->article_image) {
-            $oldImagePath = getStorageFilePath($post->article_image);
-            if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
-                Storage::disk('public')->delete($oldImagePath);
-            }
-        }
-        //delete post
-        if ($post) {
-            $post->delete();
-            return true;
-        }
+{
+    $post = $this->post->find($postId);
+
+    if (!$post) {
         return false;
     }
+
+    // delete related gallery images if cascade is not used
+    $post->postImages()->delete();
+
+    return $post->delete();
+}
+
 
     //get post by id
     public function getPostById(int $postId)
