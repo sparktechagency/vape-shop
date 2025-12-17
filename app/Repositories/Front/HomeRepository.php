@@ -110,6 +110,7 @@ class HomeRepository implements HomeInterface
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('first_name', 'like', '%' . $searchTerm . '%')
                     ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $searchTerm . '%'])
                     ->orWhere('email', 'like', '%' . $searchTerm . '%');
             });
         });
@@ -133,6 +134,7 @@ class HomeRepository implements HomeInterface
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('first_name', 'like', '%' . $searchTerm . '%')
                     ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $searchTerm . '%'])
                     ->orWhere('email', 'like', '%' . $searchTerm . '%');
             });
         });
@@ -156,6 +158,7 @@ class HomeRepository implements HomeInterface
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('first_name', 'like', '%' . $searchTerm . '%')
                     ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $searchTerm . '%'])
                     ->orWhere('email', 'like', '%' . $searchTerm . '%');
             });
         });
@@ -177,6 +180,7 @@ class HomeRepository implements HomeInterface
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('first_name', 'like', '%' . $searchTerm . '%')
                     ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $searchTerm . '%'])
                     ->orWhere('email', 'like', '%' . $searchTerm . '%');
             });
         });
@@ -206,6 +210,7 @@ class HomeRepository implements HomeInterface
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('first_name', 'like', '%' . $searchTerm . '%')
                     ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $searchTerm . '%'])
                     ->orWhere('email', 'like', '%' . $searchTerm . '%')
                     ->orWhere('phone', 'like', '%' . $searchTerm . '%');
             });
