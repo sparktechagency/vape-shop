@@ -396,7 +396,7 @@ class User extends Authenticatable implements JWTSubject
     }
     public function b2bRequesters()
     {
-        return $this->belongsToMany(User::class, 'b2b_connections', 'provider_id', 'requester_id')->withPivot('status');
+        return $this->belongsToMany(User::class, 'b2b_connections', 'provider_id', 'requester_id')->withPivot('status')->withTimestamps();
     }
 
     //subscription relationship

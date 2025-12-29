@@ -101,7 +101,6 @@ class B2bConnectionController extends Controller
             'users.avatar'
         ];
 
-
         $requests = Auth::user()
             ->b2bRequesters()
             ->paginate($perPage, $columns);
