@@ -98,11 +98,11 @@ class CheckoutController extends Controller
                 'checkout_group_id' => 'VSM-' . strtoupper(Str::random(12)),
                 'grand_total' => $grandTotal,
                 'total_tax_amount' => $totaltaxAmount,
-                'customer_name' => $validatedData['customer_name'],
-                'customer_email' => $validatedData['customer_email'],
-                'customer_phone' => $validatedData['customer_phone'],
+                'customer_name' => $validatedData['customer_name'] ?? null,
+                'customer_email' => $validatedData['customer_email'] ?? null,
+                'customer_phone' => $validatedData['customer_phone'] ?? null,
                 'customer_dob' => $validatedData['customer_dob'] ? \Carbon\Carbon::createFromFormat('d-m-Y', $validatedData['customer_dob']) : null,
-                'customer_address' => $validatedData['customer_address'],
+                'customer_address' => $validatedData['customer_address'] ?? null,
                 'status' => 'pending',
             ]);
 

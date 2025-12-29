@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\B2bConnection;
+use App\Notifications\B2bSendRequest;
+use App\Notifications\B2bStatusRequestNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -46,7 +48,8 @@ class B2bConnectionController extends Controller
             ['requester_id' => $requester->id, 'provider_id' => $provider->id],
             ['status' => 'pending']
         );
-
+        //notification  send to the provider
+        $provider->notify(new B2bSendRequest($requester));
         return response()->success(
             ['provider' => $provider, 'requester' => $requester],
             'B2B connection request sent successfully.'
@@ -63,6 +66,7 @@ class B2bConnectionController extends Controller
                 'Unauthorized'
             );
         }
+
         $validated = Validator::make($request->all(), [
             'status' => 'required|in:approved,rejected',
         ]);
@@ -81,7 +85,9 @@ class B2bConnectionController extends Controller
         // }
 
         $connection->update(['status' => $validated['status']]);
-        //notification logic can be added here
+        //notification send to the requester about the status update
+        $requester = User::find($connection->requester_id);
+        $requester->notify(new B2bStatusRequestNotification($connection, Auth::user()));
         return response()->success(
             $connection,
             'B2B connection request status updated successfully.'
