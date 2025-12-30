@@ -31,7 +31,7 @@ class OrderRequestConfirmationNotification extends Notification implements Shoul
         $checkoutUrl = url('/user/checkouts/' . $this->checkout->id);
 
         return (new MailMessage)
-                    ->subject("Your Order Request (#{$this->checkout->checkout_group_id}) Has Been Received!")
+                    ->subject("Your Items Request (#{$this->checkout->checkout_group_id}) have Been Received!")
                     ->greeting("Hello {$customerName},")
                     ->line('Thank you for your order request. We have received it and sent it to the respective stores for approval.')
                     ->line("You can track the status of all your order requests using the ID: **{$this->checkout->checkout_group_id}**")
@@ -42,10 +42,10 @@ class OrderRequestConfirmationNotification extends Notification implements Shoul
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'Order Request Confirmation',
+            'title' => 'Items Request Confirmation',
             'checkout_id' => $this->checkout->id,
             'checkout_group_id' => $this->checkout->checkout_group_id,
-            'message' => "Your order request #{$this->checkout->checkout_group_id} has been submitted successfully.",
+            'message' => "Your items request #{$this->checkout->checkout_group_id} have been submitted successfully.",
             'link' => '/user/checkouts/' . $this->checkout->id,
         ];
     }

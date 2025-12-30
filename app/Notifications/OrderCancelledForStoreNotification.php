@@ -62,7 +62,7 @@ class OrderCancelledForStoreNotification extends Notification implements ShouldQ
         return [
             'order_id' => $this->order->id,
             'title' => 'Order Cancelled',
-            'message' => "An order (#{$this->order->id}) has been cancelled by the customer.",
+            'message' => "An item (#{$this->order->id}) has been cancelled by the customer.",
             'link' => '/me/orders/',
         ];
     }

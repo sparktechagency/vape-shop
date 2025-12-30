@@ -37,8 +37,8 @@ class OrderStatusUpdatedNotification extends Notification
     public function toArray($notifiable)
     {
         return [
-            'title' => 'Order Status Updated',
-            'message' => "Your order request from {$this->order->store->full_name} has been {$this->order->status}.",
+            'title' => 'Items Status Updated',
+            'message' => "Your items requested from {$this->order->store->full_name} have been {$this->order->status}.",
             'link' => '/user/checkouts/' . $this->order->checkout_id,
             'order_id' => $this->order->id,
         ];
