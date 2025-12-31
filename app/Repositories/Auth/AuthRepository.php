@@ -208,7 +208,7 @@ class AuthRepository implements AuthRepositoryInterface
 
 
 
-        $firstName = isset($data['first_name']) || isset($data['store_name']) || isset($data['brand_name']) 
+        $firstName = isset($data['first_name']) || isset($data['store_name']) || isset($data['brand_name'])
             ? $this->getFirstNameByRole($user->role, $data)
             : $user->first_name;
         $user->first_name = $firstName;
@@ -247,23 +247,16 @@ class AuthRepository implements AuthRepositoryInterface
         ];
     }
 
-    public function me($id): array
+    public function me($id, $withBanned = false): array
     {
+        $query = User::query();
 
-        $user = User::where('id', $id)->first();
+        if ($withBanned) {
+            $query->withoutGlobalScope('active');
+        }
 
-        $user->load('address.region', 'favourites', 'about');
+        $user = $query->where('id', $id)->first();
 
-
-        [$favouriteStores, $favouriteBrands] = $user->favourites->partition(function ($favoriteUser) {
-            return $favoriteUser->role === Role::STORE->value;
-        });
-        // $user = Auth::user()->load('address.region', 'favourites');
-        unset($user->favourites);
-        // dd($favouriteStores, $favouriteBrands);
-
-        $user->favourite_store_list = FavouriteUserResource::collection($favouriteStores->values());
-        $user->favourite_brand_list = FavouriteUserResource::collection($favouriteBrands->values());
         if (!$user) {
             return [
                 'success' => false,
@@ -271,6 +264,18 @@ class AuthRepository implements AuthRepositoryInterface
                 'code' => 404,
             ];
         }
+
+        $user->load('address.region', 'favourites', 'about');
+
+        [$favouriteStores, $favouriteBrands] = $user->favourites->partition(function ($favoriteUser) {
+            return $favoriteUser->role === Role::STORE->value;
+        });
+
+        unset($user->favourites);
+
+        $user->favourite_store_list = FavouriteUserResource::collection($favouriteStores->values());
+        $user->favourite_brand_list = FavouriteUserResource::collection($favouriteBrands->values());
+
         return [
             'success' => true,
             'message' => 'User retrieved successfully.',

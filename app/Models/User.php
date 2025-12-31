@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Traits\HasAdjustedMetrics;
+use Illuminate\Database\Eloquent\Builder;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -23,11 +24,7 @@ class User extends Authenticatable implements JWTSubject
      *
      * @var list<string>
      */
-    // protected $fillable = [
-    //     'name',
-    //     'email',
-    //     'password',
-    // ];
+
 
     protected $guarded = ['id'];
     protected $appends = [
@@ -97,6 +94,15 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+
+
+    protected static function booted()
+    {
+        static::addGlobalScope('active', function (Builder $builder) {
+            $builder->whereNull('banned_at');
+        });
     }
 
 

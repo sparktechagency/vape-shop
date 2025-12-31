@@ -4,11 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\UserRole\Role;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\FavouriteUserResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
-//use authcontroller
 use App\Interfaces\Auth\AuthRepositoryInterface;
 use App\Notifications\AdminSendNotificationToUser;
 use App\Notifications\UserSuspendedNotification;
@@ -25,15 +23,14 @@ class UserManagementController extends Controller
         $search = $request->input('search', '');
 
         $query = match ($role) {
-            Role::MEMBER->value => User::query(),
-            Role::STORE->value => User::query(),
-            Role::BRAND->value => User::query(),
-            Role::WHOLESALER->value => User::query(),
-            Role::ASSOCIATION->value => User::query(),
-            default => User::where('role', '!=', Role::ADMIN->value)
+            Role::MEMBER->value => User::withoutGlobalScope('active'),
+            Role::STORE->value => User::withoutGlobalScope('active'),
+            Role::BRAND->value => User::withoutGlobalScope('active'),
+            Role::WHOLESALER->value => User::withoutGlobalScope('active'),
+            Role::ASSOCIATION->value => User::withoutGlobalScope('active'),
+            default => User::withoutGlobalScope('active')->where('role', '!=', Role::ADMIN->value)
         };
 
-        // If a specific role is requested, filter by it
         if (in_array($role, [Role::MEMBER->value, Role::STORE->value, Role::BRAND->value, Role::WHOLESALER->value, Role::ASSOCIATION->value])) {
             $query->where('role', $role);
         }
@@ -54,7 +51,7 @@ class UserManagementController extends Controller
                 $q->select('id', 'invoice_status', 'ends_at', 'subscribable_id', 'subscribable_type');
             }
         ])->latest()->paginate($perPage);
-            // return response()->success($users, 'Users retrieved successfully.');
+
         if ($users->isEmpty()) {
             return response()->error('No users found for the specified role.', 404);
         }
@@ -62,15 +59,14 @@ class UserManagementController extends Controller
         return UserResource::collection($users);
     }
 
-    //get user information by ID
     public function getUserById($id)
     {
+        // Note: Ensure AuthService also handles withoutGlobalScope internally if it uses Eloquent
         $authService = new AuthService(app(AuthRepositoryInterface::class));
-        $user = $authService->me($id);
+        $user = $authService->me($id, true); // true indicates to bypass global scopes
         return response()->success($user, 'User retrieved successfully.');
     }
 
-    //ban user
     public function banUser(Request $request, $id)
     {
         try {
@@ -80,7 +76,9 @@ class UserManagementController extends Controller
             if ($validator->fails()) {
                 return response()->error($validator->errors()->first(), 422, $validator->errors());
             }
-            $banUser = User::find($id);
+
+            $banUser = User::withoutGlobalScope('active')->find($id);
+
             if (!$banUser) {
                 return response()->error('User not found', 404);
             }
@@ -93,12 +91,15 @@ class UserManagementController extends Controller
             return response()->error('Failed to ban user', 500, $e->getMessage());
         }
     }
+
     public function unBanUser($id)
     {
         try {
-            $banUser = User::where('id', $id)
+            $banUser = User::withoutGlobalScope('active')
+                ->where('id', $id)
                 ->whereNotNull('banned_at')
                 ->first();
+
             if (!$banUser) {
                 return response()->error('User not found', 404);
             }
@@ -112,21 +113,24 @@ class UserManagementController extends Controller
         }
     }
 
-    //get all banned users
     public function getBannedUsers(Request $request)
     {
         $perPage = $request->input('per_page', 10);
-        $bannedUsers = User::whereNotNull('banned_at')->paginate($perPage);
+
+        $bannedUsers = User::withoutGlobalScope('active')
+            ->whereNotNull('banned_at')
+            ->paginate($perPage);
+
         if ($bannedUsers->isEmpty()) {
             return response()->error('No banned users found.', 404);
         }
         return response()->success($bannedUsers, 'Banned users retrieved successfully.');
     }
 
-    //delete user by admin
     public function deleteUser($id)
     {
-        $user = User::find($id);
+        $user = User::withoutGlobalScope('active')->find($id);
+
         if (!$user) {
             return response()->error('User not found', 404);
         }
@@ -137,14 +141,19 @@ class UserManagementController extends Controller
         }
     }
 
-    //suspend user account
-    public function suspend(Request $request, User $user)
+    public function suspend(Request $request, $id)
     {
         $request->validate([
             'days' => 'required|integer|min:1',
             'reason' => 'nullable|string|max:1000',
         ]);
-        // Check if the user is already suspended
+
+        $user = User::withoutGlobalScope('active')->find($id);
+
+        if (!$user) {
+            return response()->error('User not found', 404);
+        }
+
         if ($user->isSuspended()) {
             return response()->error("User '{$user->full_name}' is already suspended.", 400);
         }
@@ -163,11 +172,10 @@ class UserManagementController extends Controller
         return response()->success($data, "User '{$user->full_name}' has been suspended for {$days} days.");
     }
 
-
-    //get suspended users
     public function suspendedUsers()
     {
-        $suspendedUsers = User::where('suspended_until', '>', now())
+        $suspendedUsers = User::withoutGlobalScope('active')
+            ->where('suspended_until', '>', now())
             ->whereNotNull('suspended_at')
             ->get();
 
@@ -183,7 +191,7 @@ class UserManagementController extends Controller
                 'suspended_at' => $suspendedAt->toDateTimeString(),
                 'suspension_ends_at' => $suspendedUntil->toDateTimeString(),
                 'total_suspension_days' => $suspendedAt->diffInDays($suspendedUntil),
-                'days_remaining' => intval(Carbon::now()->diffInDays($suspendedUntil, false) + 1), // Only integer part, e.g. 14
+                'days_remaining' => intval(Carbon::now()->diffInDays($suspendedUntil, false) + 1),
             ];
         });
 
@@ -193,13 +201,14 @@ class UserManagementController extends Controller
         return response()->success($data, 'Suspended users retrieved successfully.');
     }
 
-    /**
-     * User er suspension tule nebe.
-     */
-    public function unsuspend(User $user)
+    public function unsuspend($id)
     {
+        $user = User::withoutGlobalScope('active')->find($id);
 
-        // Check if the user is suspended
+        if (!$user) {
+            return response()->error('User not found', 404);
+        }
+
         if (!$user->isSuspended()) {
             return response()->error("User '{$user->full_name}' is not suspended.", 400);
         }
@@ -211,14 +220,8 @@ class UserManagementController extends Controller
         return response()->success(null, "Suspension has been lifted for user '{$user->full_name}'.");
     }
 
-
-    //admin send notification to user
-    public function sendNotification(Request $request, User $user)
+    public function sendNotification(Request $request, $id)
     {
-        // $request->validate([
-        //     'title' => 'required|string|max:255',
-        //     'description' => 'required|string|max:2000',
-        // ]);
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:2000',
@@ -228,10 +231,11 @@ class UserManagementController extends Controller
             return response()->error($validator->errors()->first(), 422, $validator->errors());
         }
 
+        $user = User::withoutGlobalScope('active')->find($id);
+
         if (!$user) {
             return response()->error('User not found', 404);
         }
-
 
         $user->notify(new AdminSendNotificationToUser(
             $request->input('title'),
