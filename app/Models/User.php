@@ -101,7 +101,11 @@ class User extends Authenticatable implements JWTSubject
     protected static function booted()
     {
         static::addGlobalScope('active', function (Builder $builder) {
-            $builder->whereNull('banned_at');
+            $builder->whereNull('banned_at') 
+                ->where(function ($query) {
+                    $query->whereNull('suspended_until')
+                        ->orWhere('suspended_until', '<', now());
+                });
         });
     }
 
